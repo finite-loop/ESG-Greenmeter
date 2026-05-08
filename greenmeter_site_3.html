@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Green Meter — Multi-Framework ESG Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300&family=Ubuntu+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --t900:#042f2e;--t800:#0d3d3c;--t700:#0f766e;--t600:#0d9488;
+  --t500:#14b8a6;--t400:#2dd4bf;--t300:#5eead4;--t200:#99f6e4;--t100:#ccfbf1;--t50:#f0fdfa;
+  --tw:#e0fdf9;
+  --tx1:#0f172a;--tx2:#475569;--tx3:#94a3b8;
+  --bdr:#d1faf4;--bdr2:#e0fdf9;
+  --bg:#f0fdfa;
+  --bg2:#e0fdf9;
+  --surf:#ffffff;
+  --panel:#f0fdfa;
+  --ff:'Ubuntu',sans-serif;
+  --fm:'Ubuntu Mono',monospace;
+  --grid:rgba(13,148,136,.07);
+  --shadow-teal:0 4px 24px rgba(13,148,136,.12);
+  --shadow-sm:0 2px 8px rgba(13,148,136,.08);
+}
+html{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;scroll-behavior:smooth}
+body{font-family:var(--ff);background:var(--bg);color:var(--tx1);overflow-x:hidden}
+
+/* ── PAGE ROUTING ── */
+.page{display:none}.page.active{display:block}
+.auth-page{display:none}.auth-page.active{display:flex!important}
+.success-page{display:none}.success-page.active{display:flex!important}
+
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:999;
+  height:56px;
+  background:rgba(255,255,255,.92);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--bdr);
+  display:flex;align-items:center;
+  box-shadow:0 1px 0 var(--bdr);
+}
+.nav-inner{
+  width:100%;max-width:100%;
+  padding:0 32px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.logo{display:flex;align-items:center;gap:10px;cursor:pointer;text-decoration:none}
+.logo-mark{
+  width:30px;height:30px;
+  background:linear-gradient(135deg,var(--t600),var(--t400));
+  border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  box-shadow:0 2px 8px rgba(13,148,136,.3);
+}
+.logo-mark svg{width:14px;height:14px}
+.logo-name{font-family:var(--ff);font-size:14px;font-weight:600;color:var(--tx1);letter-spacing:-.01em}
+.logo-name span{color:var(--t600)}
+.nav-links{display:flex;align-items:center;gap:0}
+.nav-links a{
+  font-family:var(--ff);font-size:11.5px;font-weight:500;
+  color:var(--tx2);text-decoration:none;cursor:pointer;
+  padding:7px 16px;letter-spacing:.04em;text-transform:uppercase;
+  opacity:.8;transition:all .15s;border-radius:6px;
+}
+.nav-links a:hover{opacity:1;color:var(--t700);background:var(--t50)}
+.nav-links a.on{opacity:1;color:var(--t700)}
+.nav-right{display:flex;align-items:center;gap:8px}
+.btn-outline{
+  font-family:var(--ff);font-size:11px;font-weight:500;letter-spacing:.06em;
+  color:var(--t700);background:transparent;
+  border:1.5px solid var(--t300);
+  cursor:pointer;padding:7px 18px;border-radius:8px;
+  transition:all .15s;text-transform:uppercase;
+}
+.btn-outline:hover{border-color:var(--t500);background:var(--t50);color:var(--t700)}
+.btn-filled{
+  font-family:var(--ff);font-size:11px;font-weight:600;letter-spacing:.06em;
+  color:#fff;background:linear-gradient(135deg,var(--t600),var(--t500));
+  border:none;
+  cursor:pointer;padding:7px 18px;border-radius:8px;
+  transition:all .2s;text-transform:uppercase;display:flex;align-items:center;gap:6px;
+  box-shadow:0 2px 12px rgba(13,148,136,.28);
+}
+.btn-filled:hover{background:linear-gradient(135deg,var(--t700),var(--t600));transform:translateY(-1px);box-shadow:0 4px 16px rgba(13,148,136,.35)}
+
+/* ── SHARED ── */
+.w{max-width:1280px;margin:0 auto;padding:0 32px}
+
+/* ── GRID PAPER BACKGROUND ── */
+.grid-bg{
+  background-image:
+    linear-gradient(var(--grid) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:40px 40px;
+}
+
+/* ── SECTION LABEL ── */
+.sec-label{
+  display:flex;align-items:center;gap:10px;
+  font-family:var(--ff);font-size:11px;font-weight:500;
+  color:var(--t600);letter-spacing:.08em;text-transform:uppercase;
+  padding:14px 0;border-bottom:1px solid var(--bdr);
+  margin-bottom:0;
+}
+.sec-label-n{
+  width:20px;height:20px;
+  background:var(--t50);border:1px solid var(--t200);
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:600;color:var(--t600);flex-shrink:0;border-radius:4px;
+}
+
+/* ── HERO — Linear-style: centred, large heading, full-width product shot ── */
+.hero{padding:80px 32px 0;background:#fff;border-bottom:1px solid var(--bdr);text-align:center}
+.hero-h1{
+  font-size:clamp(32px,4vw,56px);
+  font-weight:300;
+  line-height:1.15;
+  letter-spacing:-.02em;
+  color:var(--tx1);
+  margin:0 auto 20px;
+  max-width:760px;
+  border-left:none;
+  padding-left:0;
+}
+.hero-h1 em{font-style:normal;color:var(--t600)}
+.hero-sub{font-size:16px;color:var(--tx2);line-height:1.7;max-width:480px;margin:0 auto 32px}
+.hero-cta{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:48px;flex-wrap:wrap;padding-left:0}
+.btn-hero-outline{
+  font-family:var(--ff);font-size:13px;
+  color:var(--t700);background:#fff;border:1.5px solid var(--t300);
+  cursor:pointer;padding:10px 22px;border-radius:8px;transition:all .15s;
+}
+.btn-hero-outline:hover{border-color:var(--t500);background:var(--t50)}
+.btn-hero-filled{
+  font-family:var(--ff);font-size:13px;
+  color:#fff;background:var(--t600);border:none;
+  cursor:pointer;padding:10px 22px;border-radius:8px;transition:all .2s;
+  display:flex;align-items:center;gap:8px;
+}
+.btn-hero-filled:hover{background:var(--t700);transform:translateY(-1px)}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--t50);border:1px solid var(--t200);
+  border-radius:20px;padding:4px 12px 4px 8px;
+  font-family:var(--ff);font-size:12px;
+  color:var(--t700);margin-bottom:24px;
+}
+.hero-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--t500);animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.8)}}
+.hero-screenshot{
+  max-width:960px;margin:0 auto;
+  border:1px solid var(--bdr);border-bottom:none;
+  border-radius:12px 12px 0 0;overflow:hidden;
+  box-shadow:0 -4px 40px rgba(13,148,136,.08);
+}
+
+.hero-tabs{display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:20px}
+.hero-tab{
+  font-family:var(--ff);font-size:12px;
+  color:var(--tx2);background:transparent;border:1px solid var(--bdr);
+  cursor:pointer;padding:6px 16px;border-radius:20px;
+  opacity:.7;transition:all .15s;
+}
+.hero-tab.active{opacity:1;background:var(--t50);color:var(--t700);border-color:var(--t300)}
+.hero-panel{
+  background:var(--surf);border:none;border-radius:0;
+  overflow:hidden;
+}
+.hero-panel-bar{
+  height:32px;background:#f1f5f9;
+  border-bottom:1px solid var(--bdr);
+  display:flex;align-items:center;padding:0 12px;gap:6px;
+}
+.chrome-dot{width:9px;height:9px;border-radius:50%}
+.hero-panel-body{display:grid;grid-template-columns:160px 1fr;height:280px}
+.app-sidebar{
+  background:#0f172a;border-right:1px solid rgba(255,255,255,.06);
+  padding:12px 6px;overflow:hidden;
+}
+.sb-sect{font-family:var(--ff);font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.22);padding:10px 10px 4px}
+.sb-item{display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:5px;font-size:11px;color:rgba(255,255,255,.4);margin-bottom:1px;cursor:default;font-weight:400;font-family:var(--ff)}
+.sb-item.act{background:rgba(20,184,166,.18);color:#fff;font-weight:600}
+.sb-dot{width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.2);flex-shrink:0}
+.sb-item.act .sb-dot{background:var(--t400)}
+.app-main{background:var(--bg);padding:16px;overflow:hidden}
+.app-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.app-kpi{background:#fff;border:1.5px solid var(--bdr);border-radius:10px;padding:11px;box-shadow:var(--shadow-sm)}
+.app-kpi-l{font-size:8.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:4px;font-family:var(--ff)}
+.app-kpi-v{font-size:19px;font-weight:700;color:var(--tx1);font-family:var(--ff);line-height:1}
+.app-kpi-ch{font-size:9px;font-weight:600;margin-top:3px;font-family:var(--ff)}
+.app-panels{display:grid;grid-template-columns:1fr 210px;gap:10px}
+.app-chart{background:#fff;border:1.5px solid var(--bdr);border-radius:10px;padding:13px}
+.app-chart-t{font-size:10px;font-weight:600;color:var(--tx1);margin-bottom:9px;font-family:var(--ff);text-transform:uppercase;letter-spacing:.04em}
+.app-ai{background:#fff;border:1.5px solid var(--bdr);border-radius:10px;padding:13px}
+.app-ai-h{font-size:10px;font-weight:700;color:var(--t700);margin-bottom:9px;display:flex;align-items:center;gap:5px;font-family:var(--ff);text-transform:uppercase;letter-spacing:.04em}
+.ai-row{padding:7px 0;border-bottom:1px solid var(--bdr2)}
+.ai-row:last-child{border-bottom:none}
+.ai-row-t{font-size:10px;color:var(--tx1);line-height:1.35;font-family:var(--ff)}
+.ai-row-b{font-size:9px;font-weight:700;color:var(--t600);margin-top:2px;font-family:var(--ff)}
+
+/* ── SECTION SHARED ── */
+.section{padding:80px 0}
+.section-alt{background:var(--bg)}
+
+/* ── CHALLENGES ── */
+.two-col{display:grid;grid-template-columns:320px 1fr;gap:0;border-top:1px solid var(--bdr)}
+.two-col-label{
+  padding:40px 40px 40px 0;
+  font-size:20px;font-weight:400;color:var(--tx1);line-height:1.4;letter-spacing:-.01em;
+  position:sticky;top:56px;height:fit-content;
+  border-right:1px solid var(--bdr);
+}
+.two-col-content{padding:40px 0 40px 56px}
+.ch-card{
+  background:var(--surf);border:1px solid var(--bdr);
+  border-radius:10px;padding:24px 28px;margin-bottom:10px;
+  transition:all .2s;
+}
+.ch-card:hover{border-color:var(--t300);box-shadow:0 4px 16px rgba(13,148,136,.08)}
+.ch-card:last-child{margin-bottom:0}
+.ch-n{font-family:var(--ff);font-size:10px;letter-spacing:.08em;color:var(--t500);margin-bottom:8px;font-weight:500}
+.ch-h{font-size:17px;font-weight:500;color:var(--tx1);margin-bottom:8px;letter-spacing:-.01em;line-height:1.3}
+.ch-p{font-size:14px;color:var(--tx2);line-height:1.7;max-width:560px}
+.ch-tag{display:inline-block;margin-top:12px;font-family:var(--ff);font-size:11px;color:var(--t700);border:1px solid var(--t200);background:var(--t50);padding:3px 10px;border-radius:4px;letter-spacing:.02em}
+
+/* ── SOLUTION ── */
+.sol-header{
+  display:grid;grid-template-columns:1fr 1fr;gap:48px;
+  padding:48px 0 36px;border-bottom:1px solid var(--bdr);
+  align-items:end;
+}
+.sol-h2{font-size:clamp(22px,2.5vw,32px);font-weight:400;letter-spacing:-.01em;line-height:1.25;color:var(--tx1)}
+.sol-desc{font-size:15px;color:var(--tx2);line-height:1.72;max-width:400px;margin-left:auto}
+.sol-feature{
+  display:grid;grid-template-columns:300px 1fr;gap:0;
+  border-bottom:1px solid var(--bdr);
+  padding:48px 0;align-items:start;
+}
+.sol-feature-label{
+  padding-right:48px;
+  color:var(--tx2);line-height:1.6;
+}
+.sol-feature-label strong{display:block;font-size:17px;font-weight:500;letter-spacing:-.01em;margin-bottom:10px;font-family:var(--ff);color:var(--tx1)}
+.sol-feature-label p{font-size:14px;color:var(--tx2);line-height:1.7}
+.sol-feature-body{
+  background:var(--surf);border:1px solid var(--bdr);border-radius:10px;
+  overflow:hidden;
+}
+.sol-panel{
+  background:var(--bg);
+  padding:20px;
+}
+.mini-card{background:#fff;border:1.5px solid var(--bdr);border-radius:10px;padding:14px;margin-bottom:10px}
+.mini-card:last-child{margin-bottom:0}
+.mini-l{font-family:var(--ff);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);margin-bottom:6px}
+.mini-v{font-size:20px;font-weight:700;color:var(--tx1);font-family:var(--ff);line-height:1}
+.mini-sub{font-size:10px;color:var(--t700);font-weight:600;margin-top:3px;font-family:var(--ff)}
+.mini-bar{height:5px;background:var(--bdr);border-radius:3px;margin-top:8px;overflow:hidden}
+.mini-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--t600),var(--t400))}
+.mini-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bdr2);font-family:var(--ff)}
+.mini-row:last-child{border-bottom:none}
+.mini-row-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.mini-row-t{font-size:11px;color:var(--tx1);flex:1}
+.mini-row-v{font-size:10px;font-weight:600;font-family:var(--ff)}
+
+/* ── HOW IT WORKS ── */
+.steps-header{
+  display:grid;grid-template-columns:1fr 1fr;gap:56px;
+  padding:48px 0 36px;border-bottom:1px solid var(--bdr);align-items:end;
+}
+.steps-diagram{
+  background:var(--surf);border:1px solid var(--bdr);border-radius:12px;
+  padding:32px;margin-top:0;
+}
+.steps-row{display:grid;grid-template-columns:repeat(3,1fr);gap:0}
+.step-box{border:1px solid var(--bdr);border-radius:10px;padding:24px;background:#fff;margin:12px;position:relative;transition:all .2s}
+.step-box:hover{border-color:var(--t300);box-shadow:0 4px 16px rgba(13,148,136,.08)}
+.step-n{font-family:var(--ff);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--t500);margin-bottom:8px;font-weight:500}
+.step-badge{font-family:var(--ff);font-size:11px;color:var(--t700);background:var(--t50);border:1px solid var(--t200);padding:2px 8px;border-radius:4px;display:inline-block;margin-bottom:10px}
+.step-h{font-size:15px;font-weight:500;color:var(--tx1);margin-bottom:6px;letter-spacing:-.01em}
+.step-p{font-size:13px;color:var(--tx2);line-height:1.65}
+
+/* ── CTA BAND ── */
+.cta-band{
+  padding:80px 0;
+  background:var(--tx1);
+}
+.cta-inner{max-width:600px}
+.cta-h{font-size:clamp(20px,2.5vw,32px);font-weight:400;color:#fff;letter-spacing:-.01em;margin-bottom:14px;line-height:1.3}
+.cta-p{font-size:15px;color:rgba(255,255,255,.6);line-height:1.72;margin-bottom:28px;max-width:440px}
+.cta-btns{display:flex;gap:12px;flex-wrap:wrap}
+.cta-note{font-family:var(--ff);font-size:12px;color:rgba(255,255,255,.3);margin-top:16px;letter-spacing:.02em}
+
+/* ── FEATURES PAGE — Style E hero ── */
+.feat-hero{padding:52px 32px 0;background:#fff;border-bottom:1px solid var(--bdr)}
+.feat-h1{font-size:clamp(22px,2.5vw,36px);font-weight:300;line-height:1.25;letter-spacing:-.01em;color:var(--tx1);margin-bottom:0;border-left:3px solid var(--t500);padding-left:20px}
+.feat-stats{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--bdr);margin-top:56px;margin-left:32px}
+.feat-stat{padding:28px 28px 28px 0;border-right:1px solid var(--bdr)}
+.feat-stat:last-child{border-right:none}
+.feat-stat-v{font-size:42px;font-weight:300;color:var(--t600);font-family:var(--ff);letter-spacing:-.05em;line-height:1}
+.feat-stat-l{font-size:11px;color:var(--tx2);margin-top:6px;font-family:var(--ff);text-transform:uppercase;letter-spacing:.05em}
+
+.fw-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:0}
+.fw-card{background:var(--surf);border:1.5px solid var(--bdr);border-radius:16px;padding:28px;transition:all .25s;box-shadow:var(--shadow-sm)}
+.fw-card:hover{border-color:var(--t300);box-shadow:0 8px 32px rgba(13,148,136,.12);transform:translateY(-2px)}
+.fw-badge{font-family:var(--ff);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border:1.5px solid;border-radius:8px;display:inline-block;margin-bottom:14px;font-weight:600}
+.fw-card h3{font-size:18px;font-weight:500;color:var(--tx1);margin-bottom:16px;letter-spacing:-.01em}
+.fw-card ul{list-style:none}
+.fw-card li{font-size:13px;color:var(--tx2);padding:7px 0;border-bottom:1px solid var(--bdr2);display:flex;gap:10px;line-height:1.4;font-family:var(--ff)}
+.fw-card li::before{content:'✓';color:var(--t500);flex-shrink:0;font-size:11px;font-weight:700}
+.fw-card li:last-child{border-bottom:none}
+
+.ai-three{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:0}
+.ai-card{background:var(--surf);border:1.5px solid var(--bdr);border-radius:16px;padding:32px;transition:all .25s;box-shadow:var(--shadow-sm)}
+.ai-card:hover{border-color:var(--t300);box-shadow:0 8px 32px rgba(13,148,136,.12);transform:translateY(-2px)}
+.ai-ico{font-size:28px;margin-bottom:16px}
+.ai-card h3{font-size:18px;font-weight:500;color:var(--tx1);margin-bottom:10px;letter-spacing:-.01em}
+.ai-card p{font-size:13px;color:var(--tx2);line-height:1.7}
+
+/* ── PRICING PAGE ── */
+.pricing-h1{font-size:clamp(22px,2.5vw,36px);font-weight:300;letter-spacing:-.01em;line-height:1.25;color:var(--tx1);border-left:3px solid var(--t500);padding-left:20px}
+.plans-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1.5px solid var(--bdr);border-radius:20px;overflow:hidden;margin-top:52px;box-shadow:var(--shadow-teal)}
+.plan{padding:36px;border-right:1.5px solid var(--bdr);background:var(--surf)}
+.plan:last-child{border-right:none}
+.plan.featured{background:linear-gradient(160deg,var(--t800) 0%,var(--t600) 100%)}
+.plan-name{font-size:20px;font-weight:500;color:var(--tx1);margin-bottom:6px;letter-spacing:-.01em}
+.plan.featured .plan-name{color:#fff}
+.plan-desc{font-size:11.5px;color:var(--tx3);line-height:1.5;margin-bottom:20px;font-family:var(--ff);text-transform:uppercase;letter-spacing:.05em}
+.plan.featured .plan-desc{color:rgba(255,255,255,.45)}
+.plan-price{font-size:44px;font-weight:300;color:var(--tx1);font-family:var(--ff);letter-spacing:-.04em;line-height:1}
+.plan.featured .plan-price{color:var(--t300)}
+.plan-period{font-size:11px;color:var(--tx3);margin-top:4px;font-family:var(--ff);letter-spacing:.04em;text-transform:uppercase}
+.plan.featured .plan-period{color:rgba(255,255,255,.35)}
+.plan-btn{
+  font-family:var(--ff);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  cursor:pointer;padding:11px 18px;border-radius:10px;display:block;
+  width:100%;text-align:center;margin-top:20px;transition:all .2s;
+}
+.plan-btn.o{color:var(--t700);background:var(--t50);border:1.5px solid var(--t200)}
+.plan-btn.o:hover{border-color:var(--t400);background:var(--t100)}
+.plan-btn.p{color:#fff;background:linear-gradient(135deg,var(--t600),var(--t400));border:none;box-shadow:0 4px 16px rgba(13,148,136,.3)}
+.plan-btn.p:hover{background:linear-gradient(135deg,var(--t700),var(--t500));transform:translateY(-1px)}
+.plan-btn.w{color:#fff;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.2)}
+.plan-btn.w:hover{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.4)}
+.plan-divider{height:1px;background:var(--bdr);margin:20px 0}
+.plan.featured .plan-divider{background:rgba(255,255,255,.12)}
+.plan-section{font-family:var(--ff);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--tx3);margin:16px 0 8px}
+.plan.featured .plan-section{color:rgba(255,255,255,.3)}
+.plan-f{display:flex;align-items:flex-start;gap:8px;font-size:12.5px;color:var(--tx2);padding:4px 0;line-height:1.45;font-family:var(--ff)}
+.plan.featured .plan-f{color:rgba(255,255,255,.6)}
+.plan-f::before{content:'—';color:var(--t400);flex-shrink:0;font-size:10px;margin-top:1px}
+.plan.featured .plan-f::before{color:var(--t300)}
+
+.guarantee-strip{display:grid;grid-template-columns:repeat(3,1fr);border:1.5px solid var(--bdr);border-top:none;border-radius:0 0 20px 20px;overflow:hidden;margin-bottom:0}
+.g-cell{padding:28px;border-right:1px solid var(--bdr);background:var(--surf)}
+.g-cell:last-child{border-right:none}
+.g-v{font-size:34px;font-weight:300;color:var(--t600);font-family:var(--ff);letter-spacing:-.03em}
+.g-l{font-size:12px;color:var(--tx2);margin-top:8px;line-height:1.55;font-family:var(--ff)}
+
+/* ── ABOUT PAGE ── */
+.about-h1{font-size:clamp(22px,2.5vw,36px);font-weight:300;letter-spacing:-.01em;line-height:1.25;color:var(--tx1);border-left:3px solid var(--t500);padding-left:20px}
+.about-stats{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--bdr);margin-top:56px}
+.ab-stat{padding:28px 28px 28px 0;border-right:1px solid var(--bdr)}
+.ab-stat:last-child{border-right:none}
+.ab-stat-v{font-size:38px;font-weight:300;color:var(--t600);font-family:var(--ff);letter-spacing:-.04em}
+.ab-stat-l{font-size:11px;color:var(--tx2);margin-top:5px;font-family:var(--ff);text-transform:uppercase;letter-spacing:.05em}
+
+.vals-label{font-family:var(--ff);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);padding-top:4px}
+.val-card-big{
+  background:var(--surf);border:1.5px solid var(--bdr);border-radius:16px;
+  padding:28px 32px;margin-bottom:10px;transition:all .25s;box-shadow:var(--shadow-sm);
+}
+.val-card-big:hover{border-color:var(--t300);transform:translateX(4px)}
+.val-card-big:last-child{margin-bottom:0}
+.val-h{font-size:26px;font-weight:300;color:var(--tx1);margin-bottom:0;letter-spacing:-.02em;line-height:1.15}
+.val-n{font-family:var(--ff);font-size:10px;color:var(--tx3);letter-spacing:.08em;text-transform:uppercase;margin:12px 0 10px}
+.val-p{font-family:var(--ff);font-size:11px;color:var(--tx2);line-height:1.7;letter-spacing:.02em;text-transform:uppercase;max-width:520px}
+
+.commit-block{
+  background:linear-gradient(135deg,var(--t50),var(--tw));
+  border:1.5px solid var(--t200);border-radius:16px;
+  padding:40px;
+}
+.commit-block p{font-size:16px;color:var(--tx1);line-height:1.78;margin-bottom:12px;font-weight:300}
+.commit-block strong{color:var(--t700);font-weight:500}
+
+/* ── CONTACT PAGE ── */
+.contact-h1{font-size:clamp(22px,2.5vw,36px);font-weight:300;letter-spacing:-.01em;line-height:1.25;color:var(--tx1);border-left:3px solid var(--t500);padding-left:20px}
+.c-stats{display:grid;grid-template-columns:repeat(4,1fr);border:1.5px solid var(--bdr);border-radius:16px;overflow:hidden;margin-top:48px;box-shadow:var(--shadow-sm)}
+.c-stat{padding:24px;border-right:1px solid var(--bdr);text-align:center;background:var(--surf)}
+.c-stat:last-child{border-right:none}
+.c-stat-v{font-size:28px;font-weight:300;color:var(--t600);font-family:var(--ff);letter-spacing:-.03em}
+.c-stat-l{font-size:10px;color:var(--tx2);margin-top:5px;font-family:var(--ff);text-transform:uppercase;letter-spacing:.05em}
+.contact-grid{display:grid;grid-template-columns:1fr 340px;gap:0;border:1.5px solid var(--bdr);border-radius:20px;overflow:hidden;box-shadow:var(--shadow-teal)}
+.form-side{padding:40px;border-right:1px solid var(--bdr);background:var(--surf)}
+.form-side h3{font-size:20px;font-weight:500;color:var(--tx1);margin-bottom:24px;letter-spacing:-.01em}
+.field{margin-bottom:16px}
+.field label{font-family:var(--ff);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--tx2);display:block;margin-bottom:6px}
+.field input,.field textarea,.field select{
+  width:100%;padding:11px 14px;
+  border:1.5px solid var(--bdr);border-radius:10px;
+  font-size:14px;font-family:var(--ff);outline:none;color:var(--tx1);
+  background:var(--bg);transition:all .15s;
+}
+.field input:focus,.field textarea:focus{border-color:var(--t400);box-shadow:0 0 0 3px rgba(45,212,191,.15)}
+.field textarea{resize:vertical;min-height:100px}
+.field-btn{
+  width:100%;padding:12px;background:linear-gradient(135deg,var(--t700),var(--t500));color:#fff;
+  border:none;border-radius:10px;font-family:var(--ff);font-size:11.5px;
+  letter-spacing:.08em;text-transform:uppercase;cursor:pointer;
+  margin-top:4px;transition:all .2s;font-weight:600;
+  box-shadow:0 4px 16px rgba(13,148,136,.25);
+}
+.field-btn:hover{background:linear-gradient(135deg,var(--t800),var(--t600));transform:translateY(-1px)}
+.info-side{padding:32px;background:var(--bg)}
+.info-block{border-bottom:1px solid var(--bdr);padding:18px 0}
+.info-block:first-child{padding-top:0}
+.info-block:last-child{border-bottom:none}
+.info-ico{font-size:18px;margin-bottom:8px}
+.info-tag{font-family:var(--ff);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);margin-bottom:5px}
+.info-val{font-size:13px;color:var(--t700);font-weight:600}
+.info-val.plain{font-size:12px;color:var(--tx2);font-weight:400;line-height:1.65}
+.rt-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.rt-cell{padding:10px;background:var(--t50);border:1.5px solid var(--t200);border-radius:10px;text-align:center}
+.rt-v{font-size:14px;font-weight:700;color:var(--t700);font-family:var(--ff)}
+.rt-l{font-size:9px;color:var(--tx2);margin-top:3px;font-family:var(--ff);text-transform:uppercase;letter-spacing:.04em}
+.faq-row{border-top:1px solid var(--bdr);padding:22px 0}
+.faq-q{font-size:15px;font-weight:500;color:var(--tx1);margin-bottom:8px;letter-spacing:-.01em}
+.faq-a{font-size:13.5px;color:var(--tx2);line-height:1.7}
+
+/* ── LEGAL ── */
+.legal-h1{font-size:clamp(20px,2.2vw,32px);font-weight:300;letter-spacing:-.01em;line-height:1.25;color:var(--tx1)}
+.legal-meta{font-family:var(--ff);font-size:12px;color:var(--tx3);margin-top:16px;letter-spacing:.04em}
+.legal-layout{display:grid;grid-template-columns:200px 1fr;gap:48px;padding:48px 0}
+.legal-toc{position:sticky;top:72px;height:fit-content}
+.toc-title{font-family:var(--ff);font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);margin-bottom:14px}
+.toc-a{display:block;font-family:var(--ff);font-size:11.5px;color:var(--tx2);text-decoration:none;padding:5px 0;border-bottom:1px solid var(--bdr);cursor:pointer;transition:color .15s}
+.toc-a:hover{color:var(--t600)}
+.legal-body{}
+.legal-s{margin-bottom:36px}
+.legal-s h2{font-size:16px;font-weight:600;color:var(--tx1);margin-bottom:10px;letter-spacing:-.01em}
+.legal-s p{font-size:14px;color:var(--tx2);line-height:1.75}
+
+/* ── AUTH PAGES ── */
+.auth-page{min-height:100vh;flex-direction:column;background:#fff;padding-top:56px}
+.auth-page.active{display:flex!important}
+
+/* centred card layout */
+.auth-wrap{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  padding:48px 24px;background:#fff;
+}
+.auth-card{
+  width:100%;max-width:900px;
+  display:grid;grid-template-columns:1fr 1fr;
+  border:1px solid var(--bdr);border-radius:16px;overflow:hidden;
+  align-items:start;
+}
+
+/* left — dark panel */
+.auth-panel{
+  background:var(--tx1);
+  padding:48px 44px;
+  display:flex;flex-direction:column;
+  position:relative;overflow:hidden;
+}
+.auth-panel::after{
+  content:'';position:absolute;bottom:-60px;right:-60px;
+  width:220px;height:220px;border-radius:50%;
+  border:1px solid rgba(13,148,136,.2);
+}
+.auth-panel-eyebrow{
+  font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--t500);margin-bottom:40px;
+}
+.auth-panel-h{
+  font-size:26px;font-weight:300;color:#fff;line-height:1.3;
+  letter-spacing:-.01em;margin-bottom:12px;
+}
+.auth-panel-h strong{font-weight:500;color:var(--t300)}
+.auth-panel-sub{font-size:13px;color:rgba(255,255,255,.45);line-height:1.7;margin-bottom:40px;max-width:260px}
+.auth-stats{display:flex;flex-direction:column;gap:0;margin-top:auto}
+.auth-stat{
+  display:flex;align-items:baseline;gap:12px;
+  padding:14px 0;border-top:1px solid rgba(255,255,255,.07);
+}
+.auth-stat:last-child{border-bottom:1px solid rgba(255,255,255,.07)}
+.auth-stat-v{font-size:20px;font-weight:300;color:var(--t400);letter-spacing:-.02em;min-width:48px}
+.auth-stat-l{font-size:12px;color:rgba(255,255,255,.4);line-height:1.4}
+.auth-panel-foot{font-size:11px;color:rgba(255,255,255,.2);margin-top:32px;letter-spacing:.02em}
+
+/* right — form */
+.auth-form-side{
+  background:#fff;padding:48px 44px;
+  display:flex;flex-direction:column;justify-content:center;
+  overflow-y:auto;
+}
+.auth-form-side.register-side{justify-content:flex-start}
+.auth-eyebrow{font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--t600);margin-bottom:20px}
+.auth-form-h{font-size:22px;font-weight:400;color:var(--tx1);margin-bottom:6px;letter-spacing:-.01em}
+.auth-form-sub{font-size:13px;color:var(--tx3);margin-bottom:28px;line-height:1.5}
+.auth-divider{height:1px;background:var(--bdr);margin:20px 0}
+.auth-err{
+  display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;
+  color:#dc2626;font-size:13px;padding:9px 13px;margin-bottom:16px;
+}
+.auth-f{margin-bottom:14px}
+.auth-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.auth-l{font-size:11px;font-weight:500;color:var(--tx2);display:block;margin-bottom:5px;letter-spacing:.02em;text-transform:uppercase}
+.auth-i{
+  width:100%;padding:9px 12px;
+  border:1px solid #e2e8f0;border-radius:6px;
+  font-size:13px;font-family:var(--ff);outline:none;
+  color:var(--tx1);background:#fff;
+  transition:border-color .15s;
+}
+.auth-i:focus{border-color:var(--t500);box-shadow:0 0 0 3px rgba(20,184,166,.08)}
+.auth-i option{font-size:13px}
+.auth-submit{
+  width:100%;padding:10px 16px;
+  background:var(--tx1);color:#fff;border:none;
+  border-radius:6px;font-size:13px;font-weight:500;
+  font-family:var(--ff);cursor:pointer;letter-spacing:.01em;
+  transition:background .15s;margin-top:6px;
+}
+.auth-submit:hover{background:var(--t700)}
+.auth-demo{
+  margin-top:14px;padding:10px 13px;
+  background:var(--t50);border:1px solid var(--t200);border-radius:6px;
+  font-size:12px;color:var(--t800);display:flex;gap:9px;line-height:1.5;
+}
+.auth-switch{font-size:12px;color:var(--tx3);margin-top:16px}
+.auth-switch a{color:var(--t600);font-weight:500;text-decoration:none;cursor:pointer}
+.auth-note{font-size:11px;color:var(--tx3);margin-top:10px;line-height:1.55}
+.check-row{display:flex;align-items:flex-start;gap:9px;margin-bottom:14px}
+.check-row input{width:14px;height:14px;accent-color:var(--t600);flex-shrink:0;margin-top:2px;cursor:pointer}
+.check-row label{font-size:12px;color:var(--tx3);line-height:1.55;cursor:pointer}
+.check-row label a{color:var(--t600);font-weight:500;text-decoration:none;cursor:pointer}
+.auth-back{font-size:12px;color:var(--tx3);text-decoration:none;cursor:pointer;display:inline-block;margin-top:14px}
+.auth-back:hover{color:var(--tx2)}
+
+/* success */
+.success-wrap{min-height:calc(100vh - 56px);margin-top:56px;background:#fff;display:flex;align-items:center;justify-content:center}
+.success-box{text-align:center;max-width:400px;padding:48px 24px}
+.success-ico{
+  width:52px;height:52px;background:var(--t50);border:1px solid var(--t200);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:22px;margin:0 auto 20px;
+}
+.success-h{font-size:20px;font-weight:500;color:var(--tx1);letter-spacing:-.01em;margin-bottom:8px}
+.success-p{font-size:14px;color:var(--tx2);line-height:1.72;margin-bottom:28px}
+.success-actions{display:flex;flex-direction:column;gap:8px}
+.success-btn-primary{
+  width:100%;padding:10px;background:var(--tx1);color:#fff;border:none;
+  border-radius:6px;font-size:13px;font-weight:500;font-family:var(--ff);cursor:pointer;
+}
+.success-btn-primary:hover{background:var(--t700)}
+.success-btn-secondary{
+  width:100%;padding:10px;background:#fff;color:var(--tx2);
+  border:1px solid var(--bdr);border-radius:6px;font-size:13px;
+  font-family:var(--ff);cursor:pointer;
+}
+.success-btn-secondary:hover{border-color:var(--t300);color:var(--t700)}
+
+/* ── FOOTER ── */
+.footer{background:var(--tx1);border-top:1px solid rgba(255,255,255,.06);padding:56px 0 28px}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;padding-bottom:40px;border-bottom:1px solid rgba(255,255,255,.06)}
+.f-brand{font-family:var(--ff);font-size:15px;font-weight:600;color:#fff;margin-bottom:12px;letter-spacing:.02em}
+.f-brand span{color:var(--t400)}
+.f-desc{font-size:12.5px;color:rgba(255,255,255,.35);line-height:1.75;max-width:230px;font-family:var(--ff)}
+.f-col h4{font-family:var(--ff);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:rgba(255,255,255,.25);margin-bottom:16px}
+.f-col a{display:block;font-family:var(--ff);font-size:12px;color:rgba(255,255,255,.4);text-decoration:none;margin-bottom:10px;cursor:pointer;transition:color .15s;letter-spacing:.02em}
+.f-col a:hover{color:var(--t300)}
+.footer-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:22px;font-family:var(--ff);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.2)}
+.footer-bottom a{color:rgba(255,255,255,.2);text-decoration:none;cursor:pointer;margin-left:18px;transition:color .15s}
+.footer-bottom a:hover{color:var(--t400)}
+
+/* app iframe */
+#app-wrap{display:none;position:fixed;inset:0;z-index:9999}
+#app-iframe{width:100%;height:100%;border:none;display:block}
+
+/* reveal */
+.rv{opacity:0;transform:translateY(20px);transition:opacity .5s ease,transform .5s ease}
+.rv.in{opacity:1;transform:none}
+.rv1{transition-delay:.1s}.rv2{transition-delay:.2s}
+
+/* ── PRICING FEATURE CARDS ── */
+.p-feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:0}
+.p-feature{background:var(--surf);border:1.5px solid var(--bdr);border-radius:16px;padding:28px;transition:all .25s;box-shadow:var(--shadow-sm)}
+.p-feature:hover{border-color:var(--t300);transform:translateY(-2px);box-shadow:var(--shadow-teal)}
+.p-feature-icon{width:40px;height:40px;background:var(--t50);border:1.5px solid var(--t200);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:16px}
+.p-feature h3{font-size:16px;font-weight:600;color:var(--tx1);margin-bottom:8px;letter-spacing:-.01em}
+.p-feature p{font-size:13px;color:var(--tx2);line-height:1.65}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <div class="logo" onclick="go('home')">
+      <div class="logo-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M7 12l3.5 3.5L17 8" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="logo-name">green<span>meter</span></div>
+    </div>
+    <div class="nav-links">
+      <a onclick="go('features')" id="nl-features">product</a>
+      <a onclick="go('pricing')" id="nl-pricing">pricing</a>
+      <a onclick="go('about')" id="nl-about">about us</a>
+      <a onclick="go('contact')" id="nl-contact">contact</a>
+    </div>
+    <div class="nav-right">
+      <button class="btn-outline" onclick="go('login')">login</button>
+      <button class="btn-filled" onclick="go('register')">
+        get started
+        <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ══════════ HOME ══════════ -->
+<div class="page active" id="pg-home" style="padding-top:56px">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="w">
+      <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        Now live — BRSR, GRI & ESRS unified
+      </div>
+      <h1 class="hero-h1">Your ESG data is everywhere. Your reporting <em>shouldn't be.</em></h1>
+      <p class="hero-sub">One platform to collect, map, and report across BRSR, GRI, and ESRS — automatically.</p>
+      <div class="hero-cta">
+        <button class="btn-hero-outline" onclick="go('register')">Request Access</button>
+        <button class="btn-hero-filled" onclick="go('features')">
+          See how it works
+          <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+      <div class="hero-tabs">
+        <button class="hero-tab" onclick="setTab('collect')">Collect</button>
+        <button class="hero-tab" onclick="setTab('analyse')">Analyse</button>
+        <button class="hero-tab active" id="tab-report" onclick="setTab('report')">Report</button>
+      </div>
+    </div>
+    <div class="hero-screenshot">
+      <div class="hero-panel">
+        <div class="hero-panel-bar">
+          <div class="chrome-dot" style="background:#ff5f56"></div>
+          <div class="chrome-dot" style="background:#febc2e"></div>
+          <div class="chrome-dot" style="background:#28c840"></div>
+          <span style="font-size:10px;color:rgba(0,0,0,.3);margin-left:14px">app.greenmeter.ai</span>
+        </div>
+        <div class="hero-panel-body">
+          <div class="app-sidebar">
+            <div class="sb-sect">Overview</div>
+            <div class="sb-item"><div class="sb-dot"></div>Dashboard</div>
+            <div class="sb-sect">Data</div>
+            <div class="sb-item"><div class="sb-dot"></div>Console</div>
+            <div class="sb-item"><div class="sb-dot"></div>Rollup view</div>
+            <div class="sb-item"><div class="sb-dot"></div>Analytics</div>
+            <div class="sb-sect">Reporting</div>
+            <div class="sb-item act"><div class="sb-dot"></div>Report builder</div>
+            <div class="sb-item"><div class="sb-dot"></div>Supply chain</div>
+            <div class="sb-sect">Intelligence</div>
+            <div class="sb-item"><div class="sb-dot"></div>Goals</div>
+            <div class="sb-item"><div class="sb-dot"></div>Knowledge base</div>
+            <div class="sb-sect">Governance</div>
+            <div class="sb-item"><div class="sb-dot"></div>Audit</div>
+            <div class="sb-item"><div class="sb-dot"></div>Settings</div>
+          </div>
+          <div class="app-main">
+            <div class="app-kpis">
+              <div class="app-kpi">
+                <div class="app-kpi-l">ESG Score</div>
+                <div class="app-kpi-v">82/100</div>
+                <div class="app-kpi-ch" style="color:#10b981">↑ 4 pts YoY</div>
+              </div>
+              <div class="app-kpi">
+                <div class="app-kpi-l">GHG Scope 1 tCO2e</div>
+                <div class="app-kpi-v">74.2K</div>
+                <div class="app-kpi-ch" style="color:#10b981">↓ 9.6% YoY</div>
+              </div>
+              <div class="app-kpi">
+                <div class="app-kpi-l">BRSR Compliance</div>
+                <div class="app-kpi-v">94%</div>
+                <div class="app-kpi-ch" style="color:var(--t600)">On track · FY26</div>
+              </div>
+              <div class="app-kpi">
+                <div class="app-kpi-l">Women in Workforce</div>
+                <div class="app-kpi-v">34.2%</div>
+                <div class="app-kpi-ch" style="color:#10b981">↑ 2.1% YoY</div>
+              </div>
+            </div>
+            <div class="app-panels">
+              <div class="app-chart">
+                <div class="app-chart-t">GHG Emissions Trend — tCO2e</div>
+                <svg width="100%" height="128" viewBox="0 0 500 128" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#14b8a6" stop-opacity=".2"/>
+                      <stop offset="100%" stop-color="#14b8a6" stop-opacity="0"/>
+                    </linearGradient>
+                  </defs>
+                  <line x1="0" y1="100" x2="500" y2="100" stroke="#d1faf4" stroke-width="1"/>
+                  <line x1="0" y1="72" x2="500" y2="72" stroke="#d1faf4" stroke-width="1"/>
+                  <line x1="0" y1="44" x2="500" y2="44" stroke="#d1faf4" stroke-width="1"/>
+                  <line x1="0" y1="16" x2="500" y2="16" stroke="#d1faf4" stroke-width="1"/>
+                  <polygon points="20,94 100,86 180,100 260,76 340,62 420,50 500,38 500,128 20,128" fill="url(#ag)"/>
+                  <polyline points="20,94 100,86 180,100 260,76 340,62 420,50 500,38" fill="none" stroke="#0d9488" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle cx="420" cy="50" r="4" fill="#0d9488"/>
+                  <line x1="420" y1="50" x2="500" y2="38" stroke="#14b8a6" stroke-width="1.5" stroke-dasharray="4,3"/>
+                  <circle cx="500" cy="38" r="3.5" fill="#fff" stroke="#14b8a6" stroke-width="1.5"/>
+                  <line x1="0" y1="30" x2="500" y2="30" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4,3" opacity=".6"/>
+                  <text x="6" y="27" font-size="8" fill="#f59e0b" font-family="monospace" opacity=".8">Net zero target</text>
+                  <text x="16" y="122" font-size="8" fill="#94a3b8" font-family="monospace">FY20</text>
+                  <text x="96" y="122" font-size="8" fill="#94a3b8" font-family="monospace">FY21</text>
+                  <text x="174" y="122" font-size="8" fill="#94a3b8" font-family="monospace">FY22</text>
+                  <text x="254" y="122" font-size="8" fill="#94a3b8" font-family="monospace">FY23</text>
+                  <text x="334" y="122" font-size="8" fill="#94a3b8" font-family="monospace">FY24</text>
+                  <text x="410" y="122" font-size="8" fill="#0d9488" font-family="monospace" font-weight="600">FY25</text>
+                  <text x="485" y="122" font-size="8" fill="#94a3b8" font-family="monospace">FY26E</text>
+                </svg>
+              </div>
+              <div class="app-ai">
+                <div class="app-ai-h">✦ AI Recommendations</div>
+                <div class="ai-row"><div class="ai-row-t">Solar PPA can reduce Scope 2 by 18%</div><div class="ai-row-b">HIGH IMPACT</div></div>
+                <div class="ai-row"><div class="ai-row-t">3 suppliers missing Scope 3 data</div><div class="ai-row-b">ACTION NEEDED</div></div>
+                <div class="ai-row"><div class="ai-row-t">BRSR report 84% complete</div><div class="ai-row-b">DUE IN 47 DAYS</div></div>
+                <div class="ai-row"><div class="ai-row-t">Water intensity above sector median</div><div class="ai-row-b">REVIEW NEEDED</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHALLENGES -->
+  <div class="section section-alt">
+    <div class="w">
+      <div class="sec-label"><div class="sec-label-n">1</div>THE CHALLENGES</div>
+      <div class="two-col">
+        <div class="two-col-label">We understand<br>the challenges<br>you face</div>
+        <div class="two-col-content">
+          <p style="font-size:15px;color:var(--tx2);line-height:1.78;max-width:560px;margin-bottom:32px">Your team works hard to meet BRSR, GRI, and ESRS requirements. We've seen how much effort goes into gathering data, ensuring accuracy, and meeting deadlines. You're doing important work — it just shouldn't be this difficult.</p>
+          <div class="ch-card rv">
+            <div class="ch-n">01</div>
+            <div class="ch-h">Scattered Information</div>
+            <p class="ch-p">Data lives across multiple departments and systems. Bringing it together takes valuable time that could be spent on strategic analysis.</p>
+            <div class="ch-tag">Time better spent elsewhere</div>
+          </div>
+          <div class="ch-card rv rv1">
+            <div class="ch-n">02</div>
+            <div class="ch-h">Repetitive Processes</div>
+            <p class="ch-p">Similar data needs different formats for each framework. Your team adapts the same information multiple times with care and attention.</p>
+            <div class="ch-tag">Opportunity for efficiency</div>
+          </div>
+          <div class="ch-card rv rv2">
+            <div class="ch-n">03</div>
+            <div class="ch-h">Growing Expectations</div>
+            <p class="ch-p">Stakeholders want more transparency. Regulations evolve. Your commitment to compliance deserves better tools to support it.</p>
+            <div class="ch-tag">Room for improvement</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOLUTION -->
+  <div class="section" style="background:linear-gradient(180deg,var(--t50) 0%,var(--tw) 100%);border-top:1.5px solid var(--bdr)">
+    <div class="w">
+      <div class="sec-label"><div class="sec-label-n">2</div>THE SOLUTION</div>
+      <div class="sol-header">
+        <h2 class="sol-h2">One platform.<br>All frameworks.<br>Complete automation.</h2>
+        <p class="sol-desc">Collect your sustainability data once. Our AI maps it to BRSR, GRI, and ESRS automatically. Real-time dashboards. Instant reports. Zero manual work.</p>
+      </div>
+
+      <div class="sol-feature rv" style="border-top:1px solid var(--bdr)">
+        <div class="sol-feature-label">
+          <strong>Unified Data Hub</strong>
+          <p>Single source of truth for all ESG data. Collect once, use everywhere. Automated validation ensures clean data before it reaches a report.</p>
+        </div>
+        <div class="sol-feature-body">
+          <div class="sol-panel">
+            <div style="font-family:var(--ff);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);margin-bottom:12px">Data sources connected</div>
+            <div class="mini-card">
+              <div class="mini-row"><div class="mini-row-dot" style="background:#10b981"></div><div class="mini-row-t">SAP S/4HANA — HR + FI module</div><div class="mini-row-v" style="color:#10b981">LIVE</div></div>
+              <div class="mini-row"><div class="mini-row-dot" style="background:#10b981"></div><div class="mini-row-t">Darwinbox HRMS</div><div class="mini-row-v" style="color:#10b981">LIVE</div></div>
+              <div class="mini-row"><div class="mini-row-dot" style="background:#10b981"></div><div class="mini-row-t">IoT Energy meters — Pune plant</div><div class="mini-row-v" style="color:#10b981">LIVE</div></div>
+              <div class="mini-row"><div class="mini-row-dot" style="background:#f59e0b"></div><div class="mini-row-t">Schneider EcoStruxure</div><div class="mini-row-v" style="color:#f59e0b">CONFIG</div></div>
+            </div>
+            <div class="mini-card">
+              <div class="mini-l">Data quality score</div>
+              <div class="mini-v">94<span style="font-size:13px;font-weight:400;color:var(--tx3)">/100</span></div>
+              <div class="mini-bar"><div class="mini-fill" style="width:94%"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sol-feature rv" style="border-top:1px solid var(--bdr)">
+        <div class="sol-feature-label">
+          <strong>Auto-Mapping Engine</strong>
+          <p>AI automatically maps your data to BRSR, GRI, and ESRS requirements simultaneously. No manual configuration needed.</p>
+        </div>
+        <div class="sol-feature-body">
+          <div class="sol-panel">
+            <div style="font-family:var(--ff);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);margin-bottom:12px">Framework coverage</div>
+            <div class="mini-card">
+              <div class="mini-l">BRSR Core — 45 indicators</div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div class="mini-v" style="font-size:17px">38 mapped</div>
+                <span style="font-family:var(--ff);font-size:10px;font-weight:700;color:#10b981;background:#ecfdf5;padding:2px 8px;border:1.5px solid #86efac;border-radius:6px">84%</span>
+              </div>
+              <div class="mini-bar"><div class="mini-fill" style="width:84%"></div></div>
+            </div>
+            <div class="mini-card">
+              <div class="mini-l">GRI Universal 2021 — 40 indicators</div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div class="mini-v" style="font-size:17px">34 mapped</div>
+                <span style="font-family:var(--ff);font-size:10px;font-weight:700;color:#10b981;background:#ecfdf5;padding:2px 8px;border:1.5px solid #86efac;border-radius:6px">85%</span>
+              </div>
+              <div class="mini-bar"><div class="mini-fill" style="width:85%"></div></div>
+            </div>
+            <div class="mini-card">
+              <div class="mini-l">ESRS E1 — Climate — 16 indicators</div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div class="mini-v" style="font-size:17px">9 mapped</div>
+                <span style="font-family:var(--ff);font-size:10px;font-weight:700;color:#f59e0b;background:#fffbeb;padding:2px 8px;border:1.5px solid #fde68a;border-radius:6px">56%</span>
+              </div>
+              <div class="mini-bar"><div class="mini-fill" style="width:56%;background:linear-gradient(90deg,#f59e0b,#fbbf24)"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sol-feature rv" style="border-bottom:none">
+        <div class="sol-feature-label">
+          <strong>AI-Assisted Reporting</strong>
+          <p>Generate compliance reports with one click. AI pre-fills content, flags gaps, checks for greenwashing, and supports collaborative authoring across departments.</p>
+        </div>
+        <div class="sol-feature-body">
+          <div class="sol-panel">
+            <div style="font-family:var(--ff);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);margin-bottom:12px">Annual Report 2026 — BRSR</div>
+            <div class="mini-card">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+                <svg width="42" height="42" viewBox="0 0 42 42"><circle cx="21" cy="21" r="17" fill="none" stroke="#d1faf4" stroke-width="4"/><circle cx="21" cy="21" r="17" fill="none" stroke="#0d9488" stroke-width="4" stroke-dasharray="75.7 106.8" stroke-dashoffset="26.7" stroke-linecap="round"/><text x="21" y="26" text-anchor="middle" font-size="10" font-weight="700" fill="#0f172a" font-family="monospace">72%</text></svg>
+                <div><div style="font-size:13px;font-weight:600;color:var(--tx1)">6 of 9 sections complete</div><div style="font-family:var(--ff);font-size:9px;color:var(--tx3);letter-spacing:.04em;margin-top:2px">DUE MAY 30, 2026</div></div>
+              </div>
+              <div class="mini-row"><div class="mini-row-dot" style="background:#10b981"></div><div class="mini-row-t">P1 — Ethics &amp; Transparency</div><div class="mini-row-v" style="color:#10b981;font-size:9px">DONE</div></div>
+              <div class="mini-row"><div class="mini-row-dot" style="background:#10b981"></div><div class="mini-row-t">P6 — Environment</div><div class="mini-row-v" style="color:#10b981;font-size:9px">DONE</div></div>
+              <div class="mini-row"><div class="mini-row-dot" style="background:#f59e0b"></div><div class="mini-row-t">P3 — Employee Wellbeing</div><div class="mini-row-v" style="color:#f59e0b;font-size:9px">REVIEW</div></div>
+              <div class="mini-row"><div class="mini-row-dot" style="background:#d1d5db"></div><div class="mini-row-t">P7 — Policy Advocacy</div><div class="mini-row-v" style="color:#94a3b8;font-size:9px">PENDING</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="section section-alt" style="border-top:1.5px solid var(--bdr)">
+    <div class="w">
+      <div class="sec-label"><div class="sec-label-n">3</div>HOW IT WORKS</div>
+      <div class="steps-header">
+        <h2 class="sol-h2">From chaos to<br>compliance in<br>three steps</h2>
+        <p style="font-size:15px;color:var(--tx2);line-height:1.72;max-width:380px;margin-left:auto">Collect your sustainability data once. Our AI maps it to BRSR, GRI, and ESRS automatically. Real-time dashboards. Instant reports. Zero manual work.</p>
+      </div>
+      <div class="steps-diagram">
+        <div style="font-family:var(--ff);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--t500);text-align:center;margin-bottom:24px">GREENMETER WORKFLOW</div>
+        <div class="steps-row">
+          <div style="position:relative">
+            <div class="step-box">
+              <div class="step-n">01</div>
+              <div class="step-badge">&lt; 1 hour</div>
+              <div class="step-h">Connect Your Data</div>
+              <p class="step-p">Upload files, connect ERP systems, or enter data directly. Our platform accepts any format and standardizes everything automatically.</p>
+            </div>
+            <div style="position:absolute;right:-14px;top:50%;transform:translateY(-50%);font-family:var(--ff);font-size:20px;color:var(--t400);z-index:2">→</div>
+          </div>
+          <div style="position:relative">
+            <div class="step-box">
+              <div class="step-n">02</div>
+              <div class="step-badge">Instant</div>
+              <div class="step-h">AI Does The Work</div>
+              <p class="step-p">Our engine maps your data to BRSR, GRI, and ESRS simultaneously. Validates completeness. Identifies gaps. All automated.</p>
+            </div>
+            <div style="position:absolute;right:-14px;top:50%;transform:translateY(-50%);font-family:var(--ff);font-size:20px;color:var(--t400);z-index:2">→</div>
+          </div>
+          <div>
+            <div class="step-box">
+              <div class="step-n">03</div>
+              <div class="step-badge">Ongoing</div>
+              <div class="step-h">Generate &amp; Monitor</div>
+              <p class="step-p">Create compliance reports with one click. Monitor real-time. Share with stakeholders. Update continuously.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-band">
+    <div class="w">
+      <div class="cta-inner">
+        <h2 class="cta-h">Transform your reporting<br>process with confidence</h2>
+        <p class="cta-p">We'd be honored to help you simplify multi-framework compliance. Join sustainability leaders who've streamlined their ESG reporting and now focus more time on making an impact.</p>
+        <div class="cta-btns">
+          <button class="btn-hero-filled" onclick="go('register')">Request Your Demo</button>
+          <button style="font-family:var(--ff);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.85);background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.3);cursor:pointer;padding:11px 24px;border-radius:10px;transition:all .15s" onclick="go('pricing')" onmouseover="this.style.borderColor='rgba(255,255,255,.6)';this.style.background='rgba(255,255,255,.15)'" onmouseout="this.style.borderColor='rgba(255,255,255,.3)';this.style.background='rgba(255,255,255,.1)'">View Pricing</button>
+        </div>
+        <p class="cta-note">Access granted upon registration approval &nbsp;·&nbsp; Secure platform &nbsp;·&nbsp; Enterprise-grade compliance</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ FEATURES ══════════ -->
+<div class="page" id="pg-features" style="padding-top:56px">
+  <div class="feat-hero">
+    <div class="w">
+      <h1 class="feat-h1">Every metric.<br>Every framework.<br>One platform.</h1>
+      <p style="font-size:16px;color:var(--tx2);line-height:1.7;max-width:480px;margin:28px 0 0;padding-left:32px">From data ingestion to compliance reporting — intelligent automation across BRSR, GRI, and ESRS standards.</p>
+      <div class="feat-stats">
+        <div class="feat-stat"><div class="feat-stat-v">200+</div><div class="feat-stat-l">GRI indicators</div></div>
+        <div class="feat-stat" style="padding-left:28px"><div class="feat-stat-v">3</div><div class="feat-stat-l">Frameworks unified</div></div>
+        <div class="feat-stat" style="padding-left:28px"><div class="feat-stat-v">12</div><div class="feat-stat-l">ESRS standards</div></div>
+        <div class="feat-stat" style="padding-left:28px"><div class="feat-stat-v">9</div><div class="feat-stat-l">BRSR principles</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="w">
+      <div class="sec-label"><div class="sec-label-n">1</div>COMPLETE FRAMEWORK COVERAGE</div>
+      <div class="two-col" style="margin-top:0">
+        <div class="two-col-label" style="padding-top:28px">Purpose-built<br>for every<br>major standard</div>
+        <div class="two-col-content">
+          <div class="fw-grid">
+            <div class="fw-card rv">
+              <div class="fw-badge" style="color:var(--t700);border-color:var(--t300);background:var(--t50)">BRSR</div>
+              <h3>India Compliance</h3>
+              <ul>
+                <li>9 Principles covered</li>
+                <li>Section A, B, C reporting</li>
+                <li>Essential &amp; Leadership indicators</li>
+                <li>SEBI requirement compliance</li>
+              </ul>
+            </div>
+            <div class="fw-card rv rv1">
+              <div class="fw-badge" style="color:#4338ca;border-color:#c7d2fe;background:#eef2ff">GRI</div>
+              <h3>Global Standard</h3>
+              <ul>
+                <li>200+ indicators tracked</li>
+                <li>Universal Standards 2021</li>
+                <li>Topic-specific standards</li>
+                <li>Sector-specific guidance</li>
+              </ul>
+            </div>
+            <div class="fw-card rv rv2">
+              <div class="fw-badge" style="color:#0369a1;border-color:#bae6fd;background:#f0f9ff">ESRS</div>
+              <h3>European Reporting</h3>
+              <ul>
+                <li>12 ESRS standards</li>
+                <li>CSRD compliance ready</li>
+                <li>Double materiality</li>
+                <li>Supply chain disclosure</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" style="border-top:1.5px solid var(--bdr);background:linear-gradient(180deg,var(--t50) 0%,var(--tw) 100%)">
+    <div class="w">
+      <div class="sec-label"><div class="sec-label-n">2</div>AI-POWERED FEATURES</div>
+      <div style="margin-top:32px">
+        <div class="ai-three">
+          <div class="ai-card rv">
+            <div class="ai-ico">🧠</div>
+            <h3>Intelligent Extraction</h3>
+            <p>AI reads your documents — sustainability reports, energy bills, HR records — and pulls out ESG metrics automatically. No templates. No manual mapping.</p>
+          </div>
+          <div class="ai-card rv rv1">
+            <div class="ai-ico">🗺️</div>
+            <h3>Cross-Framework Mapping</h3>
+            <p>Enter data once and our engine maps it across BRSR, GRI, and ESRS simultaneously. Identify overlaps and gaps in real time.</p>
+          </div>
+          <div class="ai-card rv rv2">
+            <div class="ai-ico">✍️</div>
+            <h3>Narrative Generation</h3>
+            <p>AI drafts compliant report narratives from your data. Collaborative editing with version control. Greenwashing checks built in.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cta-band">
+    <div class="w"><div class="cta-inner">
+      <h2 class="cta-h">Ready to see every feature in action?</h2>
+      <p class="cta-p">Schedule a personalized demo and see how Green Meter maps to your organization's specific reporting needs.</p>
+      <div class="cta-btns">
+        <button class="btn-hero-filled" onclick="go('register')">Request a Demo</button>
+        <button style="font-family:var(--ff);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.85);background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.3);cursor:pointer;padding:11px 24px;border-radius:10px;transition:all .15s" onclick="go('pricing')" onmouseover="this.style.borderColor='rgba(255,255,255,.6)'" onmouseout="this.style.borderColor='rgba(255,255,255,.3)'">View Pricing</button>
+      </div>
+    </div></div>
+  </div>
+</div>
+
+<!-- ══════════ PRICING ══════════ -->
+<div class="page" id="pg-pricing" style="padding-top:56px">
+  <div class="feat-hero">
+    <div class="w">
+      <h1 class="pricing-h1">Simple, transparent<br>pricing for every<br>organization.</h1>
+      <p style="font-size:16px;color:var(--tx2);line-height:1.7;max-width:480px;margin:28px 0 0;padding-left:32px">All plans include our core ESG reporting features. Scale as your needs grow. No hidden fees.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="w">
+      <div class="plans-grid">
+        <div class="plan">
+          <div class="plan-name">Starter</div>
+          <div class="plan-desc">For small teams getting started</div>
+          <div class="plan-price">₹0</div>
+          <div class="plan-period">Free forever · up to 5 users</div>
+          <button class="plan-btn o" onclick="go('register')">Get started free</button>
+          <div class="plan-divider"></div>
+          <div class="plan-section">Includes</div>
+          <div class="plan-f">BRSR Core reporting</div>
+          <div class="plan-f">Up to 3 data sources</div>
+          <div class="plan-f">Basic dashboards</div>
+          <div class="plan-f">Email support</div>
+          <div class="plan-f">1 report export / month</div>
+        </div>
+        <div class="plan featured">
+          <div class="plan-name">Professional</div>
+          <div class="plan-desc">For growing sustainability teams</div>
+          <div class="plan-price">₹49K</div>
+          <div class="plan-period">Per month · billed annually</div>
+          <button class="plan-btn p" onclick="go('register')">Start 14-day trial</button>
+          <div class="plan-divider"></div>
+          <div class="plan-section">Everything in Starter, plus</div>
+          <div class="plan-f">BRSR + GRI unified reporting</div>
+          <div class="plan-f">Unlimited data sources</div>
+          <div class="plan-f">AI narrative generation</div>
+          <div class="plan-f">Priority support &lt;24h</div>
+          <div class="plan-f">Unlimited report exports</div>
+          <div class="plan-f">Supply chain module</div>
+        </div>
+        <div class="plan">
+          <div class="plan-name">Enterprise</div>
+          <div class="plan-desc">For large organizations & groups</div>
+          <div class="plan-price">Custom</div>
+          <div class="plan-period">Volume pricing · dedicated support</div>
+          <button class="plan-btn o" onclick="go('contact')">Talk to sales</button>
+          <div class="plan-divider"></div>
+          <div class="plan-section">Everything in Professional, plus</div>
+          <div class="plan-f">BRSR + GRI + ESRS unified</div>
+          <div class="plan-f">White-label reporting</div>
+          <div class="plan-f">Custom integrations</div>
+          <div class="plan-f">Dedicated account manager</div>
+          <div class="plan-f">SLA guarantee</div>
+          <div class="plan-f">On-premise deployment</div>
+        </div>
+      </div>
+      <div class="guarantee-strip">
+        <div class="g-cell"><div class="g-v">14</div><div class="g-l">Day free trial on Professional. No credit card required.</div></div>
+        <div class="g-cell"><div class="g-v">99.9%</div><div class="g-l">Platform uptime SLA for Enterprise customers.</div></div>
+        <div class="g-cell"><div class="g-v">24h</div><div class="g-l">Access granted within 24 hours of registration approval.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" style="border-top:1.5px solid var(--bdr);background:linear-gradient(180deg,var(--t50) 0%,#fff 100%)">
+    <div class="w">
+      <div class="sec-label" style="margin-bottom:32px"><div class="sec-label-n">+</div>INCLUDED IN ALL PLANS</div>
+      <div class="p-feature-grid">
+        <div class="p-feature rv">
+          <div class="p-feature-icon">🔒</div>
+          <h3>Enterprise Security</h3>
+          <p>AES-256 encryption at rest, TLS 1.2+ in transit, SOC 2 certified infrastructure with regular audits.</p>
+        </div>
+        <div class="p-feature rv rv1">
+          <div class="p-feature-icon">📊</div>
+          <h3>Real-time Dashboards</h3>
+          <p>Live tracking of all ESG metrics. Custom views, drill-down capability, and automated alerts.</p>
+        </div>
+        <div class="p-feature rv rv2">
+          <div class="p-feature-icon">🤖</div>
+          <h3>AI Recommendations</h3>
+          <p>Actionable insights surfaced automatically. Identify quick wins and flag compliance risks proactively.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cta-band">
+    <div class="w"><div class="cta-inner">
+      <h2 class="cta-h">Not sure which plan is right?</h2>
+      <p class="cta-p">Let us help you find the best fit for your organization's size, frameworks, and reporting timeline.</p>
+      <div class="cta-btns">
+        <button class="btn-hero-filled" onclick="go('contact')">Talk to our team</button>
+        <button style="font-family:var(--ff);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.85);background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.3);cursor:pointer;padding:11px 24px;border-radius:10px;transition:all .15s" onclick="go('register')" onmouseover="this.style.borderColor='rgba(255,255,255,.6)'" onmouseout="this.style.borderColor='rgba(255,255,255,.3)'">Start for free</button>
+      </div>
+    </div></div>
+  </div>
+</div>
+
+<!-- ══════════ ABOUT ══════════ -->
+<div class="page" id="pg-about" style="padding-top:56px">
+  <div class="feat-hero">
+    <div class="w">
+      <h1 class="about-h1">We're building the<br>future of sustainable<br>business reporting.</h1>
+      <p style="font-size:16px;color:var(--tx2);line-height:1.7;max-width:480px;margin:28px 0 0;padding-left:32px">Green Meter was born from a simple frustration: ESG reporting shouldn't require an army of consultants and months of effort. We built the platform we wished existed.</p>
+      <div class="about-stats">
+        <div class="ab-stat"><div class="ab-stat-v">2022</div><div class="ab-stat-l">Founded</div></div>
+        <div class="ab-stat" style="padding-left:28px"><div class="ab-stat-v">50+</div><div class="ab-stat-l">Organizations served</div></div>
+        <div class="ab-stat" style="padding-left:28px"><div class="ab-stat-v">3</div><div class="ab-stat-l">Frameworks supported</div></div>
+        <div class="ab-stat" style="padding-left:28px"><div class="ab-stat-v">Blr</div><div class="ab-stat-l">Headquartered</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="w">
+      <div class="sec-label"><div class="sec-label-n">1</div>OUR VALUES</div>
+      <div class="two-col" style="margin-top:0">
+        <div class="two-col-label" style="padding-top:28px">
+          <div class="vals-label">What we<br>stand for</div>
+        </div>
+        <div class="two-col-content">
+          <div class="val-card-big rv">
+            <div class="val-h">Radical Transparency</div>
+            <div class="val-n">01 — CORE VALUE</div>
+            <div class="val-p">We practice what we preach. Our own ESG metrics are published quarterly on this website using the same platform we give to our customers.</div>
+          </div>
+          <div class="val-card-big rv rv1">
+            <div class="val-h">Accuracy Over Speed</div>
+            <div class="val-n">02 — CORE VALUE</div>
+            <div class="val-p">ESG reporting errors have real consequences. We'd rather our AI flag uncertainty than confidently produce wrong numbers.</div>
+          </div>
+          <div class="val-card-big rv rv2">
+            <div class="val-h">Accessible Compliance</div>
+            <div class="val-n">03 — CORE VALUE</div>
+            <div class="val-p">Sustainability reporting shouldn't be the exclusive domain of large enterprises with big consulting budgets. We're committed to making it accessible to every organization.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" style="border-top:1.5px solid var(--bdr)">
+    <div class="w">
+      <div class="sec-label"><div class="sec-label-n">2</div>BUILT BY FINITELOOP</div>
+      <div style="display:grid;grid-template-columns:280px 1fr;gap:0;border-top:1px solid var(--bdr)">
+        <div style="padding:36px 28px 36px 0;border-right:1px solid var(--bdr);font-size:15px;font-weight:300;color:var(--tx2)">Who we are</div>
+        <div style="padding:36px 0 36px 48px">
+          <p style="font-size:15px;color:var(--tx2);line-height:1.78;max-width:600px;margin-bottom:20px">Green Meter is a product of Finiteloop, a Bengaluru-based technology company specializing in enterprise software and sustainability solutions. Finiteloop has been building software for mission-driven organizations since 2018.</p>
+          <p style="font-size:15px;color:var(--tx2);line-height:1.78;max-width:600px">Our team includes ESG experts, AI engineers, and former regulators who have worked across SEBI, the EU Commission, and leading sustainability consultancies. We understand the regulatory landscape because we've lived in it.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" style="border-top:1.5px solid var(--bdr)">
+    <div class="w">
+      <div class="sec-label"><div class="sec-label-n">3</div>OUR COMMITMENT</div>
+      <div style="max-width:760px;margin-top:36px">
+        <div class="commit-block rv">
+          <p>Our own operations are carbon-neutral. Our infrastructure runs on renewable energy. We track and report our own sustainability metrics using the same platform we provide to you.</p>
+          <p><strong>Because sustainability isn't just our business — it's our responsibility.</strong></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cta-band">
+    <div class="w"><div class="cta-inner">
+      <h2 class="cta-h">Join us in building a sustainable future</h2>
+      <p class="cta-p">See how Green Meter can transform your sustainability reporting.</p>
+      <div class="cta-btns">
+        <button class="btn-hero-filled" onclick="go('register')">See if you qualify</button>
+        <button style="font-family:var(--ff);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.85);background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.3);cursor:pointer;padding:11px 24px;border-radius:10px;transition:all .15s" onclick="go('contact')" onmouseover="this.style.borderColor='rgba(255,255,255,.6)'" onmouseout="this.style.borderColor='rgba(255,255,255,.3)'">Talk to our team</button>
+      </div>
+    </div></div>
+  </div>
+</div>
+
+<!-- ══════════ CONTACT ══════════ -->
+<div class="page" id="pg-contact" style="padding-top:56px">
+  <div class="feat-hero">
+    <div class="w">
+      <h1 class="contact-h1">Ready for unified<br>BRSR, GRI, and<br>ESRS reporting?</h1>
+      <p style="font-size:16px;color:var(--tx2);line-height:1.7;max-width:480px;margin:28px 0 0;padding-left:32px">We review each inquiry to ensure we can provide the value you need. Tell us about your needs and we'll be in touch within 24 hours.</p>
+      <div class="c-stats">
+        <div class="c-stat"><div class="c-stat-v">&lt;24hr</div><div class="c-stat-l">Response guarantee</div></div>
+        <div class="c-stat"><div class="c-stat-v">98%</div><div class="c-stat-l">Customer satisfaction</div></div>
+        <div class="c-stat"><div class="c-stat-v">24/7</div><div class="c-stat-l">Support availability</div></div>
+        <div class="c-stat"><div class="c-stat-v">15min</div><div class="c-stat-l">Avg. call wait time</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="w">
+      <div class="contact-grid rv">
+        <div class="form-side">
+          <h3>Send us a message</h3>
+          <div class="field"><label>Your Name</label><input placeholder="Priya Sharma"></div>
+          <div class="field"><label>Email Address</label><input type="email" placeholder="priya@company.com"></div>
+          <div class="field"><label>Company Name</label><input placeholder="Ratan Industries Ltd"></div>
+          <div class="field"><label>Tell us about your needs</label><textarea placeholder="We're looking to streamline our BRSR and GRI reporting…"></textarea></div>
+          <button class="field-btn" onclick="alert('Message sent! We\'ll be in touch within 24 hours.')">Send message →</button>
+        </div>
+        <div class="info-side">
+          <div class="info-block"><div class="info-ico">📧</div><div class="info-tag">Email</div><div class="info-val">hello@terra.com</div></div>
+          <div class="info-block"><div class="info-ico">📞</div><div class="info-tag">Phone</div><div class="info-val">+91 98940 98940</div></div>
+          <div class="info-block"><div class="info-ico">🏢</div><div class="info-tag">Office</div><div class="info-val plain">FiniteLoop, Work District 45, 46, 7th B Main Rd, 4th Block, Jayanagar, Bengaluru, Karnataka 560011</div></div>
+          <div class="info-block"><div class="info-ico">⏱</div><div class="info-tag">Response times</div><div class="rt-row"><div class="rt-cell"><div class="rt-v">&lt;24h</div><div class="rt-l">Email</div></div><div class="rt-cell"><div class="rt-v">&lt;1h</div><div class="rt-l">Priority</div></div><div class="rt-cell"><div class="rt-v">24/7</div><div class="rt-l">Emergency</div></div></div></div>
+        </div>
+      </div>
+      <div style="margin-top:80px">
+        <div class="sec-label" style="margin-bottom:0"><div class="sec-label-n">?</div>FREQUENTLY ASKED</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 56px">
+          <div>
+            <div class="faq-row rv"><div class="faq-q">How quickly can we get started?</div><div class="faq-a">Most organizations are up and running within 48 hours of signing up. Our team handles the technical setup while you focus on your data.</div></div>
+            <div class="faq-row rv"><div class="faq-q">Do you offer custom solutions?</div><div class="faq-a">Yes. Enterprise clients can request custom integrations, industry-specific metrics, and white-label reporting options.</div></div>
+          </div>
+          <div>
+            <div class="faq-row rv"><div class="faq-q">What kind of support do you provide?</div><div class="faq-a">All plans include email support. Professional and Enterprise plans get priority support with faster response times and dedicated account management.</div></div>
+            <div class="faq-row rv"><div class="faq-q">Is my data secure?</div><div class="faq-a">Absolutely. We use enterprise-grade encryption, regular security audits, and comply with all major data protection regulations including GDPR and SOC 2.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ PRIVACY ══════════ -->
+<div class="page" id="pg-privacy" style="padding-top:56px">
+  <div class="section" style="padding-bottom:36px;border-bottom:1.5px solid var(--bdr)">
+    <div class="w"><div class="sec-label" style="margin-bottom:20px"><div class="sec-label-n">§</div>LEGAL</div>
+      <h1 class="legal-h1">Privacy Policy</h1>
+      <div class="legal-meta">Last updated: February 20, 2026</div>
+    </div>
+  </div>
+  <div class="w"><div class="legal-layout">
+    <div class="legal-toc"><div class="toc-title">Contents</div>
+      ${['Information Collection','Use of Data','Data Storage','Third-Party Services','Cookies','Security','User Rights','Data Retention',"Children's Privacy",'Changes to This Policy','Contact Us','Governing Law'].map((s,i)=>`<a class="toc-a" onclick="document.getElementById('p${i+1}').scrollIntoView({behavior:'smooth'})">${i+1}. ${s}</a>`).join('')}
+    </div>
+    <div class="legal-body">
+      ${[['p1','1. Information Collection','We collect information you provide directly when you create an account, upload documents, or contact us. This includes your name, email address, company name, job title, and industry. When you use our platform, we collect uploaded documents for processing, extracted ESG metrics and associated metadata, usage data such as pages visited, features used, and session duration, as well as device and browser information for platform optimization.'],['p2','2. Use of Data','We use the information we collect to provide, maintain, and improve the Green Meter platform. Specifically, we use your data to process and analyze uploaded documents for ESG metric extraction, validate extracted data against SEBI compliance rules, provide analytics dashboards and trend analysis, send service-related notifications and updates, respond to your inquiries and support requests, and improve our AI extraction models and algorithms.'],['p3','3. Data Storage','Your data is stored on secure Azure cloud infrastructure. All data is encrypted at rest using AES-256 encryption and in transit using TLS 1.2 or higher. Uploaded documents are stored in isolated environments and processed in temporary containers that are destroyed after extraction is complete. Extracted metrics and metadata are stored in encrypted PostgreSQL databases with role-based access controls.'],['p4','4. Third-Party Services','We use Azure Document Intelligence for OCR and document processing, Azure OpenAI Service for supplementary metric extraction, and cloud infrastructure providers for hosting and data storage. We do not sell, rent, or trade your personal information or document data to third parties. Third-party service providers are bound by data processing agreements.'],['p5','5. Cookies','We use essential cookies to maintain your session and authentication state. We may also use analytics cookies to understand how users interact with our platform. You can control cookie preferences through your browser settings. Essential cookies are required for the platform to function and cannot be disabled.'],['p6','6. Security','We implement industry-standard security measures including encryption at rest and in transit, role-based access controls, regular security audits, secure authentication including multi-factor authentication options, and monitoring and logging of access to sensitive data.'],['p7','7. User Rights','You have the right to access, correct, or delete your personal data. You may request a copy of all data we hold, request correction of inaccurate data, request deletion of your account, export your extracted metrics and reports, and withdraw consent for non-essential data processing. Contact: privacy@greenmeter.app.'],['p8','8. Data Retention','We retain your data for as long as your account is active or as needed to provide services. Upon account deletion, we will remove your personal data within 30 days and document data within 90 days. Aggregated, anonymized data may be retained for analytics purposes.'],['p9',"9. Children's Privacy",'Green Meter is not intended for use by individuals under the age of 18. We do not knowingly collect personal information from children. If we become aware that a child has provided us with personal information, we will take steps to delete such data.'],['p10','10. Changes to This Policy','We may update this privacy policy from time to time. We will notify you of any material changes by posting the new policy on this page and updating the "Last updated" date. Continued use of the platform after changes constitutes acceptance of the updated policy.'],['p11','11. Contact Us','If you have any questions about this privacy policy, please contact us at privacy@greenmeter.app or through our contact form on the website. We will respond to privacy inquiries within 30 days.'],['p12','12. Governing Law','This privacy policy is governed by the laws of India, including the Information Technology Act, 2000. Any disputes shall be subject to the exclusive jurisdiction of the courts in Mumbai, India.']].map(([id,h,p])=>`<div class="legal-s" id="${id}"><h2>${h}</h2><p>${p}</p></div>`).join('')}
+    </div>
+  </div></div>
+</div>
+
+<!-- ══════════ TERMS ══════════ -->
+<div class="page" id="pg-terms" style="padding-top:56px">
+  <div class="section" style="padding-bottom:36px;border-bottom:1.5px solid var(--bdr)">
+    <div class="w"><div class="sec-label" style="margin-bottom:20px"><div class="sec-label-n">§</div>LEGAL</div>
+      <h1 class="legal-h1">Terms of Service</h1>
+      <div class="legal-meta">Last updated: February 20, 2026</div>
+    </div>
+  </div>
+  <div class="w"><div class="legal-layout">
+    <div class="legal-toc"><div class="toc-title">Contents</div>
+      ${['Acceptance of Terms','Description of Service','User Accounts','Acceptable Use','Intellectual Property','Fees and Payment','Termination','Disclaimers','Limitation of Liability','Indemnification','Changes to Terms','Privacy','Support','Force Majeure','General Provisions'].map((s,i)=>`<a class="toc-a" onclick="document.getElementById('t${i+1}').scrollIntoView({behavior:'smooth'})">${i+1}. ${s}</a>`).join('')}
+    </div>
+    <div class="legal-body">
+      ${[['t1','1. Acceptance of Terms','By accessing or using the Green Meter platform, you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any of these terms, you may not use the platform. These terms apply to all visitors, users, and others who access or use the service.'],['t2','2. Description of Service','Green Meter is an AI-powered ESG analytics platform that provides automated document processing, metric extraction, SEBI compliance validation, and sustainability reporting tools. The platform processes documents using optical character recognition, natural language processing, and machine learning. The service is provided on an "as-is" and "as-available" basis.'],['t3','3. User Accounts','To use the platform, you must create an account and provide accurate, complete information. You are responsible for maintaining the security of your account credentials and for all activities that occur under your account. You must notify us immediately of any unauthorized use.'],['t4','4. Acceptable Use','You agree to use the platform only for lawful purposes. You may not attempt to gain unauthorized access to our systems, interfere with the platform, reverse engineer any part of it, or use automated means to access the platform except through our provided APIs.'],['t5','5. Intellectual Property','The Green Meter platform, including its design, features, and algorithms, is owned by Green Meter. You retain ownership of all documents you upload. By uploading documents, you grant us a limited license to process them to provide the service.'],['t6','6. Fees and Payment','Paid plans are billed monthly or annually as selected during subscription. All fees are non-refundable except as required by law. We reserve the right to modify pricing with 30 days advance notice.'],['t7','7. Termination','Either party may terminate this agreement at any time. We may terminate or suspend your account immediately for violations of these terms. We will retain your data for the period specified in our Privacy Policy.'],['t8','8. Disclaimers','The platform is a tool to assist your reporting process and should not replace professional judgment. Extracted metrics should be reviewed by qualified personnel before submission to regulatory bodies. We do not guarantee that the platform will be error-free or that extraction results will be 100% accurate.'],['t9','9. Limitation of Liability','To the maximum extent permitted by law, Green Meter shall not be liable for any indirect, incidental, special, consequential, or punitive damages. Our total liability shall not exceed amounts paid by you in the twelve months preceding the claim.'],['t10','10. Indemnification','You agree to indemnify and hold harmless Green Meter, its officers, directors, employees, and agents from any claims arising out of your use of the platform or your violation of these terms.'],['t11','11. Changes to Terms','We reserve the right to modify these terms at any time. Material changes will be communicated at least 30 days before taking effect. Continued use of the platform constitutes acceptance of the revised terms.'],['t12','12. Privacy','Your use of the platform is also governed by our Privacy Policy, which describes how we collect, use, and protect your information.'],['t13','13. Support','Starter plan: email support, 2-business-day response. Professional plan: priority email, 1-business-day response. Enterprise plan: dedicated support, same-day response guarantee and designated account manager.'],['t14','14. Force Majeure','Neither party shall be liable for any failure or delay in performance due to causes beyond its reasonable control, including natural disasters, acts of government, or network failures.'],['t15','15. General Provisions','These terms constitute the entire agreement between you and BRSR Analytics regarding the platform. These terms are governed by the laws of India. Any disputes shall be resolved through binding arbitration in Mumbai, India.']].map(([id,h,p])=>`<div class="legal-s" id="${id}"><h2>${h}</h2><p>${p}</p></div>`).join('')}
+    </div>
+  </div></div>
+</div>
+
+<!-- ══════════ LOGIN ══════════ -->
+<div class="auth-page page" id="pg-login">
+  <div class="auth-wrap">
+    <div class="auth-card">
+
+      <!-- left dark panel -->
+      <div class="auth-panel">
+        <div class="auth-panel-eyebrow">Green Meter Platform</div>
+        <div class="auth-panel-h">ESG reporting<br>made <strong>intelligent.</strong></div>
+        <div class="auth-panel-sub">Unified BRSR, GRI, and ESRS compliance from a single AI-powered dashboard.</div>
+        <div class="auth-stats">
+          <div class="auth-stat">
+            <div class="auth-stat-v">94%</div>
+            <div class="auth-stat-l">average BRSR compliance score across customers</div>
+          </div>
+          <div class="auth-stat">
+            <div class="auth-stat-v">3×</div>
+            <div class="auth-stat-l">faster reporting compared to manual workflows</div>
+          </div>
+          <div class="auth-stat">
+            <div class="auth-stat-v">200+</div>
+            <div class="auth-stat-l">GRI indicators tracked automatically</div>
+          </div>
+        </div>
+        <div class="auth-panel-foot">© 2026 Green Meter by Finiteloop</div>
+      </div>
+
+      <!-- right form -->
+      <div class="auth-form-side">
+        <div class="auth-eyebrow">Sign in</div>
+        <div class="auth-form-h">Welcome back</div>
+        <div class="auth-form-sub">Enter your credentials to access the platform</div>
+        <div class="auth-err" id="login-err"></div>
+        <div class="auth-f">
+          <label class="auth-l">Email address</label>
+          <input class="auth-i" id="l-email" type="email" value="demo@greenmeter.ai" placeholder="you@company.com">
+        </div>
+        <div class="auth-f">
+          <label class="auth-l">Password</label>
+          <input class="auth-i" id="l-pwd" type="password" value="demo123" placeholder="••••••••">
+          <div style="text-align:right;margin-top:6px">
+            <span style="font-size:12px;color:var(--t600);cursor:pointer">Forgot password?</span>
+          </div>
+        </div>
+        <button class="auth-submit" onclick="handleLogin()">Sign in →</button>
+        <div class="auth-demo">
+          <span>💡</span>
+          <div><strong>Demo credentials pre-filled.</strong> Click Sign in to explore the prototype.</div>
+        </div>
+        <div class="auth-divider"></div>
+        <div class="auth-switch">No account yet? <a onclick="go('register')">Request access →</a></div>
+        <a class="auth-back" onclick="go('home')">← Back to home</a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ REGISTER ══════════ -->
+<div class="auth-page page" id="pg-register">
+  <div class="auth-wrap" style="align-items:flex-start;padding-top:32px;padding-bottom:32px">
+    <div class="auth-card">
+
+      <!-- left dark panel -->
+      <div class="auth-panel">
+        <div class="auth-panel-eyebrow">Green Meter Platform</div>
+        <div class="auth-panel-h">Start your ESG<br><strong>transformation</strong><br>today.</div>
+        <div class="auth-panel-sub">Join organizations using unified multi-framework reporting to meet BRSR, GRI, and ESRS requirements — without the manual effort.</div>
+        <div class="auth-stats">
+          <div class="auth-stat">
+            <div class="auth-stat-v">&lt;24h</div>
+            <div class="auth-stat-l">account approval after registration</div>
+          </div>
+          <div class="auth-stat">
+            <div class="auth-stat-v">48h</div>
+            <div class="auth-stat-l">average time to first compliance report</div>
+          </div>
+          <div class="auth-stat">
+            <div class="auth-stat-v">3</div>
+            <div class="auth-stat-l">frameworks — BRSR, GRI, ESRS — unified instantly</div>
+          </div>
+        </div>
+        <div class="auth-panel-foot">© 2026 Green Meter by Finiteloop</div>
+      </div>
+
+      <!-- right form -->
+      <div class="auth-form-side register-side">
+        <div class="auth-eyebrow">Create account</div>
+        <div class="auth-form-h">Request access</div>
+        <div class="auth-form-sub">Complete the form below. We'll review and approve within 24 hours.</div>
+        <div class="auth-row">
+          <div class="auth-f"><label class="auth-l">Full Name</label><input class="auth-i" placeholder="Priya Sharma"></div>
+          <div class="auth-f"><label class="auth-l">Job Title <span style="color:var(--tx3);text-transform:none;font-size:10px">(optional)</span></label><input class="auth-i" placeholder="ESG Manager"></div>
+        </div>
+        <div class="auth-f"><label class="auth-l">Email Address</label><input class="auth-i" type="email" placeholder="priya@company.com"></div>
+        <div class="auth-row">
+          <div class="auth-f"><label class="auth-l">Company Name</label><input class="auth-i" placeholder="Ratan Industries Ltd"></div>
+          <div class="auth-f"><label class="auth-l">Industry</label>
+            <select class="auth-i" style="cursor:pointer">
+              <option value="">Select industry</option>
+              <option>Manufacturing</option><option>Energy &amp; Utilities</option><option>Financial Services</option>
+              <option>IT &amp; Technology</option><option>Pharma / Healthcare</option><option>FMCG / Retail</option>
+              <option>Infrastructure</option><option>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="auth-divider"></div>
+        <div class="auth-row">
+          <div class="auth-f"><label class="auth-l">Password</label><input class="auth-i" type="password" placeholder="Min 8 characters"></div>
+          <div class="auth-f"><label class="auth-l">Confirm Password</label><input class="auth-i" type="password" placeholder="Repeat password"></div>
+        </div>
+        <div class="check-row">
+          <input type="checkbox" id="agree-cb">
+          <label for="agree-cb">I agree to the <a onclick="go('terms')">Terms of Service</a> and <a onclick="go('privacy')">Privacy Policy</a></label>
+        </div>
+        <button class="auth-submit" onclick="handleRegister()">Create Account →</button>
+        <div class="auth-note">Registration requires approval · Access granted within 24 hours · Enterprise-grade security</div>
+        <div class="auth-divider"></div>
+        <div class="auth-switch">Already have an account? <a onclick="go('login')">Sign in →</a></div>
+        <a class="auth-back" onclick="go('home')">← Back to home</a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ SUCCESS ══════════ -->
+<div class="success-page page" id="pg-success">
+  <div class="success-wrap">
+    <div class="success-box">
+      <div class="success-ico">✓</div>
+      <div class="success-h">Application submitted</div>
+      <p class="success-p">We've received your registration request. You'll get a confirmation email within 24 hours once your account is approved.</p>
+      <div class="success-actions">
+        <button class="success-btn-primary" onclick="go('login')">Go to sign in →</button>
+        <button class="success-btn-secondary" onclick="go('home')">Back to home</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer" id="site-footer">
+  <div class="w">
+    <div class="footer-grid">
+      <div>
+        <div class="f-brand">green<span>meter</span></div>
+        <div class="f-desc">AI-powered ESG analytics platform for BRSR compliance. Transform your sustainability reporting with intelligent document processing and automated metric extraction.</div>
+      </div>
+      <div class="f-col"><h4>Product</h4><a onclick="go('features')">Features</a><a onclick="go('pricing')">Pricing</a><a onclick="go('features')">Integrations</a><a onclick="go('features')">API</a></div>
+      <div class="f-col"><h4>Company</h4><a onclick="go('about')">About</a><a onclick="go('contact')">Contact</a><a>Careers</a><a>Blog</a></div>
+      <div class="f-col"><h4>Legal</h4><a onclick="go('privacy')">Privacy Policy</a><a onclick="go('terms')">Terms of Service</a></div>
+    </div>
+    <div class="footer-bottom">
+      <div>© 2026 Green Meter by Finiteloop. All rights reserved.</div>
+      <div><a onclick="go('privacy')">privacy policy</a><a onclick="go('terms')">terms of service</a></div>
+    </div>
+  </div>
+</footer>
+
+<div id="app-wrap"><iframe id="app-iframe" src="greenmeter_ai.html"></iframe></div>
+
+<script>
+const ALL=['home','features','pricing','about','contact','privacy','terms','login','register','success'];
+const AUTH=['login','register','success'];
+
+function go(pg){
+  ALL.forEach(p=>{
+    const el=document.getElementById('pg-'+p);
+    if(!el)return;
+    el.classList.remove('active');
+    el.style.display='none';
+  });
+  document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('on'));
+  const nl=document.getElementById('nl-'+pg);
+  if(nl)nl.classList.add('on');
+  const el=document.getElementById('pg-'+pg);
+  if(!el)return;
+  el.classList.add('active');
+  if(pg==='login'||pg==='register') el.style.display='flex';
+  else if(pg==='success') el.style.display='flex';
+  else el.style.display='block';
+  document.getElementById('site-footer').style.display=AUTH.includes(pg)?'none':'block';
+  document.querySelector('nav').style.display='flex';
+  window.scrollTo({top:0,behavior:'instant'});
+  setTimeout(reveal,60);
+}
+
+function setTab(t){
+  document.querySelectorAll('.hero-tab').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+function handleLogin(){
+  const em=(document.getElementById('l-email')||{}).value||'';
+  const pw=(document.getElementById('l-pwd')||{}).value||'';
+  const err=document.getElementById('login-err');
+  if(!em||!pw){if(err){err.style.display='block';err.textContent='Please enter email and password.'}return}
+  if(em.includes('@')&&pw.length>=4){
+    if(err)err.style.display='none';
+    launchApp();
+  }else{if(err){err.style.display='block';err.textContent='Incorrect email or password.'}}
+}
+
+function handleRegister(){
+  const cb=document.getElementById('agree-cb');
+  if(!cb||!cb.checked){alert('Please agree to the Terms of Service and Privacy Policy.');return}
+  go('success');
+}
+
+function launchApp(){
+  ALL.forEach(p=>{const el=document.getElementById('pg-'+p);if(el){el.classList.remove('active');el.style.display='none'}});
+  document.getElementById('site-footer').style.display='none';
+  document.querySelector('nav').style.display='none';
+  const w=document.getElementById('app-wrap');
+  w.style.cssText='display:block;position:fixed;inset:0;z-index:9999';
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){const lp=document.getElementById('pg-login');if(lp&&lp.classList.contains('active'))handleLogin()}
+});
+
+function reveal(){
+  const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')})},{threshold:.07});
+  document.querySelectorAll('.rv:not(.in)').forEach(el=>obs.observe(el));
+}
+reveal();
+go('home');
+</script>
+</body>
+</html>

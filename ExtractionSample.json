@@ -1,0 +1,216 @@
+{
+"document_info": {
+"company_name": "Adani Total Gas Limited",
+"reporting_period": "01.04.2024 to 31.03.2025",
+"fiscal_year": "FY 2024-25"
+},
+"principles": [
+{
+"principle_number": 1,
+"principle_name": "Businesses should conduct and govern themselves with integrity, and in a manner that is Ethical, Transparent and Accountable",
+"essential_indicators": [
+{"metric_name": "Training programs - Board of Directors", "metric_value": 4, "unit": "programs", "additional_context": "100% coverage"},
+{"metric_name": "Training programs - KMPs", "metric_value": 4, "unit": "programs", "additional_context": "50% coverage"},
+{"metric_name": "Training programs - Employees other than BoD/KMPs (ESG)", "metric_value": 5, "unit": "programs", "additional_context": "70% coverage"},
+{"metric_name": "Training programs - Employees safety", "metric_value": 12, "unit": "programs", "additional_context": "83% coverage"},
+{"metric_name": "Training programs - Workers", "metric_value": 5, "unit": "programs", "additional_context": "73% coverage"},
+{"metric_name": "Penalty - BSE/NSE", "metric_value": "1,60,000", "unit": "INR", "additional_context": "Non-compliance of SEBI Listing regulation"},
+{"metric_name": "Penalty - PNGRB", "metric_value": "1,00,00,000", "unit": "INR", "additional_context": "Non-compliance of PNGRB regulation"},
+{"metric_name": "Disciplinary actions for bribery/corruption - Directors/KMPs/Employees/Workers", "metric_value": "NIL", "unit": "count"},
+{"metric_name": "Complaints of conflict of interest - Directors", "metric_value": "NIL", "unit": "count"},
+{"metric_name": "Complaints of conflict of interest - KMPs", "metric_value": "NIL", "unit": "count"},
+{"metric_name": "Number of days of accounts payables", "metric_value": 30.69, "unit": "days"},
+{"metric_name": "Purchases from trading houses as % of total purchases", "metric_value": 18.10, "unit": "%"},
+{"metric_name": "Number of trading houses where purchases made", "metric_value": 12, "unit": "count"},
+{"metric_name": "Purchases from top 10 trading houses", "metric_value": 99.99, "unit": "%"},
+{"metric_name": "Sales to dealers/distributors", "metric_value": 72, "unit": "%"},
+{"metric_name": "Number of dealers/distributors", "metric_value": 122, "unit": "count"},
+{"metric_name": "Sales to top 10 dealers/distributors", "metric_value": 46, "unit": "%"},
+{"metric_name": "RPT - Purchases", "metric_value": 0, "unit": "%"},
+{"metric_name": "RPT - Sales", "metric_value": 0, "unit": "%"},
+{"metric_name": "RPT - Loans & advances", "metric_value": 0, "unit": "%"},
+{"metric_name": "RPT - Investments", "metric_value": 94.6, "unit": "%"}
+],
+"leadership_indicators": [
+{"metric_name": "Awareness programs - STOC Training", "metric_value": 144, "unit": "programs", "additional_context": "100% value chain partners covered"},
+{"metric_name": "Awareness programs - Defensive driving", "metric_value": 180, "unit": "programs", "additional_context": "100% coverage"},
+{"metric_name": "Awareness programs - Work Specific Training", "metric_value": 253, "unit": "programs", "additional_context": "100% coverage"}
+]
+},
+{
+"principle_number": 2,
+"principle_name": "Businesses should provide goods and services in a manner that is sustainable and safe",
+"essential_indicators": [
+{"metric_name": "R&D investment %", "metric_value": 0.0, "unit": "%"},
+{"metric_name": "Capex investment in sustainable technologies", "metric_value": 3.00, "unit": "%"},
+{"metric_name": "Procedures for sustainable sourcing", "metric_value": "Yes", "unit": "Yes/No"},
+{"metric_name": "EPR applicable", "metric_value": "Not applicable", "unit": "Yes/No"}
+],
+"leadership_indicators": []
+},
+{
+"principle_number": 3,
+"principle_name": "Businesses should respect and promote the well-being of all employees",
+"essential_indicators": [
+{"metric_name": "Permanent employees - Total", "metric_value": 537, "unit": "count"},
+{"metric_name": "Permanent employees - Male", "metric_value": 520, "unit": "count"},
+{"metric_name": "Permanent employees - Female", "metric_value": 17, "unit": "count"},
+{"metric_name": "Other than Permanent employees", "metric_value": 5, "unit": "count"},
+{"metric_name": "Permanent workers - Total", "metric_value": 41, "unit": "count"},
+{"metric_name": "Other than permanent workers", "metric_value": 108, "unit": "count"},
+{"metric_name": "Health insurance coverage - Permanent Employees", "metric_value": 100, "unit": "%"},
+{"metric_name": "Cost incurred on wellbeing measures as % of total revenue", "metric_value": 0.0219, "unit": "%"},
+{"metric_name": "PF coverage", "metric_value": 100, "unit": "%"},
+{"metric_name": "Gratuity coverage", "metric_value": 100, "unit": "%"},
+{"metric_name": "Return to work rate - Male permanent employees", "metric_value": 100, "unit": "%"},
+{"metric_name": "Retention rate - Male permanent employees", "metric_value": 87, "unit": "%"},
+{"metric_name": "Return to work rate - Permanent workers", "metric_value": 100, "unit": "%"},
+{"metric_name": "Retention rate - Permanent workers", "metric_value": 100, "unit": "%"},
+{"metric_name": "Health & Safety training - Employees Total", "metric_value": 83, "unit": "%"},
+{"metric_name": "Skill upgradation training - Employees", "metric_value": 96, "unit": "%"},
+{"metric_name": "Health & Safety training - Workers Total", "metric_value": 73, "unit": "%"},
+{"metric_name": "Performance review - Employees", "metric_value": 95, "unit": "%"},
+{"metric_name": "Performance review - Workers", "metric_value": 100, "unit": "%"},
+{"metric_name": "LTIFR - Employees", "metric_value": 0, "unit": "per million-person hours"},
+{"metric_name": "LTIFR - Workers", "metric_value": 0.57, "unit": "per million-person hours"},
+{"metric_name": "Total recordable work-related injuries - Employees", "metric_value": 0, "unit": "count"},
+{"metric_name": "Total recordable work-related injuries - Workers", "metric_value": 7, "unit": "count"},
+{"metric_name": "Fatalities", "metric_value": 0, "unit": "count"},
+{"metric_name": "High consequence work-related injuries", "metric_value": 0, "unit": "count"},
+{"metric_name": "Complaints on Working Conditions", "metric_value": "Nil", "unit": "count"},
+{"metric_name": "Complaints on Health & Safety", "metric_value": "Nil", "unit": "count"},
+{"metric_name": "Plants/offices assessed for Health and safety practices", "metric_value": 100, "unit": "%"},
+{"metric_name": "Plants/offices assessed for Working Conditions", "metric_value": 100, "unit": "%"}
+],
+"leadership_indicators": [
+{"metric_name": "Life insurance for employees and workers", "metric_value": "Yes", "unit": "Yes/No"},
+{"metric_name": "Value chain partners assessed - Health and safety", "metric_value": 100, "unit": "%"},
+{"metric_name": "Value chain partners assessed - Working Conditions", "metric_value": 100, "unit": "%"}
+]
+},
+{
+"principle_number": 4,
+"principle_name": "Businesses should respect the interests of and be responsive to all its stakeholders",
+"essential_indicators": [
+{"metric_name": "Key stakeholder groups identified", "metric_value": "Local Community, Employees, Suppliers, Customers", "unit": "groups"}
+],
+"leadership_indicators": []
+},
+{
+"principle_number": 5,
+"principle_name": "Businesses should respect and promote human rights",
+"essential_indicators": [
+{"metric_name": "Permanent Employees trained on human rights", "metric_value": 92, "unit": "%"},
+{"metric_name": "Total Employees trained on human rights", "metric_value": 91, "unit": "%"},
+{"metric_name": "Permanent Workers trained on human rights", "metric_value": 76, "unit": "%"},
+{"metric_name": "Total Workers trained on human rights", "metric_value": 58, "unit": "%"},
+{"metric_name": "Permanent employees paid more than minimum wage", "metric_value": 100, "unit": "%"},
+{"metric_name": "Median remuneration - Male KMP", "metric_value": 413.28, "unit": "INR Lakhs"},
+{"metric_name": "Median remuneration - Male Employees other than BoD/KMP", "metric_value": 9.31, "unit": "INR Lakhs"},
+{"metric_name": "Median remuneration - Female Employees other than BoD/KMP", "metric_value": 8.39, "unit": "INR Lakhs"},
+{"metric_name": "Gross wages paid to females as % of total wages", "metric_value": 1.48, "unit": "%"},
+{"metric_name": "Sexual Harassment complaints", "metric_value": "NIL", "unit": "count"},
+{"metric_name": "Discrimination complaints", "metric_value": "NIL", "unit": "count"},
+{"metric_name": "Child Labour complaints", "metric_value": "NIL", "unit": "count"},
+{"metric_name": "Forced Labour complaints", "metric_value": "NIL", "unit": "count"},
+{"metric_name": "POSH complaints", "metric_value": "Nil", "unit": "count"},
+{"metric_name": "Plants/offices assessed - Child labour", "metric_value": 100, "unit": "%"},
+{"metric_name": "Plants/offices assessed - Forced labour", "metric_value": 100, "unit": "%"},
+{"metric_name": "Plants/offices assessed - Sexual harassment", "metric_value": 100, "unit": "%"},
+{"metric_name": "Plants/offices assessed - Discrimination", "metric_value": 100, "unit": "%"},
+{"metric_name": "Plants/offices assessed - Wages", "metric_value": 100, "unit": "%"}
+],
+"leadership_indicators": [
+{"metric_name": "Value chain partners assessed - Sexual Harassment", "metric_value": 100, "unit": "%"},
+{"metric_name": "Value chain partners assessed - Child Labour", "metric_value": 100, "unit": "%"}
+]
+},
+{
+"principle_number": 6,
+"principle_name": "Businesses should respect and make efforts to protect and restore the environment",
+"essential_indicators": [
+{"metric_name": "Total electricity consumption from renewable sources", "metric_value": 3966, "unit": "GJ"},
+{"metric_name": "Total electricity consumption from non-renewable sources", "metric_value": 223823, "unit": "GJ"},
+{"metric_name": "Total fuel consumption from non-renewable sources", "metric_value": 530208, "unit": "GJ"},
+{"metric_name": "Total energy consumed", "metric_value": 757997, "unit": "GJ"},
+{"metric_name": "Energy intensity per rupee of turnover", "metric_value": 140, "unit": "GJ/crore INR"},
+{"metric_name": "Energy intensity per PPP", "metric_value": 285.46, "unit": "GJ/Million USD"},
+{"metric_name": "Energy intensity in physical output", "metric_value": 81.95, "unit": "GJ/Million KWH"},
+{"metric_name": "Surface water withdrawal", "metric_value": 10651, "unit": "kilolitres"},
+{"metric_name": "Groundwater withdrawal", "metric_value": 78881, "unit": "kilolitres"},
+{"metric_name": "Third party water withdrawal", "metric_value": 18176, "unit": "kilolitres"},
+{"metric_name": "Total water withdrawal", "metric_value": 107708, "unit": "kilolitres"},
+{"metric_name": "Total water consumption", "metric_value": 107708, "unit": "kilolitres"},
+{"metric_name": "Water intensity per rupee of turnover", "metric_value": 20, "unit": "KL/crore INR"},
+{"metric_name": "Total water discharged", "metric_value": "NIL", "unit": "kilolitres"},
+{"metric_name": "NOx emissions", "metric_value": 5364.19, "unit": "Kg/Year"},
+{"metric_name": "SO2 emissions", "metric_value": 0, "unit": "Kg/Year"},
+{"metric_name": "PM emissions", "metric_value": 4613.48, "unit": "Kg/Year"},
+{"metric_name": "Total Scope 1 emissions", "metric_value": 80662, "unit": "MtCO2e"},
+{"metric_name": "Total Scope 2 emissions", "metric_value": 45200, "unit": "MtCO2e"},
+{"metric_name": "Scope 1+2 emission intensity per rupee of turnover", "metric_value": 23, "unit": "MtCO2e/crore INR"},
+{"metric_name": "Scope 1+2 emission intensity per PPP", "metric_value": 47.40, "unit": "MtCO2e/Million USD"},
+{"metric_name": "Scope 1+2 emission intensity per physical output", "metric_value": 13.60, "unit": "MtCO2e/Million KWH"},
+{"metric_name": "Plastic waste generated", "metric_value": 11.75, "unit": "metric tonnes"},
+{"metric_name": "E-waste generated", "metric_value": 3.18, "unit": "metric tonnes"},
+{"metric_name": "Battery waste generated", "metric_value": 3.24, "unit": "metric tonnes"},
+{"metric_name": "Other Hazardous waste", "metric_value": 30.88, "unit": "metric tonnes"},
+{"metric_name": "Other Non-hazardous waste", "metric_value": 90.72, "unit": "metric tonnes"},
+{"metric_name": "Total waste generated", "metric_value": 139.78, "unit": "metric tonnes"},
+{"metric_name": "Waste recycled", "metric_value": 136.53, "unit": "metric tonnes"},
+{"metric_name": "Waste disposed - other operations", "metric_value": 3.24, "unit": "metric tonnes"}
+],
+"leadership_indicators": [
+{"metric_name": "Total Scope 3 emissions", "metric_value": 2074877, "unit": "MtCO2e"},
+{"metric_name": "Scope 3 emissions per rupee of turnover", "metric_value": 383, "unit": "MtCO2e/crore INR"}
+]
+},
+{
+"principle_number": 7,
+"principle_name": "Businesses, when engaging in influencing public and regulatory policy, should do so in a manner that is responsible and transparent",
+"essential_indicators": [
+{"metric_name": "Number of trade and industry chamber affiliations", "metric_value": 8, "unit": "count"}
+],
+"leadership_indicators": []
+},
+{
+"principle_number": 8,
+"principle_name": "Businesses should promote inclusive growth and equitable development",
+"essential_indicators": [
+{"metric_name": "Directly sourced from producers", "metric_value": 10, "unit": "%"},
+{"metric_name": "Directly sourced from within India", "metric_value": 100, "unit": "%"},
+{"metric_name": "Wages paid - Rural", "metric_value": 0.25, "unit": "%"},
+{"metric_name": "Wages paid - Semi-urban", "metric_value": 1.05, "unit": "%"},
+{"metric_name": "Wages paid - Urban", "metric_value": 8.50, "unit": "%"},
+{"metric_name": "Wages paid - Metropolitan", "metric_value": 90.19, "unit": "%"}
+],
+"leadership_indicators": [
+{"metric_name": "CSR spent in Aspirational Districts - Varanasi", "metric_value": 19000000, "unit": "INR"},
+{"metric_name": "CSR spent in Aspirational Districts - Koraput", "metric_value": 94200, "unit": "INR"},
+{"metric_name": "Beneficiaries - Adani Vidya Mandir", "metric_value": 991, "unit": "count"},
+{"metric_name": "Beneficiaries - Greenmosphere students", "metric_value": 18500, "unit": "count"},
+{"metric_name": "Beneficiaries - Vision Care students", "metric_value": 23234, "unit": "count"},
+{"metric_name": "Beneficiaries - Health", "metric_value": 95000, "unit": "count"}
+]
+},
+{
+"principle_number": 9,
+"principle_name": "Businesses should engage with and provide value to their consumers in a responsible manner",
+"essential_indicators": [
+{"metric_name": "Consumer complaints - Data privacy", "metric_value": "NIL", "unit": "count"},
+{"metric_name": "Consumer complaints - Advertising", "metric_value": "NIL", "unit": "count"},
+{"metric_name": "Consumer complaints - Cyber-security", "metric_value": "NIL", "unit": "count"},
+{"metric_name": "Consumer complaints - Delivery of essential services", "metric_value": 74622, "unit": "count", "additional_context": "14 pending"},
+{"metric_name": "Consumer complaints - Other", "metric_value": 69558, "unit": "count", "additional_context": "4477 pending"},
+{"metric_name": "Voluntary product recalls", "metric_value": "NIL", "unit": "count"},
+{"metric_name": "Forced product recalls", "metric_value": "NIL", "unit": "count"},
+{"metric_name": "Data breaches", "metric_value": 0, "unit": "count"}
+],
+"leadership_indicators": []
+}
+],
+"missing_or_na_metrics": [
+{"principle_number": 2, "metric_name": "Life Cycle Assessments", "status": "Not Reported"},
+{"principle_number": 6, "metric_name": "Water discharge details", "status": "Not Applicable - No industrial effluent discharge"}
+]
+}

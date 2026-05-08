@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1777977747318,
+      "tag": "0000_gorgeous_cloak",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1778335200000,
+      "tag": "0001_esg_scores_materialized_view",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1778421600000,
+      "tag": "0002_coverage_summary_materialized_view",
+      "breakpoints": true
+    }
+  ]
+}

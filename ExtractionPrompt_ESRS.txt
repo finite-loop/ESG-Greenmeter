@@ -1,0 +1,161 @@
+You will be extracting ESG (Environmental, Social, and Governance) metrics from corporate documents based on the European Sustainability Reporting Standards (ESRS) as mandated under the EU Corporate Sustainability Reporting Directive (CSRD 2022/2464). The ESRS framework requires companies to report across 11 standards covering environmental, social, and governance topics.
+
+
+
+Here are the documents you need to analyze:
+
+
+
+<documents>
+
+{{DOCUMENT_LIST}}
+
+</documents>
+
+
+
+**Background on ESRS Requirements:**
+
+The ESRS framework (EFRAG Delegated Act, August 2023) mandates reporting across the following standards:
+
+- ESRS 2: General Disclosures — governance, strategy, impact/risk/opportunity management, metrics & targets
+- ESRS E1: Climate Change — GHG emissions (Scope 1, 2, 3), energy consumption, transition plans, carbon pricing
+- ESRS E2: Pollution — air emissions (NOx, SOx, PM, VOCs), water pollution, soil contamination
+- ESRS E3: Water and Marine Resources — water withdrawal, consumption, discharge, stress area exposure
+- ESRS E4: Biodiversity and Ecosystems — land use, protected areas, species impacts
+- ESRS E5: Resource Use and Circular Economy — waste generation, recycling rates, material inputs, circularity
+- ESRS S1: Own Workforce — headcount, diversity, pay equity, health & safety, training, engagement
+- ESRS S2: Workers in the Value Chain — supplier screening, social audits, corrective actions
+- ESRS S3: Affected Communities — community engagement, grievance mechanisms
+- ESRS S4: Consumers and End-Users — product safety, data privacy, recalls
+- ESRS G1: Business Conduct — anti-corruption, lobbying, whistleblowing, tax transparency
+
+
+
+**Your Task:**
+
+Systematically extract all quantitative and qualitative ESG metrics from each document. These metrics typically include:
+
+- Energy consumption (total, fossil, renewable) and intensity metrics
+- GHG emissions (Scope 1, 2 location-based, 2 market-based, 3 by category)
+- GHG intensity and reduction targets (vs base year, net-zero target)
+- Air pollutant emissions (NOx, SOx, PM2.5, VOCs)
+- Water withdrawal, consumption, discharge, recycling, and stress area metrics
+- Waste generation (total, hazardous, non-hazardous), recycling rates, landfill diversion
+- Biodiversity and land use metrics
+- Circular economy and material input metrics
+- Workforce statistics (headcount, diversity, permanent/temporary, non-employee workers)
+- Health and safety (TRIR, LTIFR, fatalities, occupational disease rates)
+- Remuneration (pay gaps, CEO-to-median ratio, living wage compliance)
+- Training hours and investment
+- Supply chain assessments and supplier sustainability scores
+- Community engagement and grievance resolution
+- Product safety, recalls, and data privacy incidents
+- Anti-corruption training, incidents, fines
+- Lobbying spend, tax paid, effective tax rate
+- Whistleblower reports and resolution rates
+- Internal carbon pricing
+- Transition plan status and climate risk assessments
+
+
+
+**Instructions:**
+
+
+
+1. **Read through each document carefully** to understand its structure. ESRS reports may organize disclosures differently — some follow the standard numbering (E1, E2, etc.), others integrate sustainability data across chapters.
+
+
+
+2. **Use the scratchpad below to work through your extraction process:**
+   - Identify where each of the 11 ESRS standards is discussed in the document
+   - List out all quantitative metrics found under each standard
+   - Note any qualitative disclosures required by ESRS
+   - Track which metrics you've found and which might be missing
+
+<scratchpad>
+[Work through the document systematically here. For each document:
+- Note the document structure
+- Identify sections corresponding to each ESRS standard
+- Extract all metrics with their values and units
+- Note any missing or unclear data points]
+</scratchpad>
+
+
+
+3. **Extract the following information for each document:**
+   - Document identifier (company name, reporting period, fiscal year)
+   - All quantitative metrics with their values, units, and the ESRS standard they relate to
+   - Qualitative disclosures where required by ESRS
+   - Any contextual information needed to understand the metrics (e.g., base year for reduction targets, methodology used)
+
+
+
+4. **Handle variations in document structure:**
+   - Some documents use tables, others use narrative format
+   - Section names may vary but should map to the 11 ESRS standards
+   - Look for both mandatory and voluntary disclosures
+   - If a metric is not reported or marked as "Not Material" / "Not Applicable", capture this status
+   - ESRS uses double materiality — some standards may be deemed not material by the company
+
+
+
+5. **Ensure completeness:**
+   - Cross-check that you've covered all 11 ESRS standards
+   - Verify that key metrics (energy, emissions, water, waste, workforce, safety, governance) are captured
+   - Note any standards or metrics that appear to be missing from the document
+   - Distinguish between Scope 2 location-based and market-based where reported
+
+
+
+**Output Format:**
+
+Structure your final answer as a JSON payload with the following structure:
+
+```json
+{
+  "document_info": {
+    "company_name": "string",
+    "reporting_period": "string",
+    "fiscal_year": "string",
+    "sector": "string",
+    "country": "string",
+    "currency": "string (e.g. EUR, USD)"
+  },
+  "standards": [
+    {
+      "standard_code": "string (e.g. ESRS E1)",
+      "standard_name": "string (e.g. Climate Change)",
+      "metrics": [
+        {
+          "topic": "string (e.g. Energy, Scope 1 Emissions)",
+          "metric_name": "string",
+          "metric_value": "string or number",
+          "unit": "string",
+          "additional_context": "string (optional — base year, methodology, boundary)"
+        }
+      ]
+    }
+  ],
+  "missing_or_na_metrics": [
+    {
+      "standard_code": "string",
+      "metric_name": "string",
+      "status": "Not Reported | Not Material | Not Applicable",
+      "reason": "string (optional)"
+    }
+  ]
+}
+```
+
+If you are processing multiple documents, create an array of such JSON objects, one for each document.
+
+
+
+**Important:** Your final output should contain ONLY the JSON payload(s) inside <json_output> tags. Do not include the scratchpad or any explanatory text in your final answer. The JSON should be properly formatted, valid, and complete with all extracted metrics from the documents.
+
+
+
+<json_output>
+[Your complete JSON payload goes here]
+</json_output>

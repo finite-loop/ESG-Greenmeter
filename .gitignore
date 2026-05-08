@@ -1,0 +1,13 @@
+# dependencies
+node_modules/
+
+# env files
+.env*
+
+# OS artifacts
+.DS_Store
+nul
+Thumbs.db
+
+# build artifacts
+*.tsbuildinfo
