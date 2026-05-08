@@ -139,7 +139,7 @@ export default function GoalsPage() {
             <p className="text-sm text-[var(--text-secondary)] mb-3">
               No goals defined yet. Create your first ESG goal to start tracking progress.
             </p>
-            <Button variant="outline" onClick={handleCreate}>
+            <Button variant="secondary" onClick={handleCreate}>
               <Plus className="h-4 w-4 mr-1" />
               Create Goal
             </Button>
@@ -172,7 +172,7 @@ export default function GoalsPage() {
           </span>
           <div className="flex items-center gap-2">
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1}
@@ -180,7 +180,7 @@ export default function GoalsPage() {
               Previous
             </Button>
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={() => setPage((p) => p + 1)}
               disabled={page >= totalPages}

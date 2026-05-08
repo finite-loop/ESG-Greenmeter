@@ -286,6 +286,8 @@ export function makeParameterRow(overrides: Partial<{
   depts: string[] | null;
   standards: string[] | null;
   priorityOrder: number | null;
+  createdAt: Date | null;
+  overrideParamId: string | null;
 }> = {}) {
   return {
     paramId: overrides.paramId ?? PARAM_GHG,
@@ -314,6 +316,8 @@ export function makeParameterRow(overrides: Partial<{
     depts: overrides.depts ?? null,
     standards: overrides.standards ?? null,
     priorityOrder: overrides.priorityOrder ?? null,
+    createdAt: overrides.createdAt ?? new Date('2026-01-01'),
+    overrideParamId: overrides.overrideParamId ?? null,
   };
 }
 

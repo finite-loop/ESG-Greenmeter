@@ -115,6 +115,7 @@ function extractCellValue(cellValue: ExcelJS.CellValue): string | null {
  */
 async function parseExcelFile(buffer: Buffer): Promise<ParsedRow[]> {
   const workbook = new ExcelJS.Workbook();
+  // @ts-expect-error -- Buffer generic type mismatch between Node 22 types and ExcelJS types
   await workbook.xlsx.load(buffer);
 
   // Use the first worksheet

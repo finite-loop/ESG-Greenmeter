@@ -28,7 +28,7 @@ export async function initAppInsights(): Promise<void> {
     appInsights.default
       .setup(connectionString)
       .setAutoCollectRequests(true)
-      .setAutoCollectPerformance(true)
+      .setAutoCollectPerformance(true, true)
       .setAutoCollectExceptions(true)
       .setAutoCollectDependencies(true)
       .setAutoCollectConsole(true, true)

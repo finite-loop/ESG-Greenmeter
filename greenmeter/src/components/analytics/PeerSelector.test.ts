@@ -91,7 +91,7 @@ describe('PeerSelector selection logic', () => {
   });
 
   it('generates correct button label for many selections', () => {
-    const selectedCount = 5;
+    const selectedCount = 5 as number;
     const label = selectedCount === 0
       ? 'Select peers...'
       : selectedCount <= 2

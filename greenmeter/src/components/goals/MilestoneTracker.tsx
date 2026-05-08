@@ -26,7 +26,7 @@ const STATUS_CONFIG: Record<string, {
   color: string;
   dotColor: string;
   lineColor: string;
-  variant: 'default' | 'success' | 'warning' | 'error';
+  variant: 'neutral' | 'success' | 'warning' | 'error';
   label: string;
 }> = {
   achieved: {
@@ -42,7 +42,7 @@ const STATUS_CONFIG: Record<string, {
     color: 'text-[var(--text-secondary)]',
     dotColor: 'bg-gray-400',
     lineColor: 'bg-gray-300',
-    variant: 'default',
+    variant: 'neutral',
     label: 'Upcoming',
   },
   missed: {

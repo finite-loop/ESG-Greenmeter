@@ -134,6 +134,7 @@ describe('goalService.createMilestone', () => {
       name: '10% Reduction by Q2',
       targetValue: '135',
       targetDate: new Date('2027-06-30'),
+      sortOrder: 0,
     });
 
     expect(result.name).toBe('10% Reduction by Q2');
@@ -153,6 +154,7 @@ describe('goalService.createMilestone', () => {
     await expect(
       goalService.createMilestone('goal-missing', TENANT_ID, {
         name: 'Test',
+        sortOrder: 0,
       })
     ).rejects.toThrow(AppError);
   });
@@ -164,6 +166,7 @@ describe('goalService.createMilestone', () => {
 
     const result = await goalService.createMilestone(GOAL_ID, TENANT_ID, {
       name: 'Basic Milestone',
+      sortOrder: 0,
     });
 
     expect(result).toBeDefined();

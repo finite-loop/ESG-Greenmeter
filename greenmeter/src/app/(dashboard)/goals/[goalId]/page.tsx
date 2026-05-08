@@ -8,12 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle, Badge, ProgressBar, Button } 
 import { ArrowLeft, Plus, Target, Calendar } from 'lucide-react';
 import Link from 'next/link';
 
-const STATUS_VARIANT: Record<string, 'default' | 'success' | 'warning' | 'error'> = {
-  active: 'default',
+const STATUS_VARIANT: Record<string, 'neutral' | 'success' | 'warning' | 'error'> = {
+  active: 'neutral',
   achieved: 'success',
   at_risk: 'warning',
   missed: 'error',
-  archived: 'default',
+  archived: 'neutral',
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -138,7 +138,7 @@ export default function GoalDetailPage({
                 )}
               </div>
             </div>
-            <Badge variant={STATUS_VARIANT[statusKey] ?? 'default'}>
+            <Badge variant={STATUS_VARIANT[statusKey] ?? 'neutral'}>
               {STATUS_LABEL[statusKey] ?? statusKey}
             </Badge>
           </div>
@@ -161,7 +161,7 @@ export default function GoalDetailPage({
       <Card className="group">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-semibold">Milestones</CardTitle>
-          <Button variant="outline" size="sm" onClick={handleAddMilestone}>
+          <Button variant="secondary" size="sm" onClick={handleAddMilestone}>
             <Plus className="h-3.5 w-3.5 mr-1" />
             Add Milestone
           </Button>

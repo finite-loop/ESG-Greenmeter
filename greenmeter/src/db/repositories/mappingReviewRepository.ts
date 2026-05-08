@@ -88,9 +88,9 @@ export const mappingReviewRepository = {
   async updateMetricMapping(
     metricId: string,
     fields: MappingUpdateFields,
-    tx?: typeof db
+    tx?: unknown
   ): Promise<void> {
-    const conn = tx ?? db;
+    const conn = (tx ?? db) as typeof db;
     const setFields: Record<string, unknown> = {
       mappingStatus: fields.mappingStatus,
       mappingMethod: fields.mappingMethod,
@@ -150,10 +150,10 @@ export const mappingReviewRepository = {
     paramId: string,
     aliasText: string,
     standard: string | null,
-    tx?: typeof db
+    tx?: unknown
   ): Promise<boolean> {
-    const conn = tx ?? db;
-    const result = await conn
+    const conn = (tx ?? db) as typeof db;
+    const rows = await conn
       .insert(metricAliases)
       .values({
         paramId,
@@ -162,9 +162,10 @@ export const mappingReviewRepository = {
       })
       .onConflictDoNothing({
         target: [metricAliases.paramId, metricAliases.aliasText],
-      });
+      })
+      .returning({ aliasId: metricAliases.aliasId });
 
-    return (result.rowCount ?? 0) > 0;
+    return rows.length > 0;
   },
 
   /**
@@ -183,9 +184,9 @@ export const mappingReviewRepository = {
       sourceMetricId: string;
       confidence: string;
     },
-    tx?: typeof db
+    tx?: unknown
   ): Promise<void> {
-    const conn = tx ?? db;
+    const conn = (tx ?? db) as typeof db;
     await conn
       .insert(peerKpiValues)
       .values({
@@ -210,9 +211,9 @@ export const mappingReviewRepository = {
    */
   async deletePeerKpiValueByMetric(
     sourceMetricId: string,
-    tx?: typeof db
+    tx?: unknown
   ): Promise<void> {
-    const conn = tx ?? db;
+    const conn = (tx ?? db) as typeof db;
     await conn
       .delete(peerKpiValues)
       .where(eq(peerKpiValues.sourceMetricId, sourceMetricId));
@@ -274,9 +275,9 @@ export const mappingReviewRepository = {
    */
   async updateExtractionMappedCount(
     extractionId: string,
-    tx?: typeof db
+    tx?: unknown
   ): Promise<void> {
-    const conn = tx ?? db;
+    const conn = (tx ?? db) as typeof db;
     const countResult = await conn
       .select({ count: sql<number>`count(*)::int` })
       .from(extractedMetrics)

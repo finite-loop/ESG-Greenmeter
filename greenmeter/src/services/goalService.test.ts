@@ -298,6 +298,7 @@ describe('goalService.addComponent', () => {
     const result = await goalService.addComponent('goal-1', TENANT_ID, {
       name: 'Green Energy',
       weight: '0.3',
+      sortOrder: 0,
     });
 
     expect(result.name).toBe('Green Energy');
@@ -314,6 +315,7 @@ describe('goalService.addComponent', () => {
       goalService.addComponent('goal-1', TENANT_ID, {
         name: 'Too Heavy',
         weight: '0.5',
+        sortOrder: 0,
       })
     ).rejects.toThrow(AppError);
 
@@ -321,6 +323,7 @@ describe('goalService.addComponent', () => {
       await goalService.addComponent('goal-1', TENANT_ID, {
         name: 'Too Heavy',
         weight: '0.5',
+        sortOrder: 0,
       });
     } catch (err) {
       const appErr = err as AppError;
@@ -336,6 +339,7 @@ describe('goalService.addComponent', () => {
       goalService.addComponent('goal-missing', TENANT_ID, {
         name: 'Test',
         weight: '0.5',
+        sortOrder: 0,
       })
     ).rejects.toThrow(AppError);
   });

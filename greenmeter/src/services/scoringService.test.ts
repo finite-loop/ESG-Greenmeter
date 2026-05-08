@@ -336,6 +336,7 @@ describe('scoringService.buildBreakdownFromMV', () => {
         categoryScore: '90',
         pillarScore: '85',
         overallScore: '80',
+        paramCount: '3',
         computedAt: new Date(),
       },
       {
@@ -347,6 +348,7 @@ describe('scoringService.buildBreakdownFromMV', () => {
         categoryScore: '75',
         pillarScore: '85',
         overallScore: '80',
+        paramCount: '2',
         computedAt: new Date(),
       },
       {
@@ -358,6 +360,7 @@ describe('scoringService.buildBreakdownFromMV', () => {
         categoryScore: '70',
         pillarScore: '70',
         overallScore: '80',
+        paramCount: '4',
         computedAt: new Date(),
       },
     ];

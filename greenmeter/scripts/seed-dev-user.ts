@@ -73,14 +73,14 @@ async function main() {
   // 4. Create admin user
   console.log('  [seed] user — admin@greenmeter.local (admin)');
   await client`
-    INSERT INTO users (user_id, tenant_id, name, email, role, status)
+    INSERT INTO users (user_id, tenant_id, name, email, role, active)
     VALUES (
       ${USER_ID}::uuid,
       ${TENANT_ID}::uuid,
       'Dev Admin',
       'admin@greenmeter.local',
       'admin',
-      'active'
+      true
     )
     ON CONFLICT (email) DO NOTHING
   `;

@@ -59,7 +59,7 @@ WITH param_scores AS (
     ON kv.param_id = kp.param_id AND kv.tenant_id = kp.tenant_id
   WHERE kv.value IS NOT NULL
     AND kv.not_applicable = false
-    AND kv.value ~ '^-?[0-9]*\.?[0-9]+$'  -- only numeric values
+    AND kv.value::text ~ '^-?[0-9]*\.?[0-9]+$'  -- only numeric values
 ),
 normalized AS (
   -- Step 2: Apply threshold-based normalization

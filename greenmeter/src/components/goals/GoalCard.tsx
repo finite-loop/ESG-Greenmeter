@@ -17,12 +17,12 @@ interface GoalCardProps {
   onDelete: (goalId: string) => void;
 }
 
-const STATUS_VARIANT: Record<string, 'default' | 'success' | 'warning' | 'error'> = {
-  active: 'default',
+const STATUS_VARIANT: Record<string, 'neutral' | 'success' | 'warning' | 'error'> = {
+  active: 'neutral',
   achieved: 'success',
   at_risk: 'warning',
   missed: 'error',
-  archived: 'default',
+  archived: 'neutral',
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -65,7 +65,7 @@ export function GoalCard({
               <span>{targetYear}</span>
             </div>
           </div>
-          <Badge variant={STATUS_VARIANT[statusKey] ?? 'default'}>
+          <Badge variant={STATUS_VARIANT[statusKey] ?? 'neutral'}>
             {STATUS_LABEL[statusKey] ?? statusKey}
           </Badge>
         </div>

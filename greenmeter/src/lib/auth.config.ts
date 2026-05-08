@@ -1,4 +1,4 @@
-import type { NextAuthConfig, Provider } from "next-auth";
+import type { NextAuthConfig } from "next-auth";
 import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
 import Credentials from "next-auth/providers/credentials";
 
@@ -14,7 +14,7 @@ import Credentials from "next-auth/providers/credentials";
  * - AUTH_SECRET — NextAuth.js secret for JWT encryption
  * - DEV_AUTH_ENABLED — Set to "true" to enable email-only credentials login (local dev only)
  */
-const providers: Provider[] = [
+const providers: NextAuthConfig['providers'] = [
   MicrosoftEntraID({
     clientId: process.env.AUTH_AZURE_AD_CLIENT_ID,
     clientSecret: process.env.AUTH_AZURE_AD_CLIENT_SECRET,

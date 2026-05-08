@@ -350,6 +350,7 @@ describe('Integration: KPI → Scoring Pipeline', () => {
         nodeId: NODE_ROOT,
         periodId: PERIOD_FY24,
         value: '42',
+        sourceType: 'manual',
       });
 
       expect(mockSubmitJob).toHaveBeenCalledWith(
@@ -371,6 +372,7 @@ describe('Integration: KPI → Scoring Pipeline', () => {
         nodeId: NODE_ROOT,
         periodId: PERIOD_FY24,
         value: '42',
+        sourceType: 'manual',
       });
 
       // Allow fire-and-forget to execute

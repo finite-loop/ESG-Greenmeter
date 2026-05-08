@@ -39,7 +39,7 @@ describe("Environment Validation", () => {
       vi.stubEnv(key, value);
     }
     // Explicitly unset NODE_ENV
-    delete process.env.NODE_ENV;
+    Reflect.deleteProperty(process.env, 'NODE_ENV');
 
     const { getEnv } = await import("./env");
     const env = getEnv();

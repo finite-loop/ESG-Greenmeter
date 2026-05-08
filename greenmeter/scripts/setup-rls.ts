@@ -30,7 +30,7 @@ const tenantScopedTables = [
   'suppliers',
   'supplier_assessments',
   'tenant_config',
-  'documents',
+  // 'documents', // table does not exist yet — uncomment when documents migration is added
 ] as const;
 
 /**

@@ -78,11 +78,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return "/access-denied";
       }
 
-      if (!dbUser.active) {
+      if (dbUser.status !== 'active') {
         // User exists but inactive (pending invitation) — activate on first sign-in
         await db
           .update(users)
-          .set({ active: true, updatedAt: new Date() })
+          .set({ status: 'active', updatedAt: new Date() })
           .where(eq(users.userId, dbUser.userId));
       }
 

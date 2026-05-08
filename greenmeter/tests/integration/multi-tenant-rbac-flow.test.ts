@@ -227,6 +227,7 @@ describe('Integration: Multi-Tenant RBAC Flow', () => {
           nodeId: NODE_ROOT,
           periodId: PERIOD_FY24,
           value: '100',
+          sourceType: 'manual',
         })
       ).rejects.toThrow(AppError);
 
@@ -236,6 +237,7 @@ describe('Integration: Multi-Tenant RBAC Flow', () => {
           nodeId: NODE_ROOT,
           periodId: PERIOD_FY24,
           value: '100',
+          sourceType: 'manual',
         });
       } catch (err) {
         expect((err as AppError).code).toBe('DUPLICATE_ENTRY');
@@ -253,6 +255,7 @@ describe('Integration: Multi-Tenant RBAC Flow', () => {
         nodeId: NODE_ROOT,
         periodId: PERIOD_FY24,
         value: '150',
+        sourceType: 'manual',
       });
 
       expect(result.value).toBe('150');

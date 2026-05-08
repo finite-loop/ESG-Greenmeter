@@ -39,7 +39,7 @@ const mockDbSelect = vi.fn();
 
 vi.mock('@/db', () => {
   // Build a chainable query builder mock
-  const createChainable = (mockSelect: ReturnType<typeof vi.fn>) => {
+  const createChainable = (mockSelect: () => unknown) => {
     const chain: Record<string, unknown> = {};
     const methods = ['from', 'innerJoin', 'where', 'groupBy', 'orderBy', 'select'];
     for (const method of methods) {

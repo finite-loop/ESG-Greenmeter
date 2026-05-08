@@ -23,9 +23,9 @@ export const NODE_TYPES = ['company', 'subsidiary', 'facility', 'department'] as
 
 export const companyProfileSchema = z.object({
   companyName: z.string().min(2, 'Company name is required'),
-  sector: z.enum(SECTORS, { required_error: 'Please select a sector' }),
+  sector: z.enum(SECTORS, { message: 'Please select a sector' }),
   country: z.string().min(2, 'Country is required'),
-  currency: z.enum(CURRENCIES, { required_error: 'Please select a currency' }),
+  currency: z.enum(CURRENCIES, { message: 'Please select a currency' }),
 });
 
 export type CompanyProfile = z.infer<typeof companyProfileSchema>;

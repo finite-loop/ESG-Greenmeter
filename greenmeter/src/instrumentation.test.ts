@@ -30,10 +30,19 @@ describe("instrumentation", () => {
     expect(mockGetEnv).toHaveBeenCalledTimes(1);
   });
 
-  it("calls initAppInsights() on register", async () => {
+  it("calls initAppInsights() on register when NEXT_RUNTIME is nodejs", async () => {
+    vi.stubEnv("NEXT_RUNTIME", "nodejs");
     const { register } = await import("./instrumentation");
     await register();
 
     expect(mockInitAppInsights).toHaveBeenCalledTimes(1);
+    vi.unstubAllEnvs();
+  });
+
+  it("skips initAppInsights() when NEXT_RUNTIME is not nodejs", async () => {
+    const { register } = await import("./instrumentation");
+    await register();
+
+    expect(mockInitAppInsights).not.toHaveBeenCalled();
   });
 });

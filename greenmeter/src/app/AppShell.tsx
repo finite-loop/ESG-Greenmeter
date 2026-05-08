@@ -91,7 +91,7 @@ export default function AppShell() {
   const [rollupLevel, setRollupLevel] = useState('organization');
   const [dashStd, setDashStd] = useState('all');
 
-  const navigate = useCallback((s: Screen) => setScreen(s), []);
+  const navigate = useCallback((s: string) => setScreen(s as Screen), []);
 
   const navProps = { navigate, rollupLevel, setRollupLevel, dashStd, setDashStd, RollupBar };
 
