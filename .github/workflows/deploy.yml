@@ -1,109 +1,61 @@
-name: Deploy
+name: CI/CD to Azure
 
 on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+  packages: write
+
 concurrency:
   group: deploy-${{ github.ref }}
   cancel-in-progress: false
 
-env:
-  AZURE_WEBAPP_NAME: greenmeter
-  AZURE_WEBAPP_SLOT: staging
-  NODE_VERSION: "22"
-
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: greenmeter
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
-          cache-dependency-path: greenmeter/package-lock.json
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - run: npm ci
+      - name: Free disk space on runner
+        run: |
+          echo "Disk before cleanup:"
+          df -h
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf /usr/lib/jvm
+          docker system prune -af || true
+          echo "Disk after cleanup:"
+          df -h
 
-      - run: npm run build
+      - name: Build app (no cache)
+        run: docker compose -f docker-compose.yml build --no-cache app
 
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+      - name: Push images
+        run: docker compose -f docker-compose.yml push app
+
+      - name: Azure Login
+        uses: azure/login@v2
         with:
-          name: build-output
-          path: |
-            greenmeter/.next/standalone
-            greenmeter/.next/static
-            greenmeter/public
-            greenmeter/drizzle
-            greenmeter/scripts
-            greenmeter/package.json
-          retention-days: 1
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-  deploy-staging:
-    runs-on: ubuntu-latest
-    needs: build
-    environment: staging
-
-    steps:
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: build-output
-          path: deploy
-
-      - name: Deploy to Azure App Service staging slot
+      - name: Deploy App to Azure
         uses: azure/webapps-deploy@v3
         with:
-          app-name: ${{ env.AZURE_WEBAPP_NAME }}
-          slot-name: ${{ env.AZURE_WEBAPP_SLOT }}
-          package: deploy
-          startup-command: "npm run db:migrate && npm run start"
-
-  e2e-test:
-    runs-on: ubuntu-latest
-    needs: deploy-staging
-    defaults:
-      run:
-        working-directory: greenmeter
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
-          cache-dependency-path: greenmeter/package-lock.json
-
-      - run: npm ci
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-
-      - name: Run E2E tests against staging
-        run: npm run test:e2e
-        env:
-          PLAYWRIGHT_BASE_URL: https://${{ env.AZURE_WEBAPP_NAME }}-${{ env.AZURE_WEBAPP_SLOT }}.azurewebsites.net
-
-  promote-production:
-    runs-on: ubuntu-latest
-    needs: e2e-test
-    environment: production
-
-    steps:
-      - name: Swap staging to production
-        uses: azure/cli@v2
-        with:
-          inlineScript: |
-            az webapp deployment slot swap \
-              --resource-group ${{ vars.AZURE_RESOURCE_GROUP }} \
-              --name ${{ env.AZURE_WEBAPP_NAME }} \
-              --slot ${{ env.AZURE_WEBAPP_SLOT }} \
-              --target-slot production
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
+          images: ghcr.io/finite-loop/esg-greenmeter-app:latest

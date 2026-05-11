@@ -1,0 +1,47 @@
+services:
+  app:
+    build:
+      context: ./greenmeter
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://greenmeter:greenmeter_local@db:5432/greenmeter
+      - AUTH_SECRET=local-dev-secret-change-in-production-abc123456789
+      - AUTH_URL=http://localhost:3000
+      - AUTH_TRUST_HOST=true
+      - AUTH_AZURE_AD_CLIENT_ID=placeholder
+      - AUTH_AZURE_AD_CLIENT_SECRET=placeholder
+      - AUTH_AZURE_AD_TENANT_ID=placeholder
+      - AZURE_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=devstoreaccount1;AccountKey=placeholder;EndpointSuffix=core.windows.net
+      - AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT=https://placeholder.cognitiveservices.azure.com
+      - AZURE_DOCUMENT_INTELLIGENCE_KEY=placeholder
+      - LLM_PROVIDER=azure
+      - LLM_ENDPOINT=https://placeholder.openai.azure.com
+      - LLM_API_KEY=placeholder
+      - LLM_MODEL=gpt-4o
+      - NODE_ENV=development
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=greenmeter
+      - POSTGRES_PASSWORD=greenmeter_local
+      - POSTGRES_DB=greenmeter
+    volumes:
+      - pgdata_dev:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U greenmeter -d greenmeter"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  pgdata_dev:
