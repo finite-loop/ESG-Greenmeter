@@ -1,4 +1,5 @@
 import postgres from 'postgres';
+import { hashSync } from 'bcryptjs';
 
 const connectionString = process.env.DATABASE_URL;
 
@@ -14,8 +15,12 @@ const USER_ID = '00000000-0000-0000-0000-000000000002';
 const ROOT_NODE_ID = '00000000-0000-0000-0000-000000000003';
 const PERIOD_ID = '00000000-0000-0000-0000-000000000004';
 
+const DEV_PASSWORD = 'GreenMeter@2026';
+
 async function main() {
   console.log('Seeding dev tenant, user, and supporting data...\n');
+
+  const passwordHash = hashSync(DEV_PASSWORD, 10);
 
   // 1. Create dev tenant
   console.log('  [seed] tenant — GreenMeter Dev Co');
@@ -70,23 +75,24 @@ async function main() {
     ON CONFLICT (period_id) DO NOTHING
   `;
 
-  // 4. Create admin user
+  // 4. Create admin user with password
   console.log('  [seed] user — admin@greenmeter.local (admin)');
   await client`
-    INSERT INTO users (user_id, tenant_id, name, email, role, active)
+    INSERT INTO users (user_id, tenant_id, name, email, password_hash, role, status)
     VALUES (
       ${USER_ID}::uuid,
       ${TENANT_ID}::uuid,
       'Dev Admin',
       'admin@greenmeter.local',
+      ${passwordHash},
       'admin',
-      true
+      'active'
     )
-    ON CONFLICT (email) DO NOTHING
+    ON CONFLICT (email) DO UPDATE SET password_hash = ${passwordHash}
   `;
 
   console.log('\n  Dev seed complete.');
-  console.log('  Login with: admin@greenmeter.local');
+  console.log(`  Login with: admin@greenmeter.local / ${DEV_PASSWORD}`);
 }
 
 main()

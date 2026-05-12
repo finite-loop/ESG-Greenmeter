@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queryKeys';
 
 interface KpiValueFilters {
@@ -115,6 +115,7 @@ export function useKpiValues(filters: KpiValueFilters, enabled = true) {
       const qs = buildQueryString(filters);
       return fetchJson<ApiListResponse>(`/api/kpi?${qs}`);
     },
+    placeholderData: keepPreviousData,
     enabled,
   });
 }

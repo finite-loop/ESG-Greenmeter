@@ -27,6 +27,60 @@ export function inferPillarGRI(griSeries: string): string {
   return 'G'; // GRI 2 (governance/general)
 }
 
+export function inferPillarSASB(topic: string): string {
+  const t = topic.trim().toLowerCase();
+  if (t.includes('environmental') || t.includes('energy') || t.includes('ghg') ||
+      t.includes('emission') || t.includes('water') || t.includes('waste') ||
+      t.includes('ecological') || t.includes('climate') || t.includes('air quality')) return 'E';
+  if (t.includes('data privacy') || t.includes('security') || t.includes('workforce') ||
+      t.includes('human capital') || t.includes('employee') || t.includes('health') ||
+      t.includes('safety') || t.includes('labor') || t.includes('labour') ||
+      t.includes('community') || t.includes('customer') || t.includes('access') ||
+      t.includes('product quality') || t.includes('selling practices') ||
+      t.includes('supply chain')) return 'S';
+  if (t.includes('governance') || t.includes('business ethics') || t.includes('competitive') ||
+      t.includes('systemic risk') || t.includes('management') || t.includes('regulatory') ||
+      t.includes('critical incident') || t.includes('activity metric')) return 'G';
+  return 'G';
+}
+
+export function inferPillarTCFD(pillar: string): string {
+  const p = pillar.trim().toLowerCase();
+  if (p.includes('metrics') || p.includes('targets') || p.includes('operations')) return 'E';
+  if (p.includes('strategy')) return 'S';
+  if (p.includes('risk management') || p.includes('risk')) return 'S';
+  if (p.includes('governance') || p.includes('activity')) return 'G';
+  return 'G';
+}
+
+export function inferCategorySASB(topic: string): string {
+  const t = topic.trim().toLowerCase();
+  if (t.includes('environmental') || t.includes('energy') || t.includes('ghg') ||
+      t.includes('emission') || t.includes('water') || t.includes('waste') ||
+      t.includes('ecological') || t.includes('air quality')) return 'Environment';
+  if (t.includes('data privacy') || t.includes('security')) return 'Data Privacy & Security';
+  if (t.includes('workforce') || t.includes('human capital') || t.includes('employee') ||
+      t.includes('labor') || t.includes('labour')) return 'Human Capital';
+  if (t.includes('health') || t.includes('safety')) return 'Health & Safety';
+  if (t.includes('community') || t.includes('customer') || t.includes('product') ||
+      t.includes('selling') || t.includes('access')) return 'Social Capital';
+  if (t.includes('supply chain')) return 'Supply Chain';
+  if (t.includes('business ethics') || t.includes('competitive') || t.includes('regulatory')) return 'Leadership & Governance';
+  if (t.includes('systemic risk') || t.includes('management')) return 'Risk Management';
+  if (t.includes('activity metric')) return 'Activity Metrics';
+  return 'General';
+}
+
+export function inferCategoryTCFD(pillar: string): string {
+  const p = pillar.trim().toLowerCase();
+  if (p.includes('governance')) return 'Governance';
+  if (p.includes('strategy')) return 'Strategy';
+  if (p.includes('risk management') || p.includes('risk')) return 'Risk Management';
+  if (p.includes('metrics') || p.includes('targets')) return 'Metrics & Targets';
+  if (p.includes('activity')) return 'Activity Metrics';
+  return 'General';
+}
+
 // ── Data type inference ─────────────────────────────────────────
 
 export function inferDataType(unit: string): string {
@@ -108,6 +162,8 @@ export function inferIndicatorType(section: string, standard: string): string {
   }
   if (standard === 'ESRS') return 'mandatory';
   if (standard === 'GRI') return 'voluntary';
+  if (standard === 'SASB') return 'voluntary';
+  if (standard === 'TCFD') return 'voluntary';
   return 'voluntary';
 }
 

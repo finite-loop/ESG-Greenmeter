@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { paginationSchema } from './common';
 
-export const standardEnum = z.enum(['BRSR', 'ESRS', 'GRI', 'IFRS_S2']);
+export const standardEnum = z.enum(['BRSR', 'ESRS', 'GRI', 'IFRS_S2', 'SASB', 'TCFD']);
 export const pillarEnum = z.enum(['E', 'S', 'G']);
 
 export const parameterListFilterSchema = paginationSchema.extend({

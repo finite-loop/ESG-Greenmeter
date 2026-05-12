@@ -1,14 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { NAV_ITEMS } from "./navigation";
+import { NAV_GROUPS } from "./navigation";
 
 export function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
 
   function isActive(href: string): boolean {
@@ -18,51 +15,78 @@ export function Sidebar() {
 
   return (
     <aside
-      className={cn(
-        "flex h-full flex-col border-r border-[var(--bdr)] bg-[var(--surf)]",
-        "transition-[width] duration-200",
-        collapsed ? "w-[52px]" : "w-[var(--sbw)]"
-      )}
+      className="flex flex-col flex-shrink-0 bg-[var(--surf)] border-r-[0.5px] border-[var(--bdr)] overflow-y-auto"
+      style={{
+        width: "var(--sbw)",
+        padding: "10px 8px",
+        position: "sticky",
+        top: "var(--topH)",
+        height: "calc(100vh - var(--topH))",
+      }}
     >
-      <nav className="flex-1 overflow-y-auto px-2 py-3">
-        <ul className="flex flex-col gap-0.5">
-          {NAV_ITEMS.map((item) => {
+      {NAV_GROUPS.map((group) => (
+        <div key={group.title}>
+          {/* Section header */}
+          <div
+            className="text-[var(--tx3)] uppercase font-bold"
+            style={{
+              fontSize: "9px",
+              letterSpacing: "0.08em",
+              padding: "9px 10px 3px",
+            }}
+          >
+            {group.title}
+          </div>
+
+          {/* Section items */}
+          {group.items.map((item) => {
             const active = isActive(item.href);
             const Icon = item.icon;
             return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-[12px] font-medium transition-colors",
-                    active
-                      ? "bg-[var(--t50)] text-[var(--t800)] font-semibold"
-                      : "text-[var(--tx2)] hover:bg-[var(--bg)] hover:text-[var(--tx1)]"
-                  )}
-                  title={collapsed ? item.label : undefined}
-                >
-                  <Icon className="h-4 w-4 flex-shrink-0" />
-                  {!collapsed && <span>{item.label}</span>}
-                </Link>
-              </li>
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex items-center rounded-[7px] transition-colors",
+                  active
+                    ? "bg-[var(--t50)] text-[var(--t800)] font-semibold border-l-[var(--t700)]"
+                    : "text-[var(--tx2)] hover:bg-[var(--bg)] hover:text-[var(--tx1)] border-l-transparent"
+                )}
+                style={{
+                  gap: "7px",
+                  padding: "7px 10px",
+                  borderLeft: `2px solid ${active ? "var(--t700)" : "transparent"}`,
+                  fontSize: "12px",
+                  fontWeight: active ? 600 : 500,
+                }}
+              >
+                <Icon
+                  className="flex-shrink-0"
+                  style={{
+                    width: "13px",
+                    height: "13px",
+                    opacity: active ? 1 : 0.5,
+                  }}
+                />
+                <span>{item.label}</span>
+                {item.badge && (
+                  <span
+                    className="ml-auto rounded-[3px] font-bold"
+                    style={{
+                      fontSize: "9px",
+                      background: "var(--redbg)",
+                      color: "var(--redtx)",
+                      padding: "1px 5px",
+                    }}
+                  >
+                    {item.badge}
+                  </span>
+                )}
+              </Link>
             );
           })}
-        </ul>
-      </nav>
-
-      <div className="border-t border-[var(--bdr)] px-2 py-2">
-        <button
-          onClick={() => setCollapsed((c) => !c)}
-          className="flex w-full items-center justify-center rounded-lg p-1.5 text-[var(--tx3)] hover:bg-[var(--bg)] hover:text-[var(--tx2)] transition-colors"
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {collapsed ? (
-            <PanelLeftOpen className="h-4 w-4" />
-          ) : (
-            <PanelLeftClose className="h-4 w-4" />
-          )}
-        </button>
-      </div>
+        </div>
+      ))}
     </aside>
   );
 }

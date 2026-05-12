@@ -6,6 +6,7 @@ export const users = pgTable('users', {
   tenantId: uuid('tenant_id').references(() => tenants.tenantId).notNull(),
   name: text('name').notNull(),
   email: text('email').notNull().unique(),
+  passwordHash: text('password_hash'),
   emailVerified: timestamp('email_verified', { withTimezone: true }),
   image: text('image'),
   role: text('role').notNull().default('viewer'), // 'admin' | 'analyst' | 'department' | 'viewer'

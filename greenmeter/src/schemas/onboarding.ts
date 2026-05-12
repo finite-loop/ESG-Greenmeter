@@ -17,7 +17,7 @@ export const SECTORS = [
 
 export const CURRENCIES = ['INR', 'USD', 'EUR', 'GBP'] as const;
 
-export const FRAMEWORKS = ['BRSR', 'ESRS', 'GRI', 'IFRS_S2'] as const;
+export const FRAMEWORKS = ['BRSR', 'ESRS', 'GRI', 'IFRS_S2', 'SASB', 'TCFD'] as const;
 
 export const NODE_TYPES = ['company', 'subsidiary', 'facility', 'department'] as const;
 

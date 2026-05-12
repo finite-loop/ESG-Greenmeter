@@ -9,9 +9,13 @@ import {
   inferPillarBRSR,
   inferPillarESRS,
   inferPillarGRI,
+  inferPillarSASB,
+  inferPillarTCFD,
   inferDataType,
   inferDirection,
   inferCategoryBRSR,
+  inferCategorySASB,
+  inferCategoryTCFD,
   generateCode,
   inferIndicatorType,
   cellStr,
@@ -194,6 +198,104 @@ async function parseGRI(): Promise<SeedParameter[]> {
   return params;
 }
 
+async function parseSASB(): Promise<SeedParameter[]> {
+  const wb = new ExcelJS.Workbook();
+  await wb.xlsx.readFile(path.join(SEED_DIR, 'SASB_TCFD_Real_Data.xlsx'));
+  const ws = wb.getWorksheet('SASB – Microsoft');
+  if (!ws) throw new Error('SASB: "SASB – Microsoft" sheet not found');
+
+  const params: SeedParameter[] = [];
+  const seen = new Set<string>();
+
+  ws.eachRow((row, rowNumber) => {
+    if (rowNumber <= 3) return;
+
+    const standard = cellStr(row.getCell(1).value);
+    const sasbCode = cellStr(row.getCell(2).value);
+    const topic = cellStr(row.getCell(3).value);
+    const parameter = cellStr(row.getCell(4).value);
+    const unit = cellStr(row.getCell(5).value);
+    const computation = cellStr(row.getCell(6).value);
+
+    if (!parameter || isSectionHeader(standard)) return;
+
+    const key = `SASB:${topic}:${parameter}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+
+    const pillar = inferPillarSASB(topic);
+    const code = generateCode('SASB', pillar, parameter);
+
+    params.push({
+      paramId: randomUUID(),
+      standard: 'SASB',
+      standardSection: topic || 'General',
+      standardCode: sasbCode || null,
+      disclosure: topic || null,
+      code,
+      name: parameter,
+      pillar,
+      unit: unit || 'No.',
+      dataType: inferDataType(unit || 'No.'),
+      category: inferCategorySASB(topic),
+      indicatorType: inferIndicatorType(topic, 'SASB'),
+      computationMethod: computation || null,
+      direction: inferDirection(parameter, unit),
+    });
+  });
+
+  return params;
+}
+
+async function parseTCFD(): Promise<SeedParameter[]> {
+  const wb = new ExcelJS.Workbook();
+  await wb.xlsx.readFile(path.join(SEED_DIR, 'SASB_TCFD_Real_Data.xlsx'));
+  const ws = wb.getWorksheet('TCFD – JPMorgan Chase');
+  if (!ws) throw new Error('TCFD: "TCFD – JPMorgan Chase" sheet not found');
+
+  const params: SeedParameter[] = [];
+  const seen = new Set<string>();
+
+  ws.eachRow((row, rowNumber) => {
+    if (rowNumber <= 3) return;
+
+    const tcfdPillar = cellStr(row.getCell(1).value);
+    const recommendation = cellStr(row.getCell(2).value);
+    const disclosure = cellStr(row.getCell(3).value);
+    const parameter = cellStr(row.getCell(4).value);
+    const unit = cellStr(row.getCell(5).value);
+    const computation = cellStr(row.getCell(6).value);
+
+    if (!parameter || isSectionHeader(tcfdPillar)) return;
+
+    const key = `TCFD:${tcfdPillar}:${parameter}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+
+    const pillar = inferPillarTCFD(tcfdPillar);
+    const code = generateCode('TCFD', pillar, parameter);
+
+    params.push({
+      paramId: randomUUID(),
+      standard: 'TCFD',
+      standardSection: tcfdPillar || 'General',
+      standardCode: null,
+      disclosure: disclosure || recommendation || null,
+      code,
+      name: parameter,
+      pillar,
+      unit: unit || 'No.',
+      dataType: inferDataType(unit || 'No.'),
+      category: inferCategoryTCFD(tcfdPillar),
+      indicatorType: inferIndicatorType(tcfdPillar, 'TCFD'),
+      computationMethod: computation || null,
+      direction: inferDirection(parameter, unit),
+    });
+  });
+
+  return params;
+}
+
 // ── Upsert into database ───────────────────────────────────────
 
 async function upsertParameters(params: SeedParameter[]): Promise<{ inserted: number; updated: number }> {
@@ -270,20 +372,24 @@ async function upsertParameters(params: SeedParameter[]): Promise<{ inserted: nu
 async function main() {
   console.log('Parsing seed data from Excel files...');
 
-  const [brsr, esrs, gri] = await Promise.all([
+  const [brsr, esrs, gri, sasb, tcfd] = await Promise.all([
     parseBRSR(),
     parseESRS(),
     parseGRI(),
+    parseSASB(),
+    parseTCFD(),
   ]);
 
   console.log(`  BRSR: ${brsr.length} parameters parsed`);
   console.log(`  ESRS: ${esrs.length} parameters parsed`);
   console.log(`  GRI:  ${gri.length} parameters parsed`);
-  console.log(`  Total: ${brsr.length + esrs.length + gri.length} parameters`);
+  console.log(`  SASB: ${sasb.length} parameters parsed`);
+  console.log(`  TCFD: ${tcfd.length} parameters parsed`);
+  console.log(`  Total: ${brsr.length + esrs.length + gri.length + sasb.length + tcfd.length} parameters`);
 
   console.log('\nUpserting parameters into kpi_parameters...');
 
-  const allParams = [...brsr, ...esrs, ...gri];
+  const allParams = [...brsr, ...esrs, ...gri, ...sasb, ...tcfd];
   const { inserted, updated } = await upsertParameters(allParams);
 
   console.log(`\nSeed complete:`);

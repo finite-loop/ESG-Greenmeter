@@ -30,6 +30,14 @@ const FRAMEWORK_INFO: Record<
     name: "IFRS S2",
     description: "IFRS Sustainability Disclosure — Climate (ISSB)",
   },
+  SASB: {
+    name: "SASB",
+    description: "Sustainability Accounting Standards Board (Industry-specific)",
+  },
+  TCFD: {
+    name: "TCFD",
+    description: "Task Force on Climate-related Financial Disclosures",
+  },
 };
 
 interface FrameworkSelectionProps {

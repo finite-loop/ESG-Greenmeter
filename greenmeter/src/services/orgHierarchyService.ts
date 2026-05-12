@@ -28,8 +28,8 @@ function buildTree(nodes: OrgNodeRow[]): OrgNodeTree[] {
 }
 
 export const orgHierarchyService = {
-  async getTree(): Promise<OrgNodeTree[]> {
-    const nodes = await orgHierarchyRepository.findAllByTenant();
+  async getTree(tenantId: string): Promise<OrgNodeTree[]> {
+    const nodes = await orgHierarchyRepository.findAllByTenant(tenantId);
     return buildTree(nodes);
   },
 

@@ -1,25 +1,29 @@
 import { describe, it, expect } from "vitest";
-import { NAV_ITEMS, type NavItem } from "./navigation";
+import { NAV_ITEMS, NAV_GROUPS, type NavItem } from "./navigation";
 
 describe("navigation", () => {
-  it("defines exactly 11 navigation items", () => {
-    expect(NAV_ITEMS).toHaveLength(11);
+  it("defines 14 navigation items across 5 groups", () => {
+    expect(NAV_GROUPS).toHaveLength(5);
+    expect(NAV_ITEMS).toHaveLength(14);
   });
 
   it("includes all required navigation items", () => {
     const labels = NAV_ITEMS.map((item) => item.label);
     expect(labels).toEqual([
       "Dashboard",
+      "Rollup view",
       "Console",
-      "Rollup",
-      "Analytics",
-      "Goals",
-      "Reports",
-      "Supply Chain",
-      "Knowledge",
+      "Org & hierarchy",
+      "Parameters & KPIs",
       "Materiality",
-      "Industry Data",
-      "Settings",
+      "Goals",
+      "Analytics",
+      "Industry data",
+      "Report builder",
+      "Supply chain",
+      "Knowledge base",
+      "Audit & assurance",
+      "Settings & admin",
     ]);
   });
 
@@ -30,16 +34,19 @@ describe("navigation", () => {
 
     expect(hrefMap).toEqual({
       Dashboard: "/",
+      "Rollup view": "/rollup",
       Console: "/console",
-      Rollup: "/rollup",
-      Analytics: "/analytics",
-      Goals: "/goals",
-      Reports: "/reports",
-      "Supply Chain": "/supply-chain",
-      Knowledge: "/knowledge",
+      "Org & hierarchy": "/settings/org",
+      "Parameters & KPIs": "/settings/parameters",
       Materiality: "/materiality",
-      "Industry Data": "/industry-data",
-      Settings: "/settings",
+      Goals: "/goals",
+      Analytics: "/analytics",
+      "Industry data": "/industry-data",
+      "Report builder": "/reports",
+      "Supply chain": "/supply-chain",
+      "Knowledge base": "/knowledge",
+      "Audit & assurance": "/settings/audit",
+      "Settings & admin": "/settings",
     });
   });
 
@@ -73,5 +80,16 @@ describe("navigation", () => {
       expect(["function", "object"]).toContain(typeof item.icon);
       expect(item.icon).toBeTruthy();
     }
+  });
+
+  it("nav groups have correct titles", () => {
+    const titles = NAV_GROUPS.map((g) => g.title);
+    expect(titles).toEqual([
+      "Overview",
+      "Configuration",
+      "Intelligence",
+      "Reporting",
+      "Governance",
+    ]);
   });
 });

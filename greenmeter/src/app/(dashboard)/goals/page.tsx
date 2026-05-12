@@ -1,220 +1,313 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useGoals, useCreateGoal, useUpdateGoal, useDeleteGoal } from "@/hooks/useGoals";
-import { queryKeys } from "@/lib/queryKeys";
-import { GoalCard } from "@/components/goals/GoalCard";
-import { GoalForm } from "@/components/goals/GoalForm";
-import { Button, Card, CardContent } from "@/components/ui";
-import { Plus } from "lucide-react";
-
-interface ParameterOption {
-  paramId: string;
-  name: string;
-  code: string;
-  unit: string;
-}
-
-interface ParameterListResponse {
-  data: ParameterOption[];
-  meta?: { page: number; pageSize: number; total: number };
-}
+import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { useGoals, useGoalDetail } from "@/hooks/useGoals";
+import { RollupBar } from "@/components/layout/RollupBar";
+import { ROLLUP_LEVELS } from "@/app/data";
 
 export default function GoalsPage() {
-  const [formOpen, setFormOpen] = useState(false);
-  const [formMode, setFormMode] = useState<"create" | "edit">("create");
-  const [editGoalId, setEditGoalId] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
+  const router = useRouter();
+  const [rollupLevel, setRollupLevel] = useState("organization");
+  const [selGoalId, setSelGoalId] = useState<string | null>(null);
+  const [goalTab, setGoalTab] = useState(1);
 
-  const { data: goalsResponse, isLoading } = useGoals({ page, pageSize: 20 });
-  const createMutation = useCreateGoal();
-  const updateMutation = useUpdateGoal();
-  const deleteMutation = useDeleteGoal();
+  /* ── Goals list ── */
+  const { data: goalsResp, isLoading } = useGoals({ pageSize: 50 });
+  const goals = goalsResp?.data ?? [];
 
-  const { data: paramsResponse } = useQuery<ParameterListResponse>({
-    queryKey: queryKeys.kpiParameters.list({}),
-    queryFn: async () => {
-      const res = await fetch("/api/parameters?pageSize=100");
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body?.error?.message ?? `Failed to load parameters (${res.status})`);
-      }
-      return res.json();
-    },
-  });
+  /* Select first goal by default */
+  const activeGoalId = selGoalId ?? goals[0]?.goalId ?? null;
 
-  const parameters = (paramsResponse?.data ?? []).map((p) => ({
-    paramId: p.paramId,
-    name: p.name,
-    code: p.code,
-    unit: p.unit,
-  }));
+  /* ── Goal detail (with components + milestones) ── */
+  const { data: detailResp } = useGoalDetail(activeGoalId);
+  const g = detailResp?.data ?? null;
 
-  const goals = goalsResponse?.data ?? [];
-  const meta = goalsResponse?.meta;
-  const totalPages = meta ? Math.ceil(meta.total / meta.pageSize) : 0;
+  /* ── Summary stats ── */
+  const totalGoals = goals.length;
+  const onTrack = goals.filter((x) => x.status === "on_track" || x.status === "on-track").length;
+  const atRisk = goals.filter((x) => x.status === "at_risk" || x.status === "at-risk").length;
+  const critical = goals.filter((x) => x.status === "critical").length;
+  const milestonesDue = g?.milestones?.filter((m) => m.status === "pending" || m.status === "in_progress").length ?? 0;
 
-  const handleCreate = useCallback(() => {
-    setEditGoalId(null);
-    setFormMode("create");
-    setFormOpen(true);
-  }, []);
+  /* ── Helpers ── */
+  function statusColor(st: string | null) {
+    if (!st) return "var(--tx3)";
+    if (st.includes("track")) return "var(--t700)";
+    if (st.includes("risk")) return "var(--amb)";
+    if (st === "critical") return "var(--red)";
+    return "var(--tx3)";
+  }
+  function statusBg(st: string | null) {
+    if (!st) return "var(--bg)";
+    if (st.includes("track")) return "var(--t50)";
+    if (st.includes("risk")) return "var(--ambbg)";
+    if (st === "critical") return "var(--redbg)";
+    return "var(--bg)";
+  }
+  function statusLabel(st: string | null) {
+    if (!st) return "Pending";
+    if (st.includes("track")) return "On track";
+    if (st.includes("risk")) return "At risk";
+    if (st === "critical") return "Critical";
+    return st;
+  }
+  function statusBadge(st: string | null) {
+    if (!st) return "b-gray";
+    if (st.includes("track")) return "b-green";
+    if (st.includes("risk")) return "b-amber";
+    if (st === "critical") return "b-red";
+    return "b-gray";
+  }
+  function barColor(st: string | null) {
+    if (!st) return "var(--bdr)";
+    if (st.includes("track")) return "var(--t500)";
+    if (st.includes("risk")) return "var(--amb)";
+    if (st === "critical") return "var(--red)";
+    return "var(--bdr)";
+  }
+  function directionLabel(d: string | null) {
+    if (d === "reduce") return "Reduction target";
+    if (d === "increase") return "Increase target";
+    return d ?? "Target";
+  }
 
-  const handleEdit = useCallback(
-    (goalId: string) => {
-      setEditGoalId(goalId);
-      setFormMode("edit");
-      setFormOpen(true);
-    },
-    []
-  );
-
-  const handleDelete = useCallback(
-    (goalId: string) => {
-      if (confirm("Are you sure you want to delete this goal?")) {
-        deleteMutation.mutate(goalId);
-      }
-    },
-    [deleteMutation]
-  );
-
-  const editGoal = editGoalId ? goals.find((g) => g.goalId === editGoalId) : null;
-
-  const handleFormSubmit = useCallback(
-    (values: {
-      name: string;
-      paramId: string;
-      targetValue: string;
-      targetYear: string;
-      unit?: string;
-      direction: string;
-      description?: string;
-      baselineValue?: string;
-      baselineYear?: string;
-    }) => {
-      if (formMode === "create") {
-        createMutation.mutate(values, {
-          onSuccess: () => {
-            setFormOpen(false);
-          },
-        });
-      } else if (editGoalId) {
-        updateMutation.mutate(
-          { goalId: editGoalId, input: values },
-          {
-            onSuccess: () => {
-              setFormOpen(false);
-              setEditGoalId(null);
-            },
-          }
-        );
-      }
-    },
-    [formMode, editGoalId, createMutation, updateMutation]
-  );
+  const stColor = g ? statusColor(g.status) : "var(--tx3)";
+  const stBg = g ? statusBg(g.status) : "var(--bg)";
+  const stLabel = g ? statusLabel(g.status) : "Pending";
+  const progress = g?.progress ?? 0;
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-semibold">Goals & Milestones</h1>
-          <p className="text-xs text-[var(--text-secondary)]">
-            Long-term ESG targets with weighted component decomposition
-          </p>
+    <div>
+      <div className="ph">
+        <div><div className="ptitle">Goals &amp; milestones</div><div className="psub">Long-term ESG targets · cascaded through rollup hierarchy · AI-forecast</div></div>
+        <div className="ph-acts">
+          <button className="btn-secondary" onClick={() => router.push("/reports")}>Link to report</button>
+          <button className="btn-primary">+ New goal</button>
         </div>
-        <Button onClick={handleCreate}>
-          <Plus className="h-4 w-4 mr-1" />
-          New Goal
-        </Button>
+      </div>
+      <RollupBar levels={ROLLUP_LEVELS} activeLevel={rollupLevel} onSetLevel={setRollupLevel} />
+
+      {/* Summary stats */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 10, marginBottom: 14 }}>
+        {([
+          ["Total goals", String(totalGoals), "E, S, G pillars", "var(--tx1)"],
+          ["On track", String(onTrack), totalGoals > 0 ? `${Math.round(onTrack / totalGoals * 100)}% of portfolio` : "—", "var(--t700)"],
+          ["At risk", String(atRisk), "Need intervention", "var(--amb)"],
+          ["Critical", String(critical), "Significant gap", "var(--red)"],
+          ["Milestones due", String(milestonesDue), "Pending milestones", "var(--tx1)"],
+        ] as [string, string, string, string][]).map(([l, v, s, c]) => (
+          <div key={l} className="stat-card"><div className="slbl">{l}</div><div className="sval" style={{ color: c }}>{v}</div><div className="ssub">{s}</div></div>
+        ))}
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-12 text-sm text-[var(--text-secondary)]">
-          Loading goals...
-        </div>
+        <div style={{ padding: 48, textAlign: "center", fontSize: 11, color: "var(--tx3)" }}>Loading goals...</div>
       ) : goals.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <p className="text-sm text-[var(--text-secondary)] mb-3">
-              No goals defined yet. Create your first ESG goal to start tracking progress.
-            </p>
-            <Button variant="secondary" onClick={handleCreate}>
-              <Plus className="h-4 w-4 mr-1" />
-              Create Goal
-            </Button>
-          </CardContent>
-        </Card>
+        <div style={{ padding: 48, textAlign: "center", fontSize: 11, color: "var(--tx3)" }}>No goals defined yet. Create your first ESG goal to get started.</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {goals.map((goal) => (
-            <GoalCard
-              key={goal.goalId}
-              goalId={goal.goalId}
-              name={goal.name}
-              targetValue={goal.targetValue}
-              targetYear={goal.targetYear}
-              unit={goal.unit}
-              status={goal.status}
-              progress={goal.progress}
-              componentCount={goal.componentCount}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
-          ))}
-        </div>
-      )}
-
-      {meta && totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-[var(--text-secondary)]">
-            Page {meta.page} of {totalPages} ({meta.total} goals)
-          </span>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page <= 1}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setPage((p) => p + 1)}
-              disabled={page >= totalPages}
-            >
-              Next
-            </Button>
+        <div style={{ display: "grid", gridTemplateColumns: "280px 1fr", gap: 12 }}>
+          {/* Goal list */}
+          <div className="card" style={{ height: "fit-content" }}>
+            <div className="card-head"><div className="ctitle">All goals</div><span style={{ fontSize: 10, color: "var(--tx3)" }}>Click to expand</span></div>
+            {goals.map((g2) => {
+              const isSel = g2.goalId === activeGoalId;
+              return (
+                <div key={g2.goalId} onClick={() => { setSelGoalId(g2.goalId); setGoalTab(1); }} style={{
+                  padding: "11px 14px", borderBottom: ".5px solid var(--bdr2)", cursor: "pointer",
+                  background: isSel ? "var(--t50)" : "var(--surf)",
+                  borderLeft: `3px solid ${isSel ? "var(--t700)" : "transparent"}`,
+                  transition: "all .12s",
+                }}
+                  onMouseEnter={(e) => { if (!isSel) (e.currentTarget as HTMLElement).style.background = "var(--bg)"; }}
+                  onMouseLeave={(e) => { if (!isSel) (e.currentTarget as HTMLElement).style.background = "var(--surf)"; }}>
+                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
+                    <div style={{ fontSize: 12, fontWeight: isSel ? 700 : 500, color: "var(--tx1)", lineHeight: 1.3 }}>{g2.name}</div>
+                    <span className={`badge ${statusBadge(g2.status)}`} style={{ fontSize: 9, flexShrink: 0 }}>{statusLabel(g2.status)}</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div className="pbar-bg" style={{ flex: 1, height: 4 }}><div className="pbar-fill" style={{ width: `${g2.progress}%`, height: 4, borderRadius: 2, background: barColor(g2.status) }} /></div>
+                    <span style={{ fontSize: 10, fontWeight: 700, fontFamily: "var(--fm)", color: "var(--tx2)" }}>{g2.progress}%</span>
+                  </div>
+                  <div style={{ fontSize: 10, color: "var(--tx3)", marginTop: 4 }}>Target: {g2.targetYear}</div>
+                </div>
+              );
+            })}
           </div>
+
+          {/* Goal detail */}
+          {g ? (
+            <div>
+              {/* Header card */}
+              <div style={{ background: "var(--surf)", border: ".5px solid var(--bdr)", borderRadius: 12, overflow: "hidden", marginBottom: 10 }}>
+                <div style={{ background: stBg, borderBottom: ".5px solid var(--bdr)", padding: "14px 16px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                      <span className="badge b-teal">{directionLabel(g.direction)}</span>
+                      <span className="badge" style={{ background: `${stColor}18`, color: stColor, fontSize: 9 }}>{stLabel}</span>
+                    </div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: "var(--tx1)" }}>{g.name}</div>
+                    <div style={{ fontSize: 11, color: "var(--tx2)", marginTop: 4 }}>
+                      {g.description ?? ""} · Baseline: {g.baselineValue ?? "—"} ({g.baselineYear ?? "—"}) → Target: {g.targetValue} by {g.targetYear}
+                    </div>
+                  </div>
+                  <div style={{ textAlign: "right", flexShrink: 0 }}>
+                    <div style={{ fontSize: 28, fontWeight: 700, fontFamily: "var(--fm)", color: stColor, lineHeight: 1 }}>{progress}%</div>
+                    <div style={{ fontSize: 10, color: "var(--tx3)" }}>of target achieved</div>
+                  </div>
+                </div>
+                {/* Meta */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", borderBottom: ".5px solid var(--bdr)" }}>
+                  {([
+                    ["Direction", directionLabel(g.direction)],
+                    ["Target year", g.targetYear],
+                    ["Unit", g.unit ?? "—"],
+                    ["Components", String(g.componentCount)],
+                  ] as [string, string][]).map(([l, v]) => (
+                    <div key={l} style={{ padding: "9px 14px", borderRight: ".5px solid var(--bdr2)" }}>
+                      <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em", color: "var(--tx3)", marginBottom: 2 }}>{l}</div>
+                      <div style={{ fontSize: 11, fontWeight: 500, color: "var(--tx1)", lineHeight: 1.4 }}>{v}</div>
+                    </div>
+                  ))}
+                </div>
+                {/* Progress bar */}
+                <div style={{ padding: "10px 16px", display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ fontSize: 10, color: "var(--tx3)", flexShrink: 0 }}>{g.baselineValue ?? "0"}</div>
+                  <div style={{ flex: 1, height: 8, background: "var(--bdr2)", borderRadius: 4, overflow: "hidden" }}>
+                    <div style={{ height: "100%", borderRadius: 4, background: stColor, width: `${progress}%`, transition: "width .4s" }} />
+                  </div>
+                  <div style={{ fontSize: 10, color: "var(--tx3)", flexShrink: 0 }}>{g.targetValue}</div>
+                </div>
+              </div>
+
+              {/* 3-part tabs */}
+              <div style={{ display: "flex", gap: 0, border: ".5px solid var(--bdr)", borderRadius: 9, overflow: "hidden", marginBottom: 10, background: "var(--surf)" }}>
+                {([[1, "Part 1", "Goal definition"], [2, "Part 2", "Components"], [3, "Part 3", "Milestones"]] as [number, string, string][]).map(([n, lbl, sub]) => (
+                  <div key={n} onClick={() => setGoalTab(n)} style={{
+                    flex: 1, padding: "9px 12px", textAlign: "center", cursor: "pointer",
+                    background: goalTab === n ? "var(--t50)" : "var(--surf)",
+                    borderRight: n < 3 ? ".5px solid var(--bdr)" : "none",
+                    transition: "background .12s",
+                  }}>
+                    <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em", color: goalTab === n ? "var(--t700)" : "var(--tx3)", marginBottom: 1 }}>{lbl}</div>
+                    <div style={{ fontSize: 12, fontWeight: goalTab === n ? 700 : 500, color: goalTab === n ? "var(--t800)" : "var(--tx2)" }}>{sub}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Part 1: Definition */}
+              {goalTab === 1 && (
+                <div className="card">
+                  <div className="card-head"><div><div className="ctitle">Goal definition</div><div className="csub">Core goal attributes · scope · targets</div></div><button className="btn-secondary" style={{ fontSize: 11 }}>Edit goal</button></div>
+                  <div className="cbody">
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+                      {([
+                        ["Goal name", g.name],
+                        ["Direction", directionLabel(g.direction)],
+                        ["Baseline", `${g.baselineValue ?? "—"} (${g.baselineYear ?? "—"})`],
+                        ["Target", `${g.targetValue} ${g.unit ?? ""}`],
+                        ["Target year", g.targetYear],
+                        ["Components", String(g.componentCount)],
+                        ["Status", stLabel],
+                        ["Progress", `${progress}%`],
+                      ] as [string, string][]).map(([l, v]) => (
+                        <div key={l}><div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em", color: "var(--tx3)", marginBottom: 3 }}>{l}</div><div style={{ fontSize: 13, fontWeight: 500, color: "var(--tx1)" }}>{v}</div></div>
+                      ))}
+                    </div>
+                    {g.description && (
+                      <div style={{ borderTop: ".5px solid var(--bdr2)", paddingTop: 12 }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em", color: "var(--tx3)", marginBottom: 8 }}>Description</div>
+                        <div style={{ fontSize: 12, color: "var(--tx1)", lineHeight: 1.5 }}>{g.description}</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Part 2: Components */}
+              {goalTab === 2 && (
+                <div className="card">
+                  <div className="card-head"><div><div className="ctitle">Components</div><div className="csub">{g.components?.length ?? 0} components linked to this goal</div></div><button className="btn-secondary" style={{ fontSize: 11 }}>Edit components</button></div>
+                  {g.components && g.components.length > 0 ? (
+                    <table className="tbl">
+                      <thead><tr><th>Component</th><th>Target value</th><th>Weight</th></tr></thead>
+                      <tbody>
+                        {g.components.map((c) => (
+                          <tr key={c.componentId}>
+                            <td style={{ fontWeight: 500 }}>{c.name}</td>
+                            <td style={{ fontFamily: "var(--fm)" }}>{c.targetValue ?? "—"}</td>
+                            <td style={{ fontFamily: "var(--fm)" }}>{c.weight ? `${c.weight}%` : "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  ) : (
+                    <div style={{ padding: 24, textAlign: "center", fontSize: 11, color: "var(--tx3)" }}>No components linked yet</div>
+                  )}
+                  <div style={{ padding: "10px 14px", borderTop: ".5px solid var(--bdr2)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: 11, color: "var(--tx3)" }}>Data updates quarterly · last synced from platform data</span>
+                    <button className="btn-ghost" style={{ fontSize: 11 }} onClick={() => router.push("/console")}>Enter data →</button>
+                  </div>
+                </div>
+              )}
+
+              {/* Part 3: Milestones */}
+              {goalTab === 3 && (
+                <div className="card">
+                  <div className="card-head"><div><div className="ctitle">Milestones</div><div className="csub">{g.milestones?.length ?? 0} milestones · {g.milestones?.filter((m) => m.status === "achieved").length ?? 0} completed</div></div><button className="btn-secondary" style={{ fontSize: 11 }}>Edit milestones</button></div>
+                  {g.milestones && g.milestones.length > 0 ? (
+                    <div style={{ padding: 14, position: "relative" }}>
+                      <div style={{ position: "absolute", left: 32, top: 24, bottom: 24, width: "1.5px", background: "linear-gradient(to bottom,var(--t300),var(--bdr2))" }} />
+                      <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                        {g.milestones.map((m, idx) => {
+                          const mSt = m.status ?? "pending";
+                          const isDone = mSt === "achieved";
+                          const isInProg = mSt === "in_progress" || mSt === "in-progress";
+                          return (
+                            <div key={m.milestoneId} style={{ display: "flex", gap: 14, alignItems: "flex-start", padding: "10px 0", borderBottom: idx < (g.milestones?.length ?? 0) - 1 ? ".5px solid var(--bdr2)" : "none" }}>
+                              <div style={{
+                                flexShrink: 0, width: 18, height: 18, borderRadius: "50%",
+                                border: `2px solid ${isDone ? "var(--grn)" : isInProg ? "var(--t500)" : "var(--bdr)"}`,
+                                background: isDone ? "var(--grn)" : isInProg ? "var(--t50)" : "var(--surf)",
+                                display: "flex", alignItems: "center", justifyContent: "center", marginTop: 2, zIndex: 1, position: "relative",
+                              }}>
+                                {isDone ? <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                                  : isInProg ? <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--t500)" }} />
+                                    : <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--bdr)" }} />}
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 4 }}>
+                                  <div>
+                                    {m.targetDate && <div style={{ fontSize: 10, fontFamily: "var(--fm)", fontWeight: 600, color: "var(--tx3)", marginBottom: 2 }}>{new Date(m.targetDate).toLocaleDateString()}</div>}
+                                    <div style={{ fontSize: 12, fontWeight: 500, color: "var(--tx1)", lineHeight: 1.4 }}>{m.name}</div>
+                                    {m.description && <div style={{ fontSize: 10, color: "var(--tx3)", marginTop: 2 }}>{m.description}</div>}
+                                  </div>
+                                  <span className={`badge ${isDone ? "b-green" : isInProg ? "b-teal" : "b-gray"}`} style={{ fontSize: 9, flexShrink: 0 }}>{isDone ? "Done" : isInProg ? "In progress" : "Pending"}</span>
+                                </div>
+                                {m.targetValue && (
+                                  <div style={{ fontSize: 10, color: "var(--tx3)", marginTop: 2 }}>Target: {m.targetValue}</div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ padding: 24, textAlign: "center", fontSize: 11, color: "var(--tx3)" }}>No milestones defined yet</div>
+                  )}
+                  <div style={{ padding: "10px 14px", borderTop: ".5px solid var(--bdr2)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: 11, color: "var(--tx3)" }}>Track milestones toward this goal</span>
+                    <button className="btn-ghost" style={{ fontSize: 11 }}>+ Add milestone</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div style={{ padding: 48, textAlign: "center", fontSize: 11, color: "var(--tx3)" }}>Select a goal to view details</div>
+          )}
         </div>
       )}
-
-      <GoalForm
-        key={editGoalId ?? 'create'}
-        open={formOpen}
-        onOpenChange={setFormOpen}
-        onSubmit={handleFormSubmit}
-        mode={formMode}
-        isSubmitting={createMutation.isPending || updateMutation.isPending}
-        parameters={parameters}
-        initialValues={
-          editGoal
-            ? {
-                name: editGoal.name,
-                paramId: editGoal.paramId,
-                targetValue: editGoal.targetValue,
-                targetYear: editGoal.targetYear,
-                unit: editGoal.unit ?? undefined,
-                direction: editGoal.direction ?? 'lower_is_better',
-                description: editGoal.description ?? undefined,
-                baselineValue: editGoal.baselineValue ?? undefined,
-                baselineYear: editGoal.baselineYear ?? undefined,
-              }
-            : undefined
-        }
-      />
     </div>
   );
 }

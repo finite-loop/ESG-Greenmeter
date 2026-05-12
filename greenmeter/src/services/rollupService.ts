@@ -235,7 +235,7 @@ export const rollupService = {
     nodeId: string,
     periodId: string
   ): Promise<void> {
-    const allNodes = await orgHierarchyRepository.findAllByTenant();
+    const allNodes = await orgHierarchyRepository.findAllByTenant(tenantId);
     const nodeMap = new Map(allNodes.map((n) => [n.nodeId, n]));
 
     // Walk up from the given node to the root

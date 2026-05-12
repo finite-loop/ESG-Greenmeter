@@ -5,7 +5,7 @@
  * v1: Static content only (no admin editing — deferred to v2 per decisions-log).
  */
 
-export type Framework = "BRSR" | "ESRS" | "GRI" | "IFRS_S2";
+export type Framework = "BRSR" | "ESRS" | "GRI" | "IFRS_S2" | "SASB" | "TCFD";
 export type Pillar = "E" | "S" | "G";
 export type ContentType = "standard" | "regulation" | "methodology" | "guide";
 
@@ -69,6 +69,20 @@ export const FRAMEWORKS: FrameworkMetadata[] = [
     fullName: "IFRS S2 Climate-related Disclosures",
     description:
       "ISSB climate disclosure standard focused on Scope 1, 2, 3 GHG emissions, climate risks, and scenario analysis.",
+  },
+  {
+    id: "SASB",
+    name: "SASB",
+    fullName: "Sustainability Accounting Standards Board",
+    description:
+      "Industry-specific sustainability accounting standards designed for investor decision-making. Covers 77 industries across 11 sectors with financially material ESG topics.",
+  },
+  {
+    id: "TCFD",
+    name: "TCFD",
+    fullName: "Task Force on Climate-related Financial Disclosures",
+    description:
+      "Climate risk disclosure framework organized around Governance, Strategy, Risk Management, and Metrics & Targets. Widely adopted by financial institutions and corporates.",
   },
 ];
 

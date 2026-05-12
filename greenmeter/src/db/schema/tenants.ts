@@ -5,6 +5,8 @@ export const tenants = pgTable('tenants', {
   name: text('name').notNull(),
   domain: text('domain'),
   sector: text('sector'),
+  nicCode: text('nic_code'),
+  gicsCode: text('gics_code'),
   country: text('country').default('India'),
   currency: text('currency').default('INR'),
   logoUrl: text('logo_url'),

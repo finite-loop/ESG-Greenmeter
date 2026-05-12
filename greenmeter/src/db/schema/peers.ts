@@ -9,6 +9,7 @@ export const peerOrganisations = pgTable('peer_organisations', {
   country: text('country'),
   marketCap: text('market_cap'), // 'large_cap' | 'mid_cap' | 'small_cap'
   exchange: text('exchange'),
+  sourceTenantId: uuid('source_tenant_id').references(() => tenants.tenantId),
   active: boolean('active').default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),

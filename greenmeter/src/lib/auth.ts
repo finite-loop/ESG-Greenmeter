@@ -1,4 +1,6 @@
 import NextAuth from "next-auth";
+import Credentials from "next-auth/providers/credentials";
+import { compare } from "bcryptjs";
 import { eq } from "drizzle-orm";
 import authConfig from "./auth.config";
 
@@ -18,6 +20,38 @@ async function getUsersTable() {
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
+  providers: [
+    ...authConfig.providers,
+    Credentials({
+      id: "credentials",
+      name: "Email & Password",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        const email = credentials?.email;
+        const password = credentials?.password;
+
+        if (typeof email !== "string" || !email) return null;
+        if (typeof password !== "string" || !password) return null;
+
+        const db = await getDb();
+        const users = await getUsersTable();
+
+        const dbUser = await db.query.users.findFirst({
+          where: eq(users.email, email),
+        });
+
+        if (!dbUser || !dbUser.passwordHash) return null;
+
+        const valid = await compare(password, dbUser.passwordHash);
+        if (!valid) return null;
+
+        return { id: dbUser.userId, email: dbUser.email, name: dbUser.name };
+      },
+    }),
+  ],
   callbacks: {
     async jwt({ token, account, profile, user }) {
       // On initial sign-in, look up user in our database.

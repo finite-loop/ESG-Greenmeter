@@ -4,13 +4,14 @@ import { forwardRef } from "react"
 import { cn } from "@/lib/utils"
 
 const Card = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
+  ({ className, style, ...props }, ref) => (
     <div
       ref={ref}
       className={cn(
-        "bg-[var(--surf)] border border-[var(--bdr)] rounded-xl overflow-hidden",
+        "bg-[var(--surf)] rounded-xl overflow-hidden",
         className
       )}
+      style={{ border: ".5px solid var(--bdr)", ...style }}
       {...props}
     />
   )
@@ -18,13 +19,14 @@ const Card = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
 Card.displayName = "Card"
 
 const CardHeader = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
+  ({ className, style, ...props }, ref) => (
     <div
       ref={ref}
       className={cn(
-        "flex items-center justify-between px-3.5 py-[11px] border-b border-[var(--bdr2)]",
+        "flex items-center justify-between px-3.5 py-[11px]",
         className
       )}
+      style={{ borderBottom: ".5px solid var(--bdr2)", ...style }}
       {...props}
     />
   )
@@ -61,10 +63,11 @@ const CardContent = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivEleme
 CardContent.displayName = "CardContent"
 
 const CardFooter = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
+  ({ className, style, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn("flex items-center px-3.5 py-2.5 border-t border-[var(--bdr2)]", className)}
+      className={cn("flex items-center px-3.5 py-2.5", className)}
+      style={{ borderTop: ".5px solid var(--bdr2)", ...style }}
       {...props}
     />
   )

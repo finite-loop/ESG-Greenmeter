@@ -11,3 +11,16 @@ Thumbs.db
 
 # build artifacts
 *.tsbuildinfo
+
+_bmad
+.claude
+CLAUDE.md
+
+SS/
+seed_data/
+Resources/
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd

@@ -1,616 +1,284 @@
 "use client";
+import { useState, useEffect, useRef } from "react";
+type Props = { navigate:(s:any)=>void; [k:string]:any };
 
-import { useState, useEffect, useCallback } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/queryKeys";
-import {
-  Button,
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-  Badge,
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-  ProgressBar,
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "@/components/ui";
-import { FileText, Download, Loader2, CheckCircle, AlertCircle, AlertTriangle, ChevronDown, ChevronRight } from "lucide-react";
+type Report = {
+  id: number; name: string; standard: string; stdColor: string; type: string;
+  status: 'In Progress'|'In Review'|'Completed'|'Draft';
+  progress: number; fy: string; dueDate: string;
+};
 
-type Props = { navigate: (s: string) => void; [k: string]: unknown };
+const REPORTS: Report[] = [
+  { id: 1, name: 'Annual Sustainability Report 2025', standard: 'BRSR', stdColor: '#991b1b', type: 'Integrated ESG', status: 'In Progress', progress: 64, fy: 'FY 2024-25', dueDate: 'Due May 30, 2026' },
+  { id: 2, name: 'Q4 GRI Performance Report', standard: 'GRI', stdColor: '#0f766e', type: 'Standards-based', status: 'In Review', progress: 100, fy: 'FY 2024-25', dueDate: 'Due Apr 30, 2026' },
+  { id: 3, name: 'ESRS Climate & Sustainability', standard: 'ESRS', stdColor: '#92400e', type: 'Regulatory (CSRD)', status: 'Draft', progress: 34, fy: 'FY 2024-25', dueDate: 'Due Jun 30, 2026' },
+  { id: 4, name: 'CDP Climate Disclosure 2025', standard: 'CDP', stdColor: '#6366f1', type: 'Investor-facing', status: 'Draft', progress: 58, fy: 'FY 2024-25', dueDate: 'Due Jul 31, 2026' },
+  { id: 5, name: 'IFRS S2 Climate Disclosure', standard: 'IFRS S2', stdColor: '#3730a3', type: 'Investor-facing', status: 'Draft', progress: 18, fy: 'FY 2024-25', dueDate: 'Due Sep 30, 2026' },
+  { id: 6, name: 'Board ESG Scorecard Q1', standard: 'Custom', stdColor: '#64748b', type: 'Executive report', status: 'Completed', progress: 100, fy: 'Q1 FY 2025-26', dueDate: 'Due Apr 15, 2026' },
+];
 
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
+type Section = { code: string; name: string; pillar: 'E'|'S'|'G'; questions: string; owner: string; dept: string; progress: number };
 
-interface Period {
-  periodId: string;
-  name: string;
-  fiscalYear: string;
-  status: string | null;
-}
+const REPORT_SECTIONS: Record<number, Section[]> = {
+  1: [
+    { code: 'SEC-A', name: 'Section A — General Disclosures', pillar: 'G', questions: '18/18 questions', owner: 'Priya Sharma', dept: 'EHS', progress: 100 },
+    { code: 'SEC-B', name: 'Section B — Management & Process', pillar: 'G', questions: '12/12 questions', owner: 'Legal Team', dept: 'Legal & Compliance', progress: 100 },
+    { code: 'P1', name: 'Principle 1 — Ethics & Transparency', pillar: 'G', questions: '12/12 questions', owner: 'Legal Team', dept: 'Legal & Compliance', progress: 100 },
+    { code: 'P2', name: 'Principle 2 — Product Lifecycle', pillar: 'E', questions: '15/15 questions', owner: 'Priya Sharma', dept: 'EHS', progress: 100 },
+    { code: 'P3', name: 'Principle 3 — Employee Wellbeing', pillar: 'S', questions: '15/18 questions', owner: 'Kavya Reddy', dept: 'Human Resources', progress: 84 },
+    { code: 'P4', name: 'Principle 4 — Stakeholder Engagement', pillar: 'S', questions: '7/10 questions', owner: 'CSR Team', dept: 'CSR / Sustainability', progress: 70 },
+    { code: 'P5', name: 'Principle 5 — Human Rights', pillar: 'S', questions: '5/12 questions', owner: 'Priya Sharma', dept: 'EHS', progress: 42 },
+    { code: 'P6', name: 'Principle 6 — Environment', pillar: 'E', questions: '12/20 questions', owner: 'Rajan Mehta', dept: 'EHS', progress: 60 },
+    { code: 'P7', name: 'Principle 7 — Policy Advocacy', pillar: 'G', questions: '0/6 questions', owner: 'Govt Affairs', dept: 'Secretarial', progress: 0 },
+    { code: 'P8', name: 'Principle 8 — Inclusive Growth', pillar: 'S', questions: '6/14 questions', owner: 'CSR Team', dept: 'CSR / Sustainability', progress: 43 },
+    { code: 'P9', name: 'Principle 9 — Consumer Responsibility', pillar: 'S', questions: '4/8 questions', owner: 'Quality Team', dept: 'Operations', progress: 50 },
+  ],
+};
 
-interface GeneratedReport {
-  reportId: string;
-  name: string;
-  status: string | null;
-  format: string | null;
-  blobUrl: string | null;
-  createdAt: string;
-  generatedAt: string | null;
-  metadata?: {
-    coverage?: {
-      reported: number;
-      notReported: number;
-      total: number;
-      percentComplete: number;
-    };
-    fileSize?: number;
-    blobPath?: string;
-    progressStage?: string;
-    progressPercent?: number;
-    progressMessage?: string;
-  };
-}
+const STATUS_COLORS: Record<string, string> = {
+  'In Progress': 'b-teal', 'In Review': 'b-amber', 'Completed': 'b-green', 'Draft': 'b-gray',
+};
 
-interface CoverageSection {
-  standardSection: string;
-  totalParams: number;
-  hasValue: number;
-  verified: number;
-  notApplicable: number;
-  percentComplete: number;
-}
-
-interface CoverageData {
-  framework: string;
-  periodId: string;
-  totalParams: number;
-  hasValue: number;
-  verified: number;
-  notApplicable: number;
-  percentComplete: number;
-  warningThreshold: number;
-  belowThreshold: boolean;
-  sections: CoverageSection[];
-}
-
-const FRAMEWORKS = [
-  { value: "BRSR", label: "BRSR Core", description: "India SEBI mandate" },
-  { value: "GRI", label: "GRI Standards 2021", description: "Global standards" },
-  { value: "ESRS", label: "ESRS (CSRD)", description: "EU mandatory" },
-  { value: "IFRS_S2", label: "IFRS S2", description: "ISSB climate" },
-] as const;
-
-const FORMAT_OPTIONS = [
-  { value: "pdf", label: "PDF Report", description: "Formatted disclosure document" },
-  { value: "xbrl", label: "XBRL", description: "Machine-readable for SEBI filing" },
-  { value: "excel", label: "Excel", description: "Raw KPI data with mapping" },
-] as const;
-
-function statusBadge(status: string | null) {
-  switch (status) {
-    case "complete":
-      return <Badge variant="success">Complete</Badge>;
-    case "generating":
-      return <Badge variant="warning">Generating</Badge>;
-    case "failed":
-      return <Badge variant="error">Failed</Badge>;
-    case "pending":
-      return <Badge variant="neutral">Pending</Badge>;
-    default:
-      return <Badge variant="neutral">{status ?? "Unknown"}</Badge>;
-  }
-}
-
-function coverageColor(percent: number, threshold: number): string {
-  if (percent >= threshold) return "text-emerald-600";
-  if (percent >= threshold * 0.75) return "text-amber-600";
-  return "text-red-600";
-}
-
-function CoverageSummaryBar({ coverage }: { coverage: CoverageData }) {
-  const stats = [
-    { label: "Total Required", value: coverage.totalParams },
-    { label: "Entered", value: coverage.hasValue },
-    { label: "Verified", value: coverage.verified },
-    { label: "Not Applicable", value: coverage.notApplicable },
-  ];
-
-  return (
-    <div className="flex items-center gap-6 flex-wrap">
-      {stats.map((s) => (
-        <div key={s.label} className="text-center">
-          <div className="text-lg font-semibold text-[var(--tx1)]">{s.value}</div>
-          <div className="text-[10px] text-[var(--tx3)]">{s.label}</div>
-        </div>
-      ))}
-      <div className="text-center">
-        <div className={`text-lg font-semibold ${coverageColor(coverage.percentComplete, coverage.warningThreshold)}`}>
-          {coverage.percentComplete}%
-        </div>
-        <div className="text-[10px] text-[var(--tx3)]">Complete</div>
-      </div>
-      <div className="flex-1 min-w-[120px]">
-        <ProgressBar value={coverage.percentComplete} max={100} />
-      </div>
-    </div>
-  );
-}
-
-function CoverageSectionBreakdown({
-  sections,
-  warningThreshold,
-}: {
-  sections: CoverageSection[];
-  warningThreshold: number;
-}) {
-  const [expanded, setExpanded] = useState(true);
-
-  return (
-    <div>
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="flex items-center gap-1 text-xs font-medium text-[var(--tx2)] mb-2 hover:text-[var(--tx1)] transition-colors"
-      >
-        {expanded ? (
-          <ChevronDown className="w-3 h-3" />
-        ) : (
-          <ChevronRight className="w-3 h-3" />
-        )}
-        Per-Section Breakdown
-      </button>
-
-      {expanded && (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Section</TableHead>
-              <TableHead className="text-right">Total</TableHead>
-              <TableHead className="text-right">Entered</TableHead>
-              <TableHead className="text-right">Verified</TableHead>
-              <TableHead className="text-right">N/A</TableHead>
-              <TableHead className="text-right">% Complete</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sections.map((section) => (
-              <TableRow key={section.standardSection}>
-                <TableCell className="text-xs font-medium">
-                  {section.standardSection}
-                </TableCell>
-                <TableCell className="text-right text-xs">{section.totalParams}</TableCell>
-                <TableCell className="text-right text-xs">{section.hasValue}</TableCell>
-                <TableCell className="text-right text-xs">{section.verified}</TableCell>
-                <TableCell className="text-right text-xs">{section.notApplicable}</TableCell>
-                <TableCell className={`text-right text-xs font-medium ${coverageColor(section.percentComplete, warningThreshold)}`}>
-                  {section.percentComplete}%
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
-    </div>
-  );
-}
-
-function DownloadButton({ report }: { report: GeneratedReport }) {
-  const [downloading, setDownloading] = useState(false);
-  const [downloadError, setDownloadError] = useState(false);
-
-  const handleDownload = useCallback(async () => {
-    setDownloading(true);
-    setDownloadError(false);
-    try {
-      const res = await fetch(`/api/reports/${report.reportId}/download`);
-      if (!res.ok) {
-        throw new Error('Failed to get download URL');
-      }
-      const json = await res.json();
-      const url = json.data?.downloadUrl;
-      if (typeof url === 'string' && url.startsWith('https://')) {
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = json.data?.fileName ?? 'report.pdf';
-        link.rel = 'noopener noreferrer';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } else {
-        throw new Error('Invalid download URL');
-      }
-    } catch {
-      setDownloadError(true);
-    } finally {
-      setDownloading(false);
-    }
-  }, [report.reportId]);
-
-  return (
-    <div className="flex items-center gap-1">
-      <Button variant="secondary" size="sm" onClick={handleDownload} disabled={downloading}>
-        {downloading ? (
-          <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-        ) : (
-          <Download className="w-3 h-3 mr-1" />
-        )}
-        Download
-      </Button>
-      {downloadError && (
-        <span className="text-[10px] text-red-600">Failed</span>
-      )}
-    </div>
-  );
-}
+const PILLAR_COLORS: Record<string, string> = { E: '#ef4444', S: '#6366f1', G: '#0f766e' };
 
 export default function ReportsScreen({ navigate }: Props) {
-  const queryClient = useQueryClient();
+  const [selectedId, setSelectedId] = useState(1);
+  const donutRef = useRef<HTMLCanvasElement>(null);
 
-  const [selectedFramework, setSelectedFramework] = useState<string>("BRSR");
-  const [selectedPeriodId, setSelectedPeriodId] = useState<string | null>(null);
-  const [selectedFormat, setSelectedFormat] = useState<string>("pdf");
+  const report = REPORTS.find(r => r.id === selectedId)!;
+  const sections = REPORT_SECTIONS[selectedId] ?? REPORT_SECTIONS[1]!;
 
-  // Fetch periods
-  const { data: periods } = useQuery<Period[]>({
-    queryKey: queryKeys.periods.list(),
-    queryFn: async () => {
-      const res = await fetch("/api/periods");
-      if (!res.ok) throw new Error("Failed to load periods");
-      const json = await res.json();
-      return json.data;
-    },
-  });
+  const sectionsDone = sections.filter(s => s.progress === 100).length;
+  const totalSections = sections.length;
+  const questionsAnswered = sections.reduce((a, s) => {
+    const match = s.questions.match(/^(\d+)/);
+    return a + (match ? parseInt(match[1]) : 0);
+  }, 0);
 
-  // Auto-select first period
-  useEffect(() => {
-    if (!selectedPeriodId && periods && periods.length > 0) {
-      setSelectedPeriodId(periods[0].periodId);
-    }
-  }, [periods, selectedPeriodId]);
-
-  // Fetch coverage data
-  const { data: coverage, isLoading: coverageLoading, isError: coverageError } = useQuery<CoverageData>({
-    queryKey: queryKeys.reports.coverage({
-      framework: selectedFramework,
-      periodId: selectedPeriodId ?? "",
-    }),
-    queryFn: async () => {
-      const params = new URLSearchParams({
-        framework: selectedFramework,
-        periodId: selectedPeriodId!,
-      });
-      const res = await fetch(`/api/reports/coverage?${params}`);
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body?.error?.message ?? "Failed to load coverage");
-      }
-      const json = await res.json();
-      return json.data;
-    },
-    enabled: !!selectedPeriodId && !!selectedFramework,
-    staleTime: 30_000,
-  });
-
-  // Fetch previously generated reports
-  const { data: generatedReports, isLoading: reportsLoading } = useQuery<GeneratedReport[]>({
-    queryKey: queryKeys.reports.list({
-      periodId: selectedPeriodId ?? undefined,
-      standard: selectedFramework,
-    }),
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      if (selectedPeriodId) params.set("periodId", selectedPeriodId);
-      if (selectedFramework) params.set("standard", selectedFramework);
-      const res = await fetch(`/api/reports?${params}`);
-      if (!res.ok) {
-        // Reports endpoint may not exist yet — return empty
-        return [];
-      }
-      const json = await res.json();
-      return json.data ?? [];
-    },
-    enabled: !!selectedPeriodId,
-  });
-
-  // Poll for updates when any report is in-progress
-  const hasActiveReport = generatedReports?.some(
-    (r) => r.status === "generating" || r.status === "pending"
-  );
+  // Stats
+  const inProgress = REPORTS.filter(r => r.status === 'In Progress').length;
+  const inReview = REPORTS.filter(r => r.status === 'In Review').length;
+  const completed = REPORTS.filter(r => r.status === 'Completed').length;
+  const draft = REPORTS.filter(r => r.status === 'Draft').length;
 
   useEffect(() => {
-    if (!hasActiveReport) return;
-    const interval = setInterval(() => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.reports.list({
-          periodId: selectedPeriodId ?? undefined,
-          standard: selectedFramework,
-        }),
+    let chart: any;
+    (async () => {
+      const { Chart, registerables } = await import('chart.js');
+      Chart.register(...registerables);
+      if (!donutRef.current) return;
+      chart = new Chart(donutRef.current, {
+        type: 'doughnut',
+        data: {
+          labels: ['Done', 'Remaining'],
+          datasets: [{
+            data: [report.progress, 100 - report.progress],
+            backgroundColor: ['#0f766e', '#f3f4f6'],
+            borderWidth: 0,
+          }],
+        },
+        options: {
+          responsive: true, maintainAspectRatio: true, cutout: '72%',
+          plugins: { legend: { display: false }, tooltip: { enabled: false } },
+        },
       });
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [hasActiveReport, queryClient, selectedPeriodId, selectedFramework]);
-
-  // Generate report mutation
-  const generateMutation = useMutation({
-    mutationFn: async () => {
-      const res = await fetch("/api/reports/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          framework: selectedFramework,
-          periodId: selectedPeriodId,
-          format: selectedFormat,
-        }),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body?.error?.message ?? `Generation failed (${res.status})`);
-      }
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.reports.all });
-    },
-  });
-
-  const handleGenerate = useCallback(() => {
-    if (!selectedPeriodId || !selectedFramework) return;
-    generateMutation.mutate();
-  }, [selectedPeriodId, selectedFramework, generateMutation]);
-
-  const frameworkMeta = FRAMEWORKS.find((f) => f.value === selectedFramework);
+    })();
+    return () => chart?.destroy();
+  }, [selectedId, report.progress]);
 
   return (
     <div>
-      {/* Page header */}
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <h1 className="text-xl font-semibold text-[var(--tx1)]">Report Builder</h1>
-          <p className="text-sm text-[var(--tx3)] mt-1">
-            Framework templates &middot; BRSR &middot; GRI 2021 &middot; ESRS &middot; IFRS S2 &middot; auto-generate reports
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {periods && periods.length > 0 && (
-            <Select
-              value={selectedPeriodId ?? undefined}
-              onValueChange={(val) => setSelectedPeriodId(val)}
-            >
-              <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="Select period" />
-              </SelectTrigger>
-              <SelectContent>
-                {periods.map((p) => (
-                  <SelectItem key={p.periodId} value={p.periodId}>
-                    {p.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-          <Button
-            onClick={handleGenerate}
-            disabled={!selectedPeriodId || generateMutation.isPending}
-          >
-            {generateMutation.isPending ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <Download className="w-4 h-4 mr-1" />
-                Generate Report
-              </>
-            )}
-          </Button>
+      {/* Header */}
+      <div className="ph">
+        <div><div className="ptitle">Report builder</div><div className="psub">Framework templates · BRSR · GRI 2021 · ESRS · IFRS S2 · auto-generate PDF &amp; XBRL</div></div>
+        <div className="ph-acts">
+          <button className="btn-secondary">Preview</button>
+          <button className="btn-secondary">Publish</button>
+          <button className="btn-primary">+ New report</button>
         </div>
       </div>
 
-      {/* Status message */}
-      {generateMutation.isSuccess && (
-        <div className="mb-4 p-3 rounded-md bg-emerald-50 border border-emerald-200 flex items-center gap-2 text-sm text-emerald-700">
-          <CheckCircle className="w-4 h-4" />
-          Report generation started. Job ID: {generateMutation.data?.data?.jobId ?? "queued"}
-        </div>
-      )}
-      {generateMutation.isError && (
-        <div className="mb-4 p-3 rounded-md bg-red-50 border border-red-200 flex items-center gap-2 text-sm text-red-700">
-          <AlertCircle className="w-4 h-4" />
-          {(generateMutation.error as Error).message}
-        </div>
-      )}
+      {/* Stats strip */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 10, marginBottom: 14 }}>
+        {([
+          [REPORTS.length, 'Total Reports', '📄'],
+          [inProgress, 'In Progress', '📝'],
+          [inReview, 'In Review', '🔍'],
+          [completed, 'Completed', '✅'],
+          [draft, 'Draft', '📋'],
+        ] as [number, string, string][]).map(([val, label, icon]) => (
+          <div key={label} style={{ background: 'var(--surf)', border: '.5px solid var(--bdr)', borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 20 }}>{icon}</span>
+            <div>
+              <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'var(--fm)', color: 'var(--tx1)', lineHeight: 1 }}>{val}</div>
+              <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{label}</div>
+            </div>
+          </div>
+        ))}
+      </div>
 
-      {/* Coverage warning banner */}
-      {coverage?.belowThreshold && (
-        <div className="mb-4 p-3 rounded-md bg-amber-50 border border-amber-200 flex items-center gap-2 text-sm text-amber-700">
-          <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-          <span>
-            Coverage is {coverage.percentComplete}% — below the {coverage.warningThreshold}% threshold.
-            Data gaps may affect report completeness.
-          </span>
-        </div>
-      )}
-
-      <div className="grid grid-cols-[300px_1fr] gap-4">
-        {/* Left panel: Framework selector + format options */}
-        <div className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Framework</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              {FRAMEWORKS.map((fw) => (
-                <button
-                  key={fw.value}
-                  onClick={() => setSelectedFramework(fw.value)}
-                  className={`w-full text-left px-4 py-3 border-b border-[var(--bdr2)] transition-colors ${
-                    selectedFramework === fw.value
-                      ? "bg-[var(--t50)] border-l-2 border-l-[var(--t700)]"
-                      : "hover:bg-[var(--bg)]"
-                  }`}
-                >
-                  <div className="text-xs font-semibold text-[var(--tx1)]">{fw.label}</div>
-                  <div className="text-[10px] text-[var(--tx3)]">{fw.description}</div>
-                </button>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Export Format</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {FORMAT_OPTIONS.map((fmt) => (
-                <label
-                  key={fmt.value}
-                  className="flex items-center gap-2 cursor-pointer"
-                >
-                  <input
-                    type="radio"
-                    name="format"
-                    value={fmt.value}
-                    checked={selectedFormat === fmt.value}
-                    onChange={() => setSelectedFormat(fmt.value)}
-                    className="accent-[var(--t700)]"
-                  />
-                  <div>
-                    <div className="text-xs font-medium">{fmt.label}</div>
-                    <div className="text-[10px] text-[var(--tx3)]">{fmt.description}</div>
-                  </div>
-                </label>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Right panel: Coverage + Generated reports */}
-        <div className="space-y-4">
-          {/* Coverage card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">
-                {frameworkMeta?.label ?? selectedFramework} Coverage
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {coverageLoading ? (
-                <div className="flex items-center justify-center py-6 text-sm text-[var(--tx3)]">
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Loading coverage...
-                </div>
-              ) : coverageError ? (
-                <div className="flex items-center justify-center py-6 text-sm text-red-600">
-                  <AlertCircle className="w-4 h-4 mr-2" />
-                  Failed to load coverage data.
-                </div>
-              ) : coverage ? (
-                <div className="space-y-4">
-                  <CoverageSummaryBar coverage={coverage} />
-                  {coverage.sections.length > 0 && (
-                    <CoverageSectionBreakdown
-                      sections={coverage.sections}
-                      warningThreshold={coverage.warningThreshold}
-                    />
-                  )}
-                </div>
-              ) : selectedPeriodId ? (
-                <div className="text-center py-6 text-sm text-[var(--tx3)]">
-                  No coverage data available. Enter KPI values to see coverage.
-                </div>
-              ) : (
-                <div className="text-center py-6 text-sm text-[var(--tx3)]">
-                  Select a reporting period to view coverage.
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Generated reports card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">
-                {frameworkMeta?.label ?? selectedFramework} Reports
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {reportsLoading ? (
-                <div className="flex items-center justify-center py-8 text-sm text-[var(--tx3)]">
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Loading reports...
-                </div>
-              ) : generatedReports && generatedReports.length > 0 ? (
-                <div className="divide-y divide-[var(--bdr2)]">
-                  {generatedReports.map((report) => (
-                    <div key={report.reportId} className="py-3 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <FileText className="w-5 h-5 text-[var(--tx3)]" />
-                        <div>
-                          <div className="text-xs font-medium text-[var(--tx1)]">{report.name}</div>
-                          <div className="text-[10px] text-[var(--tx3)]">
-                            {report.format?.toUpperCase()} &middot;{" "}
-                            {new Date(report.createdAt).toLocaleDateString()}
-                            {report.metadata?.fileSize != null && (
-                              <> &middot; {formatFileSize(report.metadata.fileSize)}</>
-                            )}
-                            {report.metadata?.coverage && (
-                              <> &middot; {report.metadata.coverage.percentComplete}% coverage</>
-                            )}
-                          </div>
-                          {(report.status === "generating" || report.status === "pending") && (
-                            <div className="mt-1 space-y-1">
-                              <div className="flex items-center gap-1 text-[10px] text-amber-600">
-                                <Loader2 className="w-3 h-3 animate-spin" />
-                                {report.metadata?.progressMessage ?? (report.status === "pending" ? "Queued..." : "Generating report...")}
-                              </div>
-                              {report.metadata?.progressPercent != null && report.metadata.progressPercent > 0 && (
-                                <div className="w-32">
-                                  <ProgressBar value={report.metadata.progressPercent} max={100} />
-                                </div>
-                              )}
-                            </div>
-                          )}
-                          {report.metadata?.coverage && report.status === "complete" && (
-                            <div className="mt-1 w-32">
-                              <ProgressBar
-                                value={report.metadata.coverage.percentComplete}
-                                max={100}
-                              />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {statusBadge(report.status)}
-                        {report.status === "complete" && (
-                          <DownloadButton report={report} />
-                        )}
+      {/* Main layout */}
+      <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 12 }}>
+        {/* Left - Report list */}
+        <div>
+          <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)', marginBottom: 8 }}>Active Reports</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {REPORTS.map(r => (
+              <div key={r.id} onClick={() => setSelectedId(r.id)} style={{
+                background: 'var(--surf)', border: selectedId === r.id ? '1.5px solid var(--t400)' : '.5px solid var(--bdr)',
+                borderRadius: 10, padding: '12px 14px', cursor: 'pointer', transition: 'all .12s',
+                ...(selectedId === r.id ? { background: 'var(--t50)' } : {}),
+              }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 6, background: `${r.stdColor}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <span style={{ fontSize: 12 }}>📄</span>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx1)', lineHeight: 1.3 }}>{r.name}</div>
+                      <div style={{ display: 'flex', gap: 4, marginTop: 3 }}>
+                        <span style={{ fontSize: 8, padding: '1px 5px', borderRadius: 3, fontWeight: 700, background: `${r.stdColor}15`, color: r.stdColor }}>{r.standard}</span>
+                        <span style={{ fontSize: 8, color: 'var(--tx3)' }}>{r.type}</span>
+                        <span className={`badge ${STATUS_COLORS[r.status]}`} style={{ fontSize: 8 }}>{r.status}</span>
                       </div>
                     </div>
-                  ))}
+                  </div>
                 </div>
-              ) : (
-                <div className="text-center py-8 text-sm text-[var(--tx3)]">
-                  <FileText className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                  <p>No reports generated yet.</p>
-                  <p className="mt-1">Select a framework and period, then click Generate Report.</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 10, color: 'var(--tx3)' }}>Progress</span>
+                  <div className="pbar-bg" style={{ flex: 1, height: 4 }}><div className="pbar-fill" style={{ width: `${r.progress}%`, background: r.stdColor }} /></div>
+                  <span style={{ fontSize: 10, fontWeight: 600, fontFamily: 'var(--fm)', color: r.stdColor }}>{r.progress}%</span>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+                <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 4 }}>{r.fy} · {r.dueDate}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Right - Report detail */}
+        <div>
+          {/* Report header card */}
+          <div style={{ background: 'var(--surf)', border: '.5px solid var(--bdr)', borderRadius: 12, padding: '20px 24px', marginBottom: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+              <div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--tx1)', marginBottom: 4 }}>{report.name}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: 'var(--tx2)' }}>
+                  <span>📅 {report.fy}</span>
+                  <span>📌 {report.dueDate}</span>
+                  <span style={{ fontSize: 9, padding: '1px 5px', borderRadius: 3, fontWeight: 700, background: `${report.stdColor}15`, color: report.stdColor }}>{report.standard}</span>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button className="btn-secondary" style={{ fontSize: 11 }}>Preview</button>
+                <button className="btn-secondary" style={{ fontSize: 11 }}>Export</button>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 1fr 1fr', gap: 16, alignItems: 'center' }}>
+              {/* Donut */}
+              <div style={{ position: 'relative', width: 80, height: 80 }}>
+                <canvas ref={donutRef} />
+                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', textAlign: 'center' }}>
+                  <div style={{ fontSize: 16, fontWeight: 700, fontFamily: 'var(--fm)', color: 'var(--t700)' }}>{report.progress}%</div>
+                  <div style={{ fontSize: 8, color: 'var(--tx3)' }}>Done</div>
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--fm)', color: 'var(--tx1)' }}>{sectionsDone}/{totalSections}</div>
+                <div style={{ fontSize: 10, color: 'var(--tx3)' }}>Sections done</div>
+                <div style={{ fontSize: 16, fontWeight: 700, fontFamily: 'var(--fm)', color: 'var(--tx1)', marginTop: 4 }}>{sections.filter(s => s.progress === 100).length}</div>
+                <div style={{ fontSize: 10, color: 'var(--tx3)' }}>Principles done</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--fm)', color: 'var(--tx1)' }}>{questionsAnswered}</div>
+                <div style={{ fontSize: 10, color: 'var(--tx3)' }}>Questions answered</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700, fontFamily: 'var(--fm)', color: 'var(--tx1)' }}>2 hours ago</div>
+                <div style={{ fontSize: 10, color: 'var(--tx3)' }}>Last updated</div>
+              </div>
+            </div>
+          </div>
+
+          {/* AI bar */}
+          <div style={{ background: 'linear-gradient(135deg, var(--t700), #0d9488)', borderRadius: 10, padding: '14px 18px', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 28, height: 28, background: 'rgba(255,255,255,.2)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2l2 4 4 .5-3 3 .5 4L8 12l-3.5 1.5.5-4-3-3L6 6l2-4z" fill="white" /></svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>AI-Powered Assistance</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,.8)' }}>Intelligent content generation, smart suggestions from previous reports, and automated compliance checking.</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button style={{ padding: '7px 14px', background: '#fff', color: 'var(--t700)', border: 'none', borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Generate Content</button>
+              <button style={{ padding: '7px 14px', background: 'rgba(255,255,255,.15)', color: '#fff', border: '1px solid rgba(255,255,255,.3)', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>View Insights</button>
+            </div>
+          </div>
+
+          {/* Sections */}
+          <div style={{ background: 'var(--surf)', border: '.5px solid var(--bdr)', borderRadius: 12, overflow: 'hidden' }}>
+            <div style={{ padding: '14px 18px', borderBottom: '.5px solid var(--bdr)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx1)' }}>Report sections</span>
+                <span style={{ fontSize: 11, color: 'var(--tx3)', marginLeft: 8 }}>{totalSections} sections · {report.standard} template</span>
+              </div>
+              <div style={{ display: 'flex', gap: 10 }}>
+                {(['E', 'S', 'G'] as const).map(p => (
+                  <div key={p} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: PILLAR_COLORS[p] }} />
+                    <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{p === 'E' ? 'Env' : p === 'S' ? 'Social' : 'Gov'}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {sections.map((s, i) => (
+              <div key={s.code} style={{
+                display: 'grid', gridTemplateColumns: '40px 1fr 160px', alignItems: 'center', gap: 12,
+                padding: '12px 18px', borderBottom: i < sections.length - 1 ? '.5px solid var(--bdr2)' : 'none',
+                cursor: 'pointer', transition: 'background .1s',
+              }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'var(--bg)'}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = ''}>
+                {/* Status icon */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {s.progress === 100 ? (
+                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--grn)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M4 8l3 3 5-6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                    </div>
+                  ) : s.progress > 0 ? (
+                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--t100)', border: '2px solid var(--t400)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--t600)' }} />
+                    </div>
+                  ) : (
+                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--bdr2)', border: '2px solid var(--bdr)' }} />
+                  )}
+                </div>
+                {/* Section info */}
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 10, fontFamily: 'var(--fm)', fontWeight: 700, color: 'var(--tx3)', background: 'var(--bg)', padding: '1px 5px', borderRadius: 3 }}>{s.code}</span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx1)' }}>{s.name}</span>
+                  </div>
+                  <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 3, display: 'flex', gap: 8 }}>
+                    <span style={{ color: PILLAR_COLORS[s.pillar], fontWeight: 600 }}>{s.pillar === 'E' ? 'Environmental' : s.pillar === 'S' ? 'Social' : 'Governance'}</span>
+                    <span>{s.questions}</span>
+                    <span>Owner: {s.owner}</span>
+                    <span>{s.dept}</span>
+                  </div>
+                </div>
+                {/* Progress */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 10, color: 'var(--tx3)' }}>Progress</span>
+                  <div className="pbar-bg" style={{ flex: 1, height: 4 }}>
+                    <div className="pbar-fill" style={{ width: `${s.progress}%`, background: s.progress === 100 ? 'var(--grn)' : s.progress > 50 ? 'var(--t500)' : s.progress > 0 ? 'var(--amb)' : 'var(--bdr)' }} />
+                  </div>
+                  <span style={{ fontSize: 10, fontWeight: 700, fontFamily: 'var(--fm)', color: s.progress === 100 ? 'var(--grn)' : s.progress > 50 ? 'var(--t700)' : 'var(--red)' }}>{s.progress}%</span>
+                  <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="var(--tx3)" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

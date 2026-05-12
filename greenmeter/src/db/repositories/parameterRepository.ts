@@ -1,6 +1,6 @@
 import { db } from '@/db';
 import { kpiParameters } from '@/db/schema/kpi';
-import { eq, and, sql, ilike, or, isNull, asc } from 'drizzle-orm';
+import { eq, and, sql, ilike, or, isNull, asc, inArray } from 'drizzle-orm';
 import { AppError, ErrorCode } from '@/lib/errors';
 import type { ParameterListFilter } from '@/schemas/parameters';
 
@@ -120,8 +120,8 @@ export const parameterRepository = {
       .where(
         and(
           eq(kpiParameters.tenantId, tenantId),
-          sql`${kpiParameters.code} = ANY(${codes})`,
-          sql`${kpiParameters.standard} = ANY(${standards})`
+          inArray(kpiParameters.code, codes),
+          inArray(kpiParameters.standard, standards)
         )
       );
 

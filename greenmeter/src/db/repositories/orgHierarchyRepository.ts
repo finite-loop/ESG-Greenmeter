@@ -28,10 +28,11 @@ export interface OrgNodeInsert {
 }
 
 export const orgHierarchyRepository = {
-  async findAllByTenant(): Promise<OrgNodeRow[]> {
+  async findAllByTenant(tenantId: string): Promise<OrgNodeRow[]> {
     const data = await db
       .select()
       .from(orgNodes)
+      .where(eq(orgNodes.tenantId, tenantId))
       .orderBy(orgNodes.level, orgNodes.name);
 
     return data as OrgNodeRow[];

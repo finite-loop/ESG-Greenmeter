@@ -35,6 +35,12 @@ const SECTORS = [
   "Communication Services",
 ] as const;
 
+const MATCH_LEVELS = [
+  { value: "4", label: "Industry Group (4-digit)" },
+  { value: "6", label: "Industry (6-digit)" },
+  { value: "8", label: "Sub-Industry (8-digit)" },
+] as const;
+
 interface PeerOrganisation {
   peerId: string;
   name: string;
@@ -54,6 +60,24 @@ interface PeerResponse {
     pageSize: number;
     total: number;
   };
+}
+
+interface SuggestedPeer {
+  tenantId: string;
+  name: string;
+  sector: string | null;
+  country: string | null;
+  gicsCode: string | null;
+  kpiCount: number;
+  existingPeerId: string | null;
+}
+
+interface SyncResult {
+  sourceTenantId: string;
+  status: "created" | "already_exists" | "error";
+  peerId: string | null;
+  kpiCount: number;
+  error?: string;
 }
 
 interface PeerFormData {
@@ -92,6 +116,15 @@ export default function PeersPage() {
   const [editingPeerId, setEditingPeerId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
+  // Suggestions state
+  const [suggestions, setSuggestions] = useState<SuggestedPeer[]>([]);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const [suggestionsError, setSuggestionsError] = useState<string | null>(null);
+  const [suggestionsOpen, setSuggestionsOpen] = useState(true);
+  const [matchLevel, setMatchLevel] = useState("4");
+  const [syncingIds, setSyncingIds] = useState<Set<string>>(new Set());
+  const [syncAllLoading, setSyncAllLoading] = useState(false);
 
   const abortRef = useRef<AbortController | null>(null);
 
@@ -137,10 +170,115 @@ export default function PeersPage() {
     }
   }, []);
 
+  const fetchSuggestions = useCallback(async (level: string) => {
+    setSuggestionsLoading(true);
+    setSuggestionsError(null);
+
+    try {
+      const params = new URLSearchParams();
+      params.set("matchLevel", level);
+
+      const res = await fetch(`/api/peers/suggestions?${params.toString()}`);
+
+      if (res.status === 401 || res.status === 403) {
+        return;
+      }
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        setSuggestionsError(body?.error?.message ?? `Request failed with status ${res.status}`);
+        return;
+      }
+
+      const json: { data: SuggestedPeer[] } = await res.json();
+      setSuggestions(json.data);
+    } catch (err: unknown) {
+      setSuggestionsError(err instanceof Error ? err.message : "Failed to fetch suggestions");
+    } finally {
+      setSuggestionsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchPeers(1);
+    fetchSuggestions(matchLevel);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  function handleMatchLevelChange(level: string) {
+    setMatchLevel(level);
+    fetchSuggestions(level);
+  }
+
+  async function handleSyncOne(sourceTenantId: string) {
+    setSyncingIds((prev) => new Set(prev).add(sourceTenantId));
+
+    try {
+      const res = await fetch("/api/peers/suggestions/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sourceTenantIds: [sourceTenantId] }),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        setSuggestionsError(body?.error?.message ?? "Sync failed");
+        return;
+      }
+
+      const json: { data: SyncResult[] } = await res.json();
+      const result = json.data[0];
+
+      if (result?.status === "error") {
+        setSuggestionsError(result.error ?? "Sync failed");
+        return;
+      }
+
+      // Refresh both lists
+      fetchSuggestions(matchLevel);
+      fetchPeers(meta.page, search);
+    } catch (err: unknown) {
+      setSuggestionsError(err instanceof Error ? err.message : "Sync failed");
+    } finally {
+      setSyncingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(sourceTenantId);
+        return next;
+      });
+    }
+  }
+
+  async function handleSyncAll() {
+    const unsynced = suggestions.filter((s) => !s.existingPeerId);
+    if (unsynced.length === 0) return;
+
+    setSyncAllLoading(true);
+    setSuggestionsError(null);
+
+    try {
+      const res = await fetch("/api/peers/suggestions/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sourceTenantIds: unsynced.map((s) => s.tenantId),
+        }),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        setSuggestionsError(body?.error?.message ?? "Sync failed");
+        return;
+      }
+
+      // Refresh both lists
+      fetchSuggestions(matchLevel);
+      fetchPeers(meta.page, search);
+    } catch (err: unknown) {
+      setSuggestionsError(err instanceof Error ? err.message : "Sync failed");
+    } finally {
+      setSyncAllLoading(false);
+    }
+  }
 
   function handleSearch() {
     fetchPeers(1, search);
@@ -227,6 +365,7 @@ export default function PeersPage() {
   }
 
   const totalPages = Math.ceil(meta.total / (meta.pageSize || 20));
+  const unsyncedCount = suggestions.filter((s) => !s.existingPeerId).length;
 
   if (unauthorized) {
     return (
@@ -245,6 +384,128 @@ export default function PeersPage() {
         title="Peer Organisations"
         description="Manage peer companies for ESG benchmarking and comparison"
       />
+
+      {/* Industry Peers (GICS Auto-matched) */}
+      <div className="mb-6 rounded-lg border border-[var(--bdr)] bg-[var(--surf)]">
+        <button
+          type="button"
+          className="w-full flex items-center justify-between p-4 text-left"
+          onClick={() => setSuggestionsOpen((o) => !o)}
+        >
+          <div>
+            <h3 className="text-sm font-semibold text-[var(--tx)]">
+              Industry Peers (GICS Auto-matched)
+            </h3>
+            <p className="text-[11px] text-[var(--tx3)] mt-0.5">
+              Organisations in the same GICS industry group with available KPI data
+            </p>
+          </div>
+          <span className="text-[var(--tx3)] text-xs">
+            {suggestionsOpen ? "Collapse" : "Expand"} ({suggestions.length} found)
+          </span>
+        </button>
+
+        {suggestionsOpen && (
+          <div className="border-t border-[var(--bdr)] p-4">
+            {/* Controls */}
+            <div className="flex flex-wrap items-end gap-3 mb-3">
+              <div className="w-56">
+                <label className="block text-[11px] font-semibold text-[var(--tx2)] mb-[5px]">
+                  Match Level
+                </label>
+                <Select value={matchLevel} onValueChange={handleMatchLevelChange}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MATCH_LEVELS.map((m) => (
+                      <SelectItem key={m.value} value={m.value}>
+                        {m.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {unsyncedCount > 0 && (
+                <div className="pb-[2px]">
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={handleSyncAll}
+                    disabled={syncAllLoading}
+                  >
+                    {syncAllLoading ? "Syncing..." : `Sync All (${unsyncedCount})`}
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Error */}
+            {suggestionsError && (
+              <div className="mb-3 p-2 rounded bg-[var(--redbg)] text-[var(--redtx)] text-xs">
+                {suggestionsError}
+              </div>
+            )}
+
+            {/* Suggestions table */}
+            {suggestionsLoading ? (
+              <div className="py-6 text-center text-[var(--tx3)] text-xs">
+                Loading suggestions...
+              </div>
+            ) : suggestions.length === 0 ? (
+              <div className="py-6 text-center text-[var(--tx3)] text-xs">
+                No matching industry peers found. Your organisation may need a GICS code configured, or try a broader match level.
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Organisation</TableHead>
+                    <TableHead>Sector</TableHead>
+                    <TableHead>Country</TableHead>
+                    <TableHead>GICS Code</TableHead>
+                    <TableHead>KPI Data Points</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {suggestions.map((s) => {
+                    const isSyncing = syncingIds.has(s.tenantId) || syncAllLoading;
+                    const isAdded = !!s.existingPeerId;
+
+                    return (
+                      <TableRow key={s.tenantId}>
+                        <TableCell className="font-medium">{s.name}</TableCell>
+                        <TableCell>{s.sector ?? "—"}</TableCell>
+                        <TableCell>{s.country ?? "—"}</TableCell>
+                        <TableCell>
+                          <span className="font-mono text-[11px]">{s.gicsCode ?? "—"}</span>
+                        </TableCell>
+                        <TableCell>{s.kpiCount.toLocaleString()}</TableCell>
+                        <TableCell>
+                          {isAdded ? (
+                            <Badge variant="success">Already Added</Badge>
+                          ) : isSyncing ? (
+                            <Badge variant="neutral">Syncing...</Badge>
+                          ) : (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => handleSyncOne(s.tenantId)}
+                            >
+                              Add as Peer
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Search + Add */}
       <div className="flex flex-wrap items-end gap-3 mb-4">

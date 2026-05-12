@@ -1,428 +1,119 @@
 "use client";
-
-import { useState, useCallback } from "react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { Badge } from "@/components/ui/Badge";
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalTitle,
-  ModalDescription,
-  ModalFooter,
-} from "@/components/ui/Modal";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/Select";
-import { SupplierTable } from "@/components/supply-chain/SupplierTable";
-import { SupplierDetailPanel } from "@/components/supply-chain/SupplierDetailPanel";
-import Scope3Breakdown from "@/components/supply-chain/Scope3Breakdown";
-import {
-  useSuppliers,
-  useSupplierDetail,
-  useCreateSupplier,
-  useUpsertAssessment,
-  useScope3Summary,
-  useGeneratePortalToken,
-} from "@/hooks/useSuppliers";
-import type { CreateSupplierInput, UpsertAssessmentInput } from "@/hooks/useSuppliers";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- matches AppShell navProps spread pattern used by all screens
-type Props = { navigate: (s: any) => void; [k: string]: any };
+import { useEffect, useRef } from "react";
+type Props = { navigate:(s:any)=>void; [k:string]:any };
 
 export default function SupplyChainScreen({ navigate }: Props) {
-  const [activeTab, setActiveTab] = useState<"suppliers" | "scope3">("suppliers");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<string>("");
-  const [riskFilter, setRiskFilter] = useState<string>("");
-  const [selectedSupplierId, setSelectedSupplierId] = useState<string | null>(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [portalLinkCopied, setPortalLinkCopied] = useState(false);
-  const [page, setPage] = useState(1);
+  const donutRef = useRef<HTMLCanvasElement>(null);
 
-  // Create form state
-  const [newName, setNewName] = useState("");
-  const [newSector, setNewSector] = useState("");
-  const [newCountry, setNewCountry] = useState("");
-  const [newCategory, setNewCategory] = useState("");
-  const [newContactName, setNewContactName] = useState("");
-  const [newContactEmail, setNewContactEmail] = useState("");
+  const suppliers = [
+    { name: 'Tata Steel Ltd', sector: 'Steel', tier: 1, score: 72, scope3: '124k', completion: 91, risk: 'low', status: 'Complete' },
+    { name: 'Mahindra Logistics', sector: 'Logistics', tier: 1, score: 58, scope3: '89k', completion: 78, risk: 'medium', status: 'Complete' },
+    { name: 'Asian Paints', sector: 'Chemicals', tier: 1, score: 81, scope3: '42k', completion: 85, risk: 'low', status: 'Complete' },
+    { name: 'CEAT Tyres', sector: 'Auto components', tier: 1, score: 44, scope3: '67k', completion: 54, risk: 'high', status: 'Partial' },
+    { name: 'Bajaj Electricals', sector: 'Electrical', tier: 1, score: 39, scope3: '38k', completion: 46, risk: 'high', status: 'Partial' },
+    { name: 'Premier Industries', sector: 'Electronics', tier: 2, score: 28, scope3: '55k', completion: 32, risk: 'high', status: 'Pending' },
+    { name: 'Thermax Ltd', sector: 'Energy', tier: 1, score: 69, scope3: '33k', completion: 88, risk: 'low', status: 'Complete' },
+  ];
 
-  const { data: suppliersResponse, isLoading } = useSuppliers({
-    search: searchQuery || undefined,
-    category: (categoryFilter as "tier1" | "tier2" | "tier3") || undefined,
-    riskLevel: (riskFilter as "low" | "medium" | "high" | "critical") || undefined,
-    page,
-    pageSize: 20,
-  });
-
-  const { data: detailResponse } = useSupplierDetail(selectedSupplierId);
-
-  const { data: scope3Response } = useScope3Summary(activeTab === "scope3");
-
-  const createMutation = useCreateSupplier();
-  const assessmentMutation = useUpsertAssessment();
-  const portalTokenMutation = useGeneratePortalToken();
-
-  const suppliers = suppliersResponse?.data ?? [];
-  const meta = suppliersResponse?.meta;
-  const supplierDetail = detailResponse?.data ?? null;
-  const scope3Data = scope3Response?.data ?? null;
-
-  const handleGeneratePortalLink = useCallback(
-    (supplierId: string) => {
-      portalTokenMutation.mutate(supplierId, {
-        onSuccess: (data) => {
-          const url = `${window.location.origin}${data.data.portalUrl}`;
-          navigator.clipboard.writeText(url).then(() => {
-            setPortalLinkCopied(true);
-            setTimeout(() => setPortalLinkCopied(false), 3000);
-          });
+  useEffect(() => {
+    let chart: any;
+    (async () => {
+      const { Chart, registerables } = await import('chart.js');
+      Chart.register(...registerables);
+      if (!donutRef.current) return;
+      chart = new Chart(donutRef.current, {
+        type: 'doughnut',
+        data: {
+          labels: ['Cat 1: Purchased goods', 'Cat 4: Transport', 'Cat 11: Use of products', 'Cat 6: Travel', 'Other'],
+          datasets: [{
+            data: [420, 180, 150, 80, 60],
+            backgroundColor: ['#0f766e', '#5eead4', '#6366f1', '#f59e0b', '#e5e7eb'],
+            borderWidth: 0,
+          }],
+        },
+        options: {
+          responsive: true, maintainAspectRatio: true, cutout: '60%',
+          plugins: {
+            legend: { display: true, position: 'bottom', labels: { font: { family: 'DM Sans', size: 9 }, color: '#64748b', boxWidth: 10, padding: 6 } },
+            tooltip: { backgroundColor: '#0f172a', bodyFont: { family: 'DM Mono', size: 11 } },
+          },
         },
       });
-    },
-    [portalTokenMutation]
-  );
-
-  const handleCreateSupplier = useCallback(() => {
-    const input: CreateSupplierInput = {
-      name: newName,
-      ...(newSector ? { sector: newSector } : {}),
-      ...(newCountry ? { country: newCountry } : {}),
-      ...(newCategory ? { category: newCategory as "tier1" | "tier2" | "tier3" } : {}),
-      ...(newContactName ? { contactName: newContactName } : {}),
-      ...(newContactEmail ? { contactEmail: newContactEmail } : {}),
-    };
-
-    createMutation.mutate(input, {
-      onSuccess: () => {
-        setShowCreateModal(false);
-        setNewName("");
-        setNewSector("");
-        setNewCountry("");
-        setNewCategory("");
-        setNewContactName("");
-        setNewContactEmail("");
-      },
-    });
-  }, [newName, newSector, newCountry, newCategory, newContactName, newContactEmail, createMutation]);
-
-  const handleUpsertAssessment = useCallback(
-    (supplierId: string, input: UpsertAssessmentInput) => {
-      assessmentMutation.mutate({ supplierId, input });
-    },
-    [assessmentMutation]
-  );
-
-  // Summary stats
-  const totalSuppliers = meta?.total ?? 0;
-  const highRiskCount = suppliers.filter(
-    (s) => s.riskLevel === "high" || s.riskLevel === "critical"
-  ).length;
-
-  if (selectedSupplierId && supplierDetail) {
-    return (
-      <div>
-        <div className="ph">
-          <div>
-            <div className="ptitle">Supplier Detail</div>
-            <div className="psub">ESG scorecard and assessment data</div>
-          </div>
-        </div>
-        <SupplierDetailPanel
-          supplier={supplierDetail}
-          onClose={() => setSelectedSupplierId(null)}
-          onUpsertAssessment={handleUpsertAssessment}
-          isAssessmentLoading={assessmentMutation.isPending}
-          onGeneratePortalLink={handleGeneratePortalLink}
-          isPortalLinkLoading={portalTokenMutation.isPending}
-        />
-      </div>
-    );
-  }
+    })();
+    return () => chart?.destroy();
+  }, []);
 
   return (
     <div>
       <div className="ph">
-        <div>
-          <div className="ptitle">Supply chain ESG</div>
-          <div className="psub">
-            Tier 1 &amp; Tier 2 suppliers &middot; Scope 3 Cat 1 emissions &middot; ESG
-            scorecards &middot; survey management
-          </div>
-        </div>
+        <div><div className="ptitle">Supply chain ESG</div><div className="psub">Scope 3 · 38 Tier-1 suppliers · vendor portal</div></div>
         <div className="ph-acts">
-          <Button variant="primary" onClick={() => setShowCreateModal(true)}>
-            + Add supplier
-          </Button>
+          <button className="btn-secondary">Send survey</button>
+          <button className="btn-primary">+ Add supplier</button>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 mb-3 border-b border-[var(--bdr)]">
-        <button
-          className={`px-3 py-1.5 text-xs font-semibold border-b-2 transition-colors ${
-            activeTab === "suppliers"
-              ? "border-[var(--t700)] text-[var(--t700)]"
-              : "border-transparent text-[var(--tx3)] hover:text-[var(--tx2)]"
-          }`}
-          onClick={() => setActiveTab("suppliers")}
-        >
-          Suppliers
-        </button>
-        <button
-          className={`px-3 py-1.5 text-xs font-semibold border-b-2 transition-colors ${
-            activeTab === "scope3"
-              ? "border-[var(--t700)] text-[var(--t700)]"
-              : "border-transparent text-[var(--tx3)] hover:text-[var(--tx2)]"
-          }`}
-          onClick={() => setActiveTab("scope3")}
-        >
-          Scope 3 Emissions
-        </button>
-      </div>
-
-      {/* Portal link copied toast */}
-      {portalLinkCopied && (
-        <div className="mb-3 p-2 rounded-lg bg-[#f0fdfa] border border-[#99f6e4] text-xs text-[#134e4a] text-center">
-          Portal link copied to clipboard
-        </div>
-      )}
-
-      {activeTab === "scope3" && scope3Data && (
-        <Scope3Breakdown
-          totalScope3Cat1={scope3Data.totalScope3Cat1}
-          supplierBreakdown={scope3Data.supplierBreakdown}
-          onSupplierClick={(id) => {
-            setSelectedSupplierId(id);
-            setActiveTab("suppliers");
-          }}
-        />
-      )}
-
-      {activeTab === "scope3" && !scope3Data && (
-        <div className="p-8 text-center text-xs text-[var(--tx3)]">
-          Loading Scope 3 data...
-        </div>
-      )}
-
-      {activeTab === "suppliers" && (
-        <>
       {/* Summary strip */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: 10,
-          marginBottom: 14,
-        }}
-      >
-        <div className="stat-card">
-          <div className="slbl">Total suppliers</div>
-          <div className="sval" style={{ color: "var(--tx1)" }}>
-            {totalSuppliers}
-          </div>
-          <div className="ssub">All categories</div>
-        </div>
-        <div className="stat-card">
-          <div className="slbl">High risk</div>
-          <div className="sval" style={{ color: "var(--red)" }}>
-            {highRiskCount}
-          </div>
-          <div className="ssub">Score below 40</div>
-        </div>
-        <div className="stat-card">
-          <div className="slbl">Showing</div>
-          <div className="sval" style={{ color: "var(--t700)" }}>
-            {suppliers.length}
-          </div>
-          <div className="ssub">On this page</div>
-        </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10, marginBottom: 14 }}>
+        {([
+          ['Total Suppliers', '38', 'Tier-1 active', 'var(--tx1)'],
+          ['Data Submitted', '24', '63% response rate', 'var(--t700)'],
+          ['High Risk', '6', 'ESG score <40', 'var(--red)'],
+          ['Scope 3 Cat 1', '890k tCO2e', 'Purchased goods', 'var(--tx1)'],
+        ] as [string, string, string, string][]).map(([l, v, s, c]) => (
+          <div key={l} className="stat-card"><div className="slbl">{l}</div><div className="sval" style={{ color: c }}>{v}</div><div className="ssub">{s}</div></div>
+        ))}
       </div>
 
-      {/* Filters + Table */}
-      <Card>
-        <CardHeader>
-          <div>
-            <CardTitle>Supplier ESG scorecards</CardTitle>
-            <CardDescription>
-              Manage suppliers and track ESG performance
-            </CardDescription>
+      {/* Main layout: table + chart */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 12 }}>
+        {/* Supplier table */}
+        <div className="card">
+          <div className="card-head">
+            <div><div className="ctitle">Supplier ESG scorecards</div></div>
           </div>
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              placeholder="Search suppliers..."
-              className="px-2 py-1.5 border border-[var(--bdr)] rounded-[7px] text-xs bg-[var(--surf)] outline-none w-40"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setPage(1);
-              }}
-            />
-            <Select
-              value={categoryFilter}
-              onValueChange={(v) => {
-                setCategoryFilter(v === "all" ? "" : v);
-                setPage(1);
-              }}
-            >
-              <SelectTrigger className="w-[100px]">
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="tier1">Tier 1</SelectItem>
-                <SelectItem value="tier2">Tier 2</SelectItem>
-                <SelectItem value="tier3">Tier 3</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select
-              value={riskFilter}
-              onValueChange={(v) => {
-                setRiskFilter(v === "all" ? "" : v);
-                setPage(1);
-              }}
-            >
-              <SelectTrigger className="w-[100px]">
-                <SelectValue placeholder="Risk" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All risk</SelectItem>
-                <SelectItem value="low">Low</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-                <SelectItem value="critical">Critical</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="p-8 text-center text-xs text-[var(--tx3)]">
-              Loading suppliers...
-            </div>
-          ) : (
-            <SupplierTable
-              suppliers={suppliers}
-              onView={(id) => setSelectedSupplierId(id)}
-            />
-          )}
-        </CardContent>
-      </Card>
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th>Supplier</th>
+                <th style={{ textAlign: 'right' }}>ESG Score</th>
+                <th style={{ textAlign: 'right' }}>Scope 3</th>
+                <th>Completion</th>
+                <th>Risk</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {suppliers.map(s => (
+                <tr key={s.name}>
+                  <td style={{ fontWeight: 500 }}>{s.name}</td>
+                  <td style={{ textAlign: 'right' }}>
+                    <span style={{ fontSize: 15, fontWeight: 700, fontFamily: 'var(--fm)', color: s.score >= 60 ? 'var(--t700)' : s.score >= 40 ? 'var(--amb)' : 'var(--red)' }}>{s.score}</span>
+                  </td>
+                  <td style={{ textAlign: 'right', fontFamily: 'var(--fm)', fontSize: 11 }}>{s.scope3}</td>
+                  <td>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <div className="pbar-bg" style={{ width: 60 }}><div className="pbar-fill" style={{ width: `${s.completion}%`, background: s.completion >= 80 ? 'var(--t500)' : s.completion >= 60 ? 'var(--amb)' : 'var(--red)' }} /></div>
+                    </div>
+                  </td>
+                  <td><span className={`badge b-${s.risk === 'low' ? 'green' : s.risk === 'medium' ? 'amber' : 'red'}`} style={{ fontSize: 9 }}>{s.risk === 'low' ? 'Low' : s.risk === 'medium' ? 'Medium' : 'High'}</span></td>
+                  <td><span className={`badge b-${s.status === 'Complete' ? 'green' : s.status === 'Partial' ? 'amber' : 'gray'}`} style={{ fontSize: 9 }}>{s.status}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-      {/* Pagination */}
-      {meta && meta.total > meta.pageSize && (
-        <div className="flex items-center justify-between mt-3 text-xs text-[var(--tx3)]">
-          <span>
-            Page {meta.page} of {Math.ceil(meta.total / meta.pageSize)}
-          </span>
-          <div className="flex gap-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              disabled={page >= Math.ceil(meta.total / meta.pageSize)}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              Next
-            </Button>
+        {/* Scope 3 donut */}
+        <div className="card" style={{ padding: 16 }}>
+          <div className="card-head" style={{ paddingBottom: 10 }}>
+            <div className="ctitle">Scope 3 by category</div>
+          </div>
+          <div style={{ position: 'relative', width: '100%', maxWidth: 240, margin: '0 auto' }}>
+            <canvas ref={donutRef} />
           </div>
         </div>
-      )}
-
-      </>
-      )}
-
-      {/* Create supplier modal */}
-      <Modal open={showCreateModal} onOpenChange={setShowCreateModal}>
-        <ModalContent>
-          <ModalHeader>
-            <ModalTitle>Add Supplier</ModalTitle>
-            <ModalDescription>
-              Register a new supplier for ESG tracking
-            </ModalDescription>
-          </ModalHeader>
-          <div className="space-y-1">
-            <Input
-              label="Supplier Name"
-              id="supplierName"
-              placeholder="e.g., Tata Steel Ltd"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-            />
-            <Input
-              label="Sector"
-              id="sector"
-              placeholder="e.g., Steel, Electronics"
-              value={newSector}
-              onChange={(e) => setNewSector(e.target.value)}
-            />
-            <Input
-              label="Country"
-              id="country"
-              placeholder="e.g., India"
-              value={newCountry}
-              onChange={(e) => setNewCountry(e.target.value)}
-            />
-            <div className="mb-[13px]">
-              <label className="block text-[11px] font-semibold text-[var(--tx2)] mb-[5px]">
-                Category
-              </label>
-              <Select value={newCategory} onValueChange={setNewCategory}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select tier" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="tier1">Tier 1</SelectItem>
-                  <SelectItem value="tier2">Tier 2</SelectItem>
-                  <SelectItem value="tier3">Tier 3</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <Input
-              label="Contact Name"
-              id="contactName"
-              placeholder="e.g., John Doe"
-              value={newContactName}
-              onChange={(e) => setNewContactName(e.target.value)}
-            />
-            <Input
-              label="Contact Email"
-              id="contactEmail"
-              type="email"
-              placeholder="e.g., john@example.com"
-              value={newContactEmail}
-              onChange={(e) => setNewContactEmail(e.target.value)}
-            />
-          </div>
-          <ModalFooter>
-            <Button variant="secondary" onClick={() => setShowCreateModal(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleCreateSupplier}
-              disabled={!newName.trim()}
-              loading={createMutation.isPending}
-            >
-              Create Supplier
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      </div>
     </div>
   );
 }

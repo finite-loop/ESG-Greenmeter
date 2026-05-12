@@ -4,8 +4,8 @@ import { createOrgNodeSchema } from '@/schemas/orgHierarchy';
 import { AppError, ErrorCode } from '@/lib/errors';
 
 export const GET = withApiHandler(
-  async () => {
-    const tree = await orgHierarchyService.getTree();
+  async (_req, ctx) => {
+    const tree = await orgHierarchyService.getTree(ctx.tenantId);
 
     return { data: tree };
   },

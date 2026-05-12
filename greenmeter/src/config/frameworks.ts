@@ -675,11 +675,99 @@ const ifrsS2Template: ReportTemplate = {
 // Exported template registry
 // ---------------------------------------------------------------------------
 
+const sasbTemplate: ReportTemplate = {
+  framework: 'SASB',
+  name: 'SASB Disclosure Report',
+  version: '1.0',
+  description: 'Sustainability Accounting Standards Board industry-specific disclosure. Covers financially material ESG topics.',
+  sections: [
+    {
+      id: 'sasb-env',
+      name: 'Environmental',
+      description: 'Environmental footprint, energy management, and ecological impacts',
+      pillar: 'E',
+      disclosures: [
+        { id: 'sasb-env-footprint', name: 'Environmental Footprint', standardSection: 'Environmental Footprint' },
+        { id: 'sasb-env-energy', name: 'Energy Management', standardSection: 'Energy Management' },
+      ],
+    },
+    {
+      id: 'sasb-social',
+      name: 'Social Capital & Human Capital',
+      description: 'Data privacy, workforce, health & safety, and community impacts',
+      pillar: 'S',
+      disclosures: [
+        { id: 'sasb-soc-privacy', name: 'Data Privacy & Security', standardSection: 'Data Privacy & Security' },
+        { id: 'sasb-soc-workforce', name: 'Human Capital', standardSection: 'Human Capital' },
+        { id: 'sasb-soc-health', name: 'Health & Safety', standardSection: 'Health & Safety' },
+      ],
+    },
+    {
+      id: 'sasb-gov',
+      name: 'Leadership & Governance',
+      description: 'Business ethics, systemic risk management, and activity metrics',
+      pillar: 'G',
+      disclosures: [
+        { id: 'sasb-gov-ethics', name: 'Business Ethics', standardSection: 'Business Ethics' },
+        { id: 'sasb-gov-risk', name: 'Managing Systemic Risks', standardSection: 'Managing Systemic Risks' },
+        { id: 'sasb-gov-activity', name: 'Activity Metrics', standardSection: 'Activity Metrics' },
+      ],
+    },
+  ],
+};
+
+const tcfdTemplate: ReportTemplate = {
+  framework: 'TCFD',
+  name: 'TCFD Disclosure Report',
+  version: '1.0',
+  description: 'Task Force on Climate-related Financial Disclosures. Covers Governance, Strategy, Risk Management, and Metrics & Targets.',
+  sections: [
+    {
+      id: 'tcfd-governance',
+      name: 'Governance',
+      description: 'Board oversight and management role in climate-related risks and opportunities',
+      pillar: 'G',
+      disclosures: [
+        { id: 'tcfd-gov-board', name: 'Board Oversight', standardSection: 'Governance' },
+      ],
+    },
+    {
+      id: 'tcfd-strategy',
+      name: 'Strategy',
+      description: 'Climate-related risks, opportunities, and their impact on strategy and financial planning',
+      pillar: 'S',
+      disclosures: [
+        { id: 'tcfd-str-risks', name: 'Strategy & Scenario Analysis', standardSection: 'Strategy' },
+      ],
+    },
+    {
+      id: 'tcfd-risk',
+      name: 'Risk Management',
+      description: 'Processes for identifying, assessing, and managing climate-related risks',
+      pillar: 'S',
+      disclosures: [
+        { id: 'tcfd-risk-process', name: 'Risk Management Processes', standardSection: 'Risk Management' },
+      ],
+    },
+    {
+      id: 'tcfd-metrics',
+      name: 'Metrics & Targets',
+      description: 'Metrics and targets used to assess and manage climate-related risks and opportunities',
+      pillar: 'E',
+      disclosures: [
+        { id: 'tcfd-met-ghg', name: 'Metrics & Targets', standardSection: 'Metrics & Targets' },
+      ],
+    },
+  ],
+};
+
 export const REPORT_TEMPLATES: Record<Framework, ReportTemplate> = {
   BRSR: brsrTemplate,
   ESRS: esrsTemplate,
   GRI: griTemplate,
   IFRS_S2: ifrsS2Template,
+  SASB: sasbTemplate,
+  TCFD: tcfdTemplate,
 };
 
 /**

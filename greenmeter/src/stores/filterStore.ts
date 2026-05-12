@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type Standard = 'BRSR' | 'ESRS' | 'GRI' | 'IFRS_S2';
+export type Standard = 'BRSR' | 'ESRS' | 'GRI' | 'IFRS_S2' | 'SASB' | 'TCFD';
 
 interface FilterState {
   activePeriod: string | null;

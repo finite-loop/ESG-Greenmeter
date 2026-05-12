@@ -62,13 +62,13 @@ describe('orgHierarchyService.getTree', () => {
 
   it('returns empty array for no nodes', async () => {
     mockFindAllByTenant.mockResolvedValue([]);
-    const tree = await orgHierarchyService.getTree();
+    const tree = await orgHierarchyService.getTree('tenant-1');
     expect(tree).toEqual([]);
   });
 
   it('builds tree with parent-child relationship', async () => {
     mockFindAllByTenant.mockResolvedValue([rootNode, childNode]);
-    const tree = await orgHierarchyService.getTree();
+    const tree = await orgHierarchyService.getTree('tenant-1');
 
     expect(tree).toHaveLength(1);
     expect(tree[0].nodeId).toBe('node-root');
@@ -80,7 +80,7 @@ describe('orgHierarchyService.getTree', () => {
   it('handles multiple roots', async () => {
     const root2 = { ...rootNode, nodeId: 'node-root-2', name: 'Beta Corp' };
     mockFindAllByTenant.mockResolvedValue([rootNode, root2]);
-    const tree = await orgHierarchyService.getTree();
+    const tree = await orgHierarchyService.getTree('tenant-1');
 
     expect(tree).toHaveLength(2);
   });

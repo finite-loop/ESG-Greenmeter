@@ -2,7 +2,7 @@ name: CI/CD to Azure
 
 on:
   push:
-    branches: [main]
+    branches: [master]
 
 permissions:
   contents: read

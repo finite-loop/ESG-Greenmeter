@@ -29,7 +29,19 @@ export const peerListFilterSchema = paginationSchema.extend({
   active: z.coerce.boolean().optional(),
 });
 
+export const peerSuggestionsFilterSchema = z.object({
+  matchLevel: z.coerce.number().refine((v) => [4, 6, 8].includes(v), {
+    message: 'matchLevel must be 4, 6, or 8',
+  }).default(4),
+});
+
+export const peerSyncSchema = z.object({
+  sourceTenantIds: z.array(z.string().uuid()).min(1).max(20),
+});
+
 export type CreatePeer = z.infer<typeof createPeerSchema>;
 export type UpdatePeer = z.infer<typeof updatePeerSchema>;
 export type PeerValuesFilter = z.infer<typeof peerValuesFilterSchema>;
 export type PeerListFilter = z.infer<typeof peerListFilterSchema>;
+export type PeerSuggestionsFilter = z.infer<typeof peerSuggestionsFilterSchema>;
+export type PeerSync = z.infer<typeof peerSyncSchema>;
