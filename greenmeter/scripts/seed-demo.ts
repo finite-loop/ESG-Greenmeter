@@ -462,6 +462,23 @@ async function main() {
     console.log(`  [params] ${t.name}: ${cloned} params cloned`);
   }
 
+  // Rebuild tenantParamMap from DB (handles re-runs where ON CONFLICT DO NOTHING kept old UUIDs)
+  console.log('  Rebuilding param map from DB...');
+  tenantParamMap.clear();
+  for (const t of TENANTS) {
+    const existingParams = await sql`
+      SELECT param_id, canonical_id FROM kpi_parameters
+      WHERE tenant_id = ${T[t.key]}::uuid AND canonical_id IS NOT NULL
+    `;
+    for (const ep of existingParams) {
+      const mapKey = `${t.key}:${ep.canonical_id}`;
+      if (!tenantParamMap.has(mapKey)) {
+        tenantParamMap.set(mapKey, ep.param_id);
+      }
+    }
+  }
+  console.log(`  Param map rebuilt: ${tenantParamMap.size} entries`);
+
   // ── 3f. KPI Values ──
   console.log('\n[6/12] Seeding KPI values...');
 
