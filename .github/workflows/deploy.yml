@@ -54,6 +54,15 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      - name: Configure GHCR credentials on App Service
+        run: |
+          az webapp config container set \
+            --name ${{ secrets.AZURE_WEBAPP_NAME }} \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --registry-server-url https://ghcr.io \
+            --registry-server-user ${{ github.actor }} \
+            --registry-server-password ${{ secrets.GHCR_PAT }}
+
       - name: Deploy App to Azure
         uses: azure/webapps-deploy@v3
         with:
