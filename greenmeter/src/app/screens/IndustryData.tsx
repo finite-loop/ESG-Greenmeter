@@ -164,14 +164,17 @@ function fmtChange(curr: number, prev: number, unit: string): { text: string; go
 }
 
 /* ── Mini sparkline SVG ──────────────────────────────────────── */
-function Sparkline({ values, color, width = 64, height = 28 }: { values: number[]; color: string; width?: number; height?: number }) {
+const YEAR_LABELS = ['FY22', 'FY23', 'FY24', 'FY25'];
+
+function Sparkline({ values, color, width = 80, height = 40, showYears = false }: { values: number[]; color: string; width?: number; height?: number; showYears?: boolean }) {
   if (values.length < 2) return null;
   const min = Math.min(...values);
   const max = Math.max(...values);
   const range = max - min || 1;
-  const padding = 2;
+  const padding = 4;
+  const labelH = showYears ? 12 : 0;
   const w = width - padding * 2;
-  const h = height - padding * 2;
+  const h = height - padding * 2 - labelH;
 
   const points = values.map((v, i) => {
     const x = padding + (i / (values.length - 1)) * w;
@@ -189,6 +192,14 @@ function Sparkline({ values, color, width = 64, height = 28 }: { values: number[
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+      {showYears && values.map((_, i) => {
+        const x = padding + (i / (values.length - 1)) * w;
+        return (
+          <text key={i} x={x} y={height - 1} textAnchor="middle" fill="#94a3b8" fontSize="7" fontFamily="var(--fm)">
+            {YEAR_LABELS[i] ?? ''}
+          </text>
+        );
+      })}
     </svg>
   );
 }
@@ -216,6 +227,7 @@ export default function IndustryDataScreen({ navigate }: Props) {
   const [viewLevel, setViewLevel] = useState('organization');
   const [metricSearch, setMetricSearch] = useState('');
   const [metricMode, setMetricMode] = useState('Absolute');
+  const [showAllCompanies, setShowAllCompanies] = useState(false);
 
   const company = selectedId ? COMPANIES.find(c => c.id === selectedId) ?? null : null;
   const data = selectedId ? COMPANY_DATA[selectedId] : null;
@@ -259,7 +271,7 @@ export default function IndustryDataScreen({ navigate }: Props) {
             Choose a year and search for any organisation from the corpus of {COMPANIES.length} indexed companies. ESG metrics, trends, benchmarks, and anomalies will appear here.
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 8 }}>
-            {filteredCompanies.slice(0, 8).map(c => (
+            {(showAllCompanies ? filteredCompanies : filteredCompanies.slice(0, 8)).map(c => (
               <button key={c.id} onClick={() => { setSelectedId(c.id); setTab('trends'); }}
                 style={{ padding: '6px 14px', border: '.5px solid var(--bdr)', borderRadius: 20, fontSize: 12, fontWeight: 500, cursor: 'pointer', background: 'var(--surf)', color: 'var(--tx1)', transition: 'all .12s' }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--t50)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--t400)'; }}
@@ -267,8 +279,19 @@ export default function IndustryDataScreen({ navigate }: Props) {
                 {c.name}
               </button>
             ))}
-            {filteredCompanies.length > 8 && (
-              <span style={{ padding: '6px 14px', fontSize: 12, color: 'var(--tx3)' }}>+ {filteredCompanies.length - 8} more…</span>
+            {!showAllCompanies && filteredCompanies.length > 8 && (
+              <button onClick={() => setShowAllCompanies(true)}
+                style={{ padding: '6px 14px', border: '.5px solid var(--t400)', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer', background: 'var(--t50)', color: 'var(--t700)', transition: 'all .12s' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--t100)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'var(--t50)'; }}>
+                + {filteredCompanies.length - 8} more
+              </button>
+            )}
+            {showAllCompanies && filteredCompanies.length > 8 && (
+              <button onClick={() => setShowAllCompanies(false)}
+                style={{ padding: '6px 14px', border: '.5px solid var(--bdr)', borderRadius: 20, fontSize: 12, fontWeight: 500, cursor: 'pointer', background: 'var(--surf)', color: 'var(--tx3)', transition: 'all .12s' }}>
+                Show less
+              </button>
             )}
           </div>
         </div>
@@ -474,7 +497,7 @@ function TrendsKpiTab({ data, year, metricSearch, setMetricSearch, metricMode, s
                   {change.arrow} {change.text} <span style={{ color: 'var(--tx3)', fontWeight: 400 }}>{year}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 8 }}>
-                  <Sparkline values={sparkValues} color={change.good ? '#10b981' : '#ef4444'} />
+                  <Sparkline values={sparkValues} color={change.good ? '#10b981' : '#ef4444'} showYears />
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{YEARS.length} years of data</div>
                     <div style={{ fontSize: 10, fontWeight: 600, fontFamily: 'var(--fm)', color: overallChange < 0 ? 'var(--t700)' : overallChange > 0 ? 'var(--red)' : 'var(--tx3)', marginTop: 1 }}>
