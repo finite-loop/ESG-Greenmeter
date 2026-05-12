@@ -15,6 +15,7 @@
     "db:seed-dev": "node --env-file=.env node_modules/.bin/tsx scripts/seed-dev-user.ts",
     "db:seed-demo": "node --env-file=.env node_modules/.bin/tsx scripts/seed-demo.ts",
     "db:seed-uk": "node --env-file=.env node_modules/.bin/tsx scripts/seed-uk-companies.ts",
+    "db:seed-peers": "node --env-file=.env node_modules/.bin/tsx scripts/seed-peer-links.ts",
     "db:setup": "npm run db:migrate && npm run db:setup-rls && npm run db:seed && npm run db:seed-dev",
     "test": "vitest run",
     "test:watch": "vitest",
