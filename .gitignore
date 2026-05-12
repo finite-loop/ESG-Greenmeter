@@ -12,8 +12,9 @@ Thumbs.db
 # build artifacts
 *.tsbuildinfo
 
-_bmad
-.claude
+_bmad/
+_bmad-output/
+.claude/
 CLAUDE.md
 
 SS/
