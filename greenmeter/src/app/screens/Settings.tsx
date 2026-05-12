@@ -285,7 +285,11 @@ function RequestsContent() {
         const json = await res.json();
         setRequests(json.data ?? []);
         if (json.tenants) {
-          setTenants(json.tenants.map((t: TenantOption) => ({ tenantId: t.tenantId, name: t.name })));
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          setTenants(json.tenants.map((t: any) => ({
+            tenantId: t.tenantId || t.tenant_id || '',
+            name: t.name || '',
+          })).filter((t: TenantOption) => t.tenantId));
         }
       }
     } catch { /* ignore */ }
@@ -300,6 +304,11 @@ function RequestsContent() {
     try {
       const body: Record<string, string> = { action };
       if (action === 'approve') {
+        if (!approveForm.tenantId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(approveForm.tenantId)) {
+          setActionError(`Invalid tenant selection (got "${approveForm.tenantId}"). Please re-select a tenant.`);
+          setActionLoading(false);
+          return;
+        }
         body.tenantId = approveForm.tenantId;
         body.role = approveForm.role;
       }
