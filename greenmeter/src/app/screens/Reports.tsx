@@ -5,26 +5,15 @@ import { queryKeys } from "@/lib/queryKeys";
 
 type Props = { navigate:(s:any)=>void; [k:string]:any };
 
-/* ── Hardcoded reference data ───────────────────────────────── */
+/* ── Framework template structures (UI reference data) ───── */
 
 interface TemplateSection {
   code: string; title: string; pillar: string; color: string; questions: number; guidance: string;
 }
 
-interface ReportItem {
-  id: number; name: string; std: string; type: string; status: string; color: string;
-  fy: string; due: string; updated: string; sectionProgress: number[];
-}
-
-interface Question {
-  id: string; code: string; type: string; required: boolean; qnum: number; total: number;
-  status: string; q: string; guidance: string; unit: string; value: string;
-  prevValue: string; prevUnit: string; prevYoY: string; aiSuggestion: string;
-}
-
-const RP_TEMPLATES: Record<string, { name: string; color: string; sections: TemplateSection[] }> = {
+const RP_TEMPLATES: Record<string, { name: string; color: string; apiKey: string; sections: TemplateSection[] }> = {
   BRSR: {
-    name: 'BRSR Core', color: '#ef4444',
+    name: 'BRSR Core', color: '#ef4444', apiKey: 'BRSR',
     sections: [
       { code: 'SEC-A', title: 'Section A \u2014 General Disclosures', pillar: 'Governance', color: '#6366f1', questions: 18, guidance: 'Basic corporate identity, business overview, operations, and sustainability overview.' },
       { code: 'SEC-B', title: 'Section B \u2014 Management & Process', pillar: 'Governance', color: '#6366f1', questions: 12, guidance: 'Governance, oversight, and sustainability management processes.' },
@@ -40,7 +29,7 @@ const RP_TEMPLATES: Record<string, { name: string; color: string; sections: Temp
     ],
   },
   GRI: {
-    name: 'GRI Universal 2021', color: '#0f766e',
+    name: 'GRI Universal 2021', color: '#0f766e', apiKey: 'GRI',
     sections: [
       { code: 'GRI 2', title: 'GRI 2 \u2014 General Disclosures', pillar: 'Governance', color: '#6366f1', questions: 28, guidance: 'Organizational profile, activities, governance, strategy, and stakeholder engagement.' },
       { code: 'GRI 3', title: 'GRI 3 \u2014 Material Topics', pillar: 'Governance', color: '#6366f1', questions: 10, guidance: 'Process for determining material topics, list of material topics, and management of each.' },
@@ -55,7 +44,7 @@ const RP_TEMPLATES: Record<string, { name: string; color: string; sections: Temp
     ],
   },
   ESRS: {
-    name: 'ESRS (CSRD)', color: '#f59e0b',
+    name: 'ESRS (CSRD)', color: '#f59e0b', apiKey: 'ESRS',
     sections: [
       { code: 'ESRS 1', title: 'ESRS 1 \u2014 General Requirements', pillar: 'Governance', color: '#6366f1', questions: 8, guidance: 'General requirements for sustainability reporting under CSRD.' },
       { code: 'ESRS 2', title: 'ESRS 2 \u2014 General Disclosures', pillar: 'Governance', color: '#6366f1', questions: 20, guidance: 'Governance, strategy, materiality assessment, metrics and targets.' },
@@ -69,8 +58,8 @@ const RP_TEMPLATES: Record<string, { name: string; color: string; sections: Temp
       { code: 'G1', title: 'G1 \u2014 Business Conduct', pillar: 'Governance', color: '#6366f1', questions: 14, guidance: 'Corporate culture, anti-corruption, whistleblower protection, supplier relationships.' },
     ],
   },
-  'IFRS S2': {
-    name: 'IFRS S2 Climate', color: '#6366f1',
+  IFRS_S2: {
+    name: 'IFRS S2 Climate', color: '#6366f1', apiKey: 'IFRS_S2',
     sections: [
       { code: 'GOV', title: 'Governance', pillar: 'Governance', color: '#6366f1', questions: 10, guidance: 'Board oversight of climate-related risks and opportunities, management role.' },
       { code: 'STR', title: 'Strategy', pillar: 'Governance', color: '#6366f1', questions: 14, guidance: 'Climate-related risks and opportunities, their impact on business model and strategy.' },
@@ -78,77 +67,77 @@ const RP_TEMPLATES: Record<string, { name: string; color: string; sections: Temp
       { code: 'MET', title: 'Metrics & Targets', pillar: 'Environmental', color: '#ef4444', questions: 16, guidance: 'Scope 1, 2, 3 GHG emissions, climate-related targets, performance metrics.' },
     ],
   },
-  CDP: {
-    name: 'CDP Climate', color: '#0d9488',
-    sections: [
-      { code: 'C0', title: 'Introduction & Targets', pillar: 'Governance', color: '#6366f1', questions: 8, guidance: 'Reporting year, business description, emission targets overview.' },
-      { code: 'C1', title: 'Governance', pillar: 'Governance', color: '#6366f1', questions: 10, guidance: 'Board and management level climate oversight.' },
-      { code: 'C2', title: 'Risks & Opportunities', pillar: 'Environmental', color: '#ef4444', questions: 14, guidance: 'Physical and transition climate risks and opportunities identification and assessment.' },
-      { code: 'C4', title: 'Targets & Performance', pillar: 'Environmental', color: '#ef4444', questions: 12, guidance: 'Emission targets, reduction initiatives, performance against targets.' },
-      { code: 'C6', title: 'Emissions Data', pillar: 'Environmental', color: '#ef4444', questions: 16, guidance: 'Scope 1, 2, 3 absolute and intensity emissions with methodology.' },
-      { code: 'C7', title: 'Emissions Breakdowns', pillar: 'Environmental', color: '#ef4444', questions: 8, guidance: 'Emissions by geography, activity, and GHG type.' },
-      { code: 'C11', title: 'Carbon Pricing', pillar: 'Governance', color: '#6366f1', questions: 6, guidance: 'Carbon pricing instruments, exposure, and internal carbon prices.' },
-      { code: 'C12', title: 'Engagement', pillar: 'Social', color: '#0f766e', questions: 8, guidance: 'Value chain engagement, industry association memberships.' },
-    ],
-  },
-  Custom: {
-    name: 'Custom', color: '#8b5cf6',
-    sections: [
-      { code: 'E-OV', title: 'ESG Overview', pillar: 'Governance', color: '#6366f1', questions: 6, guidance: 'High-level ESG performance summary for executive review.' },
-      { code: 'KPI', title: 'Key Performance Indicators', pillar: 'Environmental', color: '#ef4444', questions: 10, guidance: 'Top-line KPIs across environmental, social, and governance pillars.' },
-      { code: 'NARR', title: 'Executive Narrative', pillar: 'Governance', color: '#6366f1', questions: 4, guidance: 'Board-level commentary on ESG progress and outlook.' },
-    ],
-  },
 };
 
-const RP_REPORTS: ReportItem[] = [
-  { id: 0, name: 'Annual Sustainability Report 2025', std: 'BRSR', type: 'Integrated ESG', status: 'in-progress', color: '#ef4444', fy: 'FY 2024-25', due: 'May 30, 2026', updated: '2 hours ago', sectionProgress: [100, 100, 100, 100, 84, 70, 42, 60, 0, 43, 0] },
-  { id: 1, name: 'Q4 GRI Performance Report', std: 'GRI', type: 'Standards-based', status: 'review', color: '#0f766e', fy: 'FY 2024-25', due: 'Apr 30, 2026', updated: '1 day ago', sectionProgress: [100, 100, 100, 100, 100, 100, 100, 100, 100, 100] },
-  { id: 2, name: 'ESRS Climate & Sustainability', std: 'ESRS', type: 'Regulatory (CSRD)', status: 'draft', color: '#f59e0b', fy: 'FY 2024-25', due: 'Jun 30, 2026', updated: '3 days ago', sectionProgress: [100, 68, 45, 20, 10, 0, 0, 38, 0, 60] },
-  { id: 3, name: 'CDP Climate Disclosure 2025', std: 'CDP', type: 'Investor-facing', status: 'draft', color: '#0d9488', fy: 'FY 2024-25', due: 'Jul 31, 2026', updated: '1 week ago', sectionProgress: [100, 80, 60, 40, 70, 30, 0, 20] },
-  { id: 4, name: 'IFRS S2 Climate Disclosure', std: 'IFRS S2', type: 'Investor-facing', status: 'pending', color: '#6366f1', fy: 'FY 2024-25', due: 'Sep 30, 2026', updated: '2 weeks ago', sectionProgress: [50, 20, 0, 0] },
-  { id: 5, name: 'Board ESG Scorecard Q1', std: 'Custom', type: 'Executive report', status: 'completed', color: '#8b5cf6', fy: 'Q1 FY 2025-26', due: 'Apr 15, 2026', updated: '2 weeks ago', sectionProgress: [100, 100, 100] },
-];
+/* ── Types ── */
 
-const SECTION_QUESTIONS: Record<string, Question[]> = {
-  P6: [
-    { id: 'P6-Q1', code: 'P6-Q1', type: 'Quantitative', required: true, qnum: 1, total: 5, status: 'answered', q: 'Details of total energy consumption (in Joules or multiples) and energy intensity', guidance: 'Provide details of total energy consumption from renewable and non-renewable sources. Energy intensity should be calculated per rupee of turnover.', unit: 'GJ', value: '45,230', prevValue: '42,150', prevUnit: 'GJ', prevYoY: '+7.3%', aiSuggestion: 'Based on your previous year data and current inputs, your energy consumption has increased by 7.3%. Consider adding context about capacity expansion or production increase.' },
-    { id: 'P6-Q2', code: 'P6-Q2', type: 'Qualitative', required: true, qnum: 2, total: 5, status: 'answered', q: 'Does the entity have any sites / facilities identified as designated consumers (DCs) under the PAT Scheme?', guidance: 'Identify all manufacturing units under PAT scheme as per BEE notifications.', unit: 'Text', value: 'Yes, our manufacturing facility in Pune is designated as a DC under the PAT scheme. The facility has been part of PAT Cycle III and has achieved 105% of the prescribed SEC target.', prevValue: 'Yes \u2014 Plant Pune designated DC under PAT Cycle II. Target achieved 98%.', prevUnit: '', prevYoY: '', aiSuggestion: 'Your response is strong. Consider adding the specific energy consumption (SEC) target value and your actual achievement in numbers.' },
-    { id: 'P6-Q3', code: 'P6-Q3', type: 'Quantitative', required: true, qnum: 3, total: 5, status: 'answered', q: 'GHG Scope 1 emissions (direct) in metric tonnes CO2 equivalent', guidance: 'Report gross Scope 1 GHG emissions using GHG Protocol. Include all Kyoto gases.', unit: 'tCO2e', value: '74,200', prevValue: '82,100', prevUnit: 'tCO2e', prevYoY: '-9.6%', aiSuggestion: 'Scope 1 reduced 9.6% YoY \u2014 strong performance. Consider disclosing the specific initiatives that drove this reduction.' },
-    { id: 'P6-Q4', code: 'P6-Q4', type: 'Quantitative', required: false, qnum: 4, total: 5, status: 'draft', q: 'Water withdrawal in kilolitres by source (groundwater, surface, municipal, rainwater)', guidance: 'Disclose total water withdrawal split by source. Identify sites in water-stressed areas per WRI Aqueduct.', unit: 'kL', value: '', prevValue: '305,000', prevUnit: 'kL', prevYoY: '', aiSuggestion: 'Previous year: 305,000 kL. Your platform data shows 312,000 kL (FY24 meters). Suggest using this and noting the 2.3% increase.' },
-    { id: 'P6-Q5', code: 'P6-Q5', type: 'Qualitative', required: false, qnum: 5, total: 5, status: 'pending', q: 'Describe initiatives taken during the year towards reducing energy consumption', guidance: 'Describe specific programs, technologies deployed, and measurable outcomes.', unit: 'Text', value: '', prevValue: 'Deployed LED lighting across all three facilities (savings: 2.1M kWh/yr). VFD on 12 cooling tower motors at Plant Pune.', prevUnit: '', prevYoY: '', aiSuggestion: 'VFD at Plant Pune: \u21936.2% energy in FY24. LED retrofit across 3 facilities: ~2.4M kWh savings. Solar PPA signed for Plant Nashik Sep 2024 (40% RE by FY26).' },
-  ],
-  'GRI 305': [
-    { id: '305-Q1', code: '305-Q1', type: 'Quantitative', required: true, qnum: 1, total: 4, status: 'answered', q: 'GRI 305-1: Direct (Scope 1) GHG emissions in metric tonnes CO2 equivalent', guidance: 'Report gross direct GHG emissions. Disclose gases included, GWP source, consolidation approach, and base year.', unit: 'tCO2e', value: '74,200', prevValue: '82,100', prevUnit: 'tCO2e', prevYoY: '-9.6%', aiSuggestion: 'Good reduction YoY. Add breakdown by gas type (CO2, CH4, N2O) and by source category to fully satisfy GRI 305-1.' },
-    { id: '305-Q2', code: '305-Q2', type: 'Quantitative', required: true, qnum: 2, total: 4, status: 'answered', q: 'GRI 305-2: Energy indirect (Scope 2) GHG emissions \u2014 location-based and market-based', guidance: 'Report both location-based (grid factor) and market-based (contractual instruments). Disclose factors used.', unit: 'tCO2e', value: '68,100', prevValue: '74,500', prevUnit: 'tCO2e', prevYoY: '-8.6%', aiSuggestion: 'Report both location and market-based figures. Market-based figure requires RE certificates.' },
-    { id: '305-Q3', code: '305-Q3', type: 'Quantitative', required: true, qnum: 3, total: 4, status: 'draft', q: 'GRI 305-3: Other indirect (Scope 3) GHG emissions by relevant category', guidance: 'Identify and disclose all material Scope 3 categories.', unit: 'tCO2e', value: '', prevValue: '~890,000 (estimated)', prevUnit: 'tCO2e', prevYoY: '', aiSuggestion: 'Platform estimate: ~890k tCO2e from Cat 1 (purchased goods ~61%), Cat 4 (transport 14%), Cat 11 (use of products 13%).' },
-    { id: '305-Q4', code: '305-Q4', type: 'Quantitative', required: false, qnum: 4, total: 4, status: 'pending', q: 'GRI 305-4: GHG emissions intensity ratio', guidance: 'Report at least one intensity ratio relevant to the organization.', unit: 'tCO2e/\u20b9cr', value: '', prevValue: '4.30', prevUnit: 'tCO2e/\u20b9cr', prevYoY: '', aiSuggestion: 'Your current year intensity = 4.12 t/\u20b9cr. This is 4.2% better than FY23 (4.30) and 14% better than sector median (4.8).' },
-  ],
-  E1: [
-    { id: 'E1-Q1', code: 'E1-Q1', type: 'Qualitative', required: true, qnum: 1, total: 6, status: 'answered', q: 'E1-1: Transition plan for climate change mitigation aligned with 1.5\u00b0C pathway', guidance: "Describe the undertaking's transition plan, including targets, milestones, and actions.", unit: 'Text', value: 'The organisation has committed to net-zero Scope 1+2 emissions by 2035, aligned with SBTi 1.5\u00b0C pathway. Key milestones: 25% reduction by FY2026, 50% by FY2030, net-zero by FY2035.', prevValue: 'Net zero commitment announced FY2022. Transition plan under development.', prevUnit: '', prevYoY: '', aiSuggestion: 'Good foundation. ESRS E1-1 requires specific financial resource allocation to the transition plan. Add CapEx committed for renewables and efficiency.' },
-    { id: 'E1-Q2', code: 'E1-Q2', type: 'Quantitative', required: true, qnum: 2, total: 6, status: 'answered', q: 'E1-6: Gross Scope 1, 2, and 3 GHG emissions in metric tonnes CO2 equivalent', guidance: 'Report gross Scope 1 (direct), Scope 2 (location + market-based), and material Scope 3 categories.', unit: 'tCO2e', value: '1,106,500', prevValue: '1,214,600', prevUnit: 'tCO2e', prevYoY: '-8.9%', aiSuggestion: 'Good disclosure. Ensure Scope 3 breakdown covers all material categories.' },
-    { id: 'E1-Q3', code: 'E1-Q3', type: 'Quantitative', required: true, qnum: 3, total: 6, status: 'draft', q: 'E1-5: Energy consumption and mix from fossil and renewable sources', guidance: 'Report total energy from fossil fuels, nuclear, renewable. Disclose renewable energy as % of total.', unit: 'GJ', value: '', prevValue: '1,910,000', prevUnit: 'GJ', prevYoY: '', aiSuggestion: 'Platform data: 1,840,000 GJ total. Renewable: 331,200 GJ (18%). Non-renewable: 1,508,800 GJ (82%).' },
-    { id: 'E1-Q4', code: 'E1-Q4', type: 'Qualitative', required: true, qnum: 4, total: 6, status: 'pending', q: 'E1-2: Climate-related policies and actions for climate change mitigation and adaptation', guidance: "Describe the undertaking's policies related to climate change mitigation and any adaptation actions.", unit: 'Text', value: '', prevValue: '', prevUnit: '', prevYoY: '', aiSuggestion: 'Describe your ISO 50001 energy management framework, renewable procurement policy, and fleet electrification roadmap.' },
-    { id: 'E1-Q5', code: 'E1-Q5', type: 'Quantitative', required: false, qnum: 5, total: 6, status: 'pending', q: 'E1-7: GHG removals and carbon credits', guidance: 'Disclose GHG removals from the atmosphere and credits purchased/retired, if any.', unit: 'tCO2e', value: '', prevValue: '0', prevUnit: 'tCO2e', prevYoY: '', aiSuggestion: 'Currently 0. If considering carbon credits for residual emissions post-2030, document the strategy now.' },
-    { id: 'E1-Q6', code: 'E1-Q6', type: 'Quantitative', required: false, qnum: 6, total: 6, status: 'pending', q: 'E1-8: Internal carbon pricing', guidance: 'If the undertaking uses an internal carbon price, disclose the price and how it influences decision-making.', unit: '$/tCO2e', value: '', prevValue: 'Not in use', prevUnit: '', prevYoY: '', aiSuggestion: 'Consider implementing an internal shadow carbon price ($20\u2013150/tCO2e) to guide CapEx decisions.' },
-  ],
-};
+interface GeneratedReport {
+  reportId: string;
+  tenantId: string;
+  templateId: string;
+  periodId: string;
+  name: string;
+  status: string | null;
+  format: string | null;
+  blobUrl: string | null;
+  metadata: Record<string, unknown> | null;
+  generatedBy: string | null;
+  generatedAt: string | null;
+  createdAt: string;
+}
+
+interface RenderedParameter {
+  paramId: string; code: string; name: string; unit: string; dataType: string;
+  value: string | null; valueText: string | null; displayValue: string;
+  status: 'reported' | 'not_reported' | 'not_applicable'; verified: boolean;
+}
+
+interface RenderedDisclosure {
+  id: string; name: string; description?: string;
+  parameters: RenderedParameter[]; reported: number; total: number;
+}
+
+interface RenderedSection {
+  id: string; name: string; description?: string; pillar?: string;
+  disclosures: RenderedDisclosure[]; reported: number; total: number;
+}
+
+interface RenderedReport {
+  framework: string; templateName: string; templateVersion: string;
+  tenantId: string; periodId: string; fiscalYear: string; generatedAt: string;
+  sections: RenderedSection[];
+  coverage: { reported: number; notReported: number; notApplicable: number; total: number; percentComplete: number };
+}
+
+interface PeriodOption { periodId: string; label: string; fiscalYear: string }
 
 /* ── Helpers ── */
 
 const STATUS_BADGE: Record<string, string> = {
-  'in-progress': 'b-teal', review: 'b-ind', draft: 'b-amber', pending: 'b-gray', completed: 'b-green',
+  pending: 'b-gray', generating: 'b-amber', complete: 'b-green', failed: 'b-red',
+  'in-progress': 'b-teal', review: 'b-ind', draft: 'b-amber', completed: 'b-green',
 };
-
 const STATUS_LABEL: Record<string, string> = {
-  'in-progress': 'In Progress', review: 'In Review', draft: 'Draft', pending: 'Pending', completed: 'Completed',
+  pending: 'Pending', generating: 'Generating...', complete: 'Complete', failed: 'Failed',
+  'in-progress': 'In Progress', review: 'In Review', draft: 'Draft', completed: 'Completed',
 };
 
-const Q_STATUS_STYLE: Record<string, { bg: string; col: string; label: string }> = {
-  answered: { bg: 'var(--grnbg)', col: 'var(--grn)', label: 'Answered' },
-  draft: { bg: 'var(--ambbg)', col: 'var(--amb)', label: 'Draft' },
-  pending: { bg: 'var(--bg)', col: 'var(--tx3)', label: 'Pending' },
+const PILLAR_COLOR: Record<string, string> = {
+  Environmental: '#ef4444', Social: '#0f766e', Governance: '#6366f1', environmental: '#ef4444', social: '#0f766e', governance: '#6366f1',
 };
+
+const FRAMEWORK_COLOR: Record<string, string> = {
+  BRSR: '#ef4444', GRI: '#0f766e', ESRS: '#f59e0b', IFRS_S2: '#6366f1',
+};
+
+function frameworkLabel(std: string): string {
+  const map: Record<string, string> = { BRSR: 'BRSR', GRI: 'GRI', ESRS: 'ESRS', IFRS_S2: 'IFRS S2' };
+  return map[std] ?? std;
+}
+
+function templateForStandard(std: string) {
+  return RP_TEMPLATES[std] ?? RP_TEMPLATES.BRSR;
+}
 
 async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, init);
@@ -162,46 +151,71 @@ async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
 
 /* ── Component ── */
 
-interface PeriodOption { periodId: string; label: string; fiscalYear: string }
-
 export default function ReportsScreen({ navigate }: Props) {
   const queryClient = useQueryClient();
-  const [selectedIdx, setSelectedIdx] = useState(0);
+  const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [openSection, setOpenSection] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [genError, setGenError] = useState<string | null>(null);
   const [showGenModal, setShowGenModal] = useState(false);
   const [genFramework, setGenFramework] = useState('BRSR');
-  const [periods, setPeriods] = useState<PeriodOption[]>([]);
-  const [selectedPeriodId, setSelectedPeriodId] = useState('');
   const donutRef = useRef<HTMLCanvasElement>(null);
   const chartRef = useRef<any>(null);
 
-  /* Fetch reporting periods on mount */
-  useEffect(() => {
-    fetch('/api/periods')
-      .then(r => { if (r.ok) return r.json(); return null; })
-      .then(data => {
-        const items: PeriodOption[] = (data?.data ?? []).map((p: { periodId: string; label: string; fiscalYear: string }) => ({
-          periodId: p.periodId,
-          label: p.label,
-          fiscalYear: p.fiscalYear,
-        }));
-        setPeriods(items);
-        if (items.length > 0) setSelectedPeriodId(items[0].periodId);
-      })
-      .catch(() => {});
-  }, []);
+  /* Fetch reporting periods */
+  const { data: periods = [] } = useQuery<PeriodOption[]>({
+    queryKey: queryKeys.periods.list(),
+    queryFn: async () => {
+      const res = await fetchJson<{ data: Array<{ periodId: string; label: string; fiscalYear: string }> }>('/api/periods');
+      return res.data.map(p => ({ periodId: p.periodId, label: p.label, fiscalYear: p.fiscalYear }));
+    },
+  });
+  const [selectedPeriodId, setSelectedPeriodId] = useState('');
+  useEffect(() => { if (periods.length > 0 && !selectedPeriodId) setSelectedPeriodId(periods[0].periodId); }, [periods, selectedPeriodId]);
 
-  const report = RP_REPORTS[selectedIdx];
-  const template = RP_TEMPLATES[report.std] ?? RP_TEMPLATES.Custom;
-  const sections = template.sections;
-  const progress = sections.length > 0
-    ? Math.round(report.sectionProgress.reduce((a, b) => a + b, 0) / report.sectionProgress.length)
-    : 0;
-  const sectionsDone = report.sectionProgress.filter(p => p === 100).length;
-  const totalQuestions = sections.reduce((s, sec) => s + sec.questions, 0);
-  const questionsAnswered = Math.round(totalQuestions * progress / 100);
+  /* Fetch real reports from API */
+  const { data: reports = [], isLoading: reportsLoading } = useQuery<GeneratedReport[]>({
+    queryKey: queryKeys.reports.all,
+    queryFn: async () => {
+      const res = await fetchJson<{ data: GeneratedReport[] }>('/api/reports');
+      return res.data;
+    },
+  });
+
+  // Auto-select first report
+  useEffect(() => {
+    if (reports.length > 0 && !selectedReportId) setSelectedReportId(reports[0].reportId);
+  }, [reports, selectedReportId]);
+
+  const selectedReport = reports.find(r => r.reportId === selectedReportId) ?? null;
+  const framework = selectedReport
+    ? (selectedReport.metadata as Record<string, unknown>)?.framework as string ?? detectFramework(selectedReport.name)
+    : 'BRSR';
+
+  /* Fetch rendered report data for the selected report */
+  const renderPeriodId = selectedReport?.periodId;
+  const { data: renderedReport, isLoading: renderLoading } = useQuery<RenderedReport>({
+    queryKey: queryKeys.reports.render({ framework, periodId: renderPeriodId! }),
+    queryFn: async () => {
+      const res = await fetchJson<{ data: RenderedReport }>(`/api/reports/render?framework=${framework}&periodId=${renderPeriodId}`);
+      return res.data;
+    },
+    enabled: !!renderPeriodId && !!framework && !!selectedReport,
+  });
+
+  const template = templateForStandard(framework);
+  const fwColor = FRAMEWORK_COLOR[framework] ?? '#6366f1';
+
+  /* Derive section progress from rendered data */
+  const sectionProgress = renderedReport
+    ? renderedReport.sections.map(s => s.total > 0 ? Math.round((s.reported / s.total) * 100) : 0)
+    : template.sections.map(() => 0);
+
+  const progress = renderedReport?.coverage.percentComplete ?? 0;
+  const sectionsDone = sectionProgress.filter(p => p === 100).length;
+  const totalSections = renderedReport?.sections.length ?? template.sections.length;
+  const totalParams = renderedReport?.coverage.total ?? 0;
+  const paramsReported = renderedReport?.coverage.reported ?? 0;
 
   /* Donut chart */
   useEffect(() => {
@@ -222,14 +236,11 @@ export default function ReportsScreen({ navigate }: Props) {
       chartRef.current = chart;
     })();
     return () => { chartRef.current?.destroy(); chartRef.current = null; };
-  }, [selectedIdx, progress]);
+  }, [selectedReportId, progress]);
 
   /* Generate handler */
   async function handleGenerate(fw: string) {
-    if (!selectedPeriodId) {
-      setGenError('Please select a reporting period');
-      return;
-    }
+    if (!selectedPeriodId) { setGenError('Please select a reporting period'); return; }
     setGenerating(true);
     setGenError(null);
     try {
@@ -247,6 +258,18 @@ export default function ReportsScreen({ navigate }: Props) {
     }
   }
 
+  /* ── Empty state ── */
+  if (reportsLoading) {
+    return (
+      <div>
+        <div className="ph"><div><div className="ptitle">Report builder</div><div className="psub">Loading reports...</div></div></div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200 }}>
+          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       {/* Header */}
@@ -258,7 +281,7 @@ export default function ReportsScreen({ navigate }: Props) {
         </div>
       </div>
 
-      {/* New Report modal — radio-style framework selection */}
+      {/* New Report modal */}
       {showGenModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setShowGenModal(false)}>
           <div style={{ background: 'var(--surf)', borderRadius: 14, padding: 24, width: 520, maxWidth: '96vw', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }} onClick={e => e.stopPropagation()}>
@@ -272,9 +295,7 @@ export default function ReportsScreen({ navigate }: Props) {
                 ['BRSR', 'BRSR Core', 'SEBI-mandated Business Responsibility & Sustainability Report for top 1000 listed entities.', '#ef4444'],
                 ['GRI', 'GRI Universal 2021', 'Global Reporting Initiative universal and topic-specific standards for comprehensive sustainability disclosure.', '#0f766e'],
                 ['ESRS', 'ESRS (CSRD)', 'European Sustainability Reporting Standards under the Corporate Sustainability Reporting Directive.', '#f59e0b'],
-                ['IFRS S2', 'IFRS S2 Climate', 'ISSB climate-related disclosure standard focused on risks, opportunities, and metrics.', '#6366f1'],
-                ['CDP', 'CDP Climate', 'Carbon Disclosure Project questionnaire for climate change, water security, and forests.', '#0d9488'],
-                ['Custom', 'Custom report', 'Build a custom report with your own sections and questions.', '#8b5cf6'],
+                ['IFRS_S2', 'IFRS S2 Climate', 'ISSB climate-related disclosure standard focused on risks, opportunities, and metrics.', '#6366f1'],
               ] as [string, string, string, string][]).map(([k, label, desc, c]) => (
                 <label key={k} onClick={() => setGenFramework(k)} style={{
                   display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px',
@@ -289,7 +310,7 @@ export default function ReportsScreen({ navigate }: Props) {
                     <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx1)' }}>{label}</div>
                     <div style={{ fontSize: 10, color: 'var(--tx3)', lineHeight: 1.4, marginTop: 1 }}>{desc}</div>
                   </div>
-                  <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 4, background: `${c}15`, color: c }}>{k}</span>
+                  <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 4, background: `${c}15`, color: c }}>{frameworkLabel(k)}</span>
                 </label>
               ))}
             </div>
@@ -314,13 +335,12 @@ export default function ReportsScreen({ navigate }: Props) {
       )}
 
       {/* Stats strip */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 10, marginBottom: 14 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10, marginBottom: 14 }}>
         {([
-          [RP_REPORTS.length, 'Total Reports', 'var(--tx1)'],
-          [RP_REPORTS.filter(r => r.status === 'in-progress').length, 'In Progress', 'var(--t700)'],
-          [RP_REPORTS.filter(r => r.status === 'review').length, 'In Review', 'var(--ind)'],
-          [RP_REPORTS.filter(r => r.status === 'draft').length, 'Draft', 'var(--amb)'],
-          [RP_REPORTS.filter(r => r.status === 'completed').length, 'Completed', 'var(--grn)'],
+          [reports.length, 'Total Reports', 'var(--tx1)'],
+          [reports.filter(r => r.status === 'pending' || r.status === 'generating').length, 'In Progress', 'var(--amb)'],
+          [reports.filter(r => r.status === 'complete').length, 'Complete', 'var(--grn)'],
+          [reports.filter(r => r.status === 'failed').length, 'Failed', 'var(--red)'],
         ] as [number, string, string][]).map(([val, label, c]) => (
           <div key={label} className="stat-card">
             <div className="slbl">{label}</div>
@@ -333,162 +353,45 @@ export default function ReportsScreen({ navigate }: Props) {
       <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 12 }}>
         {/* Left sidebar - Report list */}
         <div>
-          <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)', marginBottom: 8 }}>Active Reports</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {RP_REPORTS.map((r, i) => {
-              const isSel = i === selectedIdx;
-              return (
-                <div key={r.id} onClick={() => { setSelectedIdx(i); setOpenSection(null); }} style={{
-                  background: isSel ? 'var(--t50)' : 'var(--surf)',
-                  border: isSel ? '1.5px solid var(--t400)' : '.5px solid var(--bdr)',
-                  borderRadius: 10, padding: '12px 14px', cursor: 'pointer', transition: 'all .12s',
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <div style={{ width: 28, height: 28, borderRadius: 6, background: `${r.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <span style={{ fontSize: 10, fontWeight: 700, color: r.color }}>{r.std.charAt(0)}</span>
-                      </div>
-                      <div>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx1)', lineHeight: 1.3 }}>{r.name}</div>
-                        <div style={{ display: 'flex', gap: 4, marginTop: 3, flexWrap: 'wrap' }}>
-                          <span style={{ fontSize: 8, padding: '1px 5px', borderRadius: 3, fontWeight: 700, background: `${r.color}15`, color: r.color }}>{r.std}</span>
-                          <span className={`badge ${STATUS_BADGE[r.status] ?? 'b-gray'}`} style={{ fontSize: 8 }}>{STATUS_LABEL[r.status] ?? r.status}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
-                    <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{r.fy} &middot; Due {r.due}</div>
-                    <div style={{ fontSize: 9, color: 'var(--tx3)' }}>Updated {r.updated}</div>
-                  </div>
-                  {/* Mini progress bar */}
-                  <div className="pbar-bg" style={{ height: 3, marginTop: 6 }}>
-                    <div className="pbar-fill" style={{ width: `${Math.round(r.sectionProgress.reduce((a, b) => a + b, 0) / r.sectionProgress.length)}%` }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Right content */}
-        <div>
-          {/* Report header card */}
-          <div style={{ background: 'var(--surf)', border: '.5px solid var(--bdr)', borderRadius: 12, padding: '20px 24px', marginBottom: 12 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-              <div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--tx1)', marginBottom: 4 }}>{report.name}</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: 'var(--tx2)' }}>
-                  <span style={{ fontSize: 9, padding: '1px 5px', borderRadius: 3, fontWeight: 700, background: `${report.color}15`, color: report.color }}>{report.std}</span>
-                  <span className={`badge ${STATUS_BADGE[report.status] ?? 'b-gray'}`} style={{ fontSize: 9 }}>{STATUS_LABEL[report.status] ?? report.status}</span>
-                  <span>{report.type}</span>
-                  <span>&middot;</span>
-                  <span>{report.fy}</span>
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: 6 }}>
-                <button className="btn-secondary" style={{ fontSize: 11 }}>Export PDF</button>
-                <button className="btn-secondary" style={{ fontSize: 11 }}>XBRL</button>
-              </div>
+          <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)', marginBottom: 8 }}>Your Reports</div>
+          {reports.length === 0 ? (
+            <div style={{ background: 'var(--surf)', border: '1px dashed var(--bdr)', borderRadius: 10, padding: '24px 16px', textAlign: 'center' }}>
+              <div style={{ fontSize: 12, color: 'var(--tx2)', marginBottom: 8 }}>No reports yet</div>
+              <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 12 }}>Create your first ESG report using a framework template.</div>
+              <button className="btn-primary" style={{ fontSize: 11 }} onClick={() => setShowGenModal(true)}>+ New report</button>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 1fr 1fr', gap: 16, alignItems: 'center' }}>
-              {/* Donut */}
-              <div style={{ position: 'relative', width: 80, height: 80 }}>
-                <canvas ref={donutRef} />
-                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', textAlign: 'center' }}>
-                  <div style={{ fontSize: 16, fontWeight: 700, fontFamily: 'var(--fm)', color: 'var(--t700)' }}>{progress}%</div>
-                  <div style={{ fontSize: 8, color: 'var(--tx3)' }}>Coverage</div>
-                </div>
-              </div>
-              <div>
-                <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--fm)', color: 'var(--tx1)' }}>{sectionsDone}/{sections.length}</div>
-                <div style={{ fontSize: 10, color: 'var(--tx3)' }}>Sections complete</div>
-              </div>
-              <div>
-                <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--fm)', color: 'var(--tx1)' }}>{questionsAnswered}/{totalQuestions}</div>
-                <div style={{ fontSize: 10, color: 'var(--tx3)' }}>Questions answered</div>
-              </div>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 700, fontFamily: 'var(--fm)', color: 'var(--tx1)' }}>Due {report.due}</div>
-                <div style={{ fontSize: 10, color: 'var(--tx3)' }}>Deadline</div>
-              </div>
-            </div>
-          </div>
-
-          {/* AI bar */}
-          <div style={{ background: 'linear-gradient(135deg, var(--t700), #0d9488)', borderRadius: 10, padding: '14px 18px', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 28, height: 28, background: 'rgba(255,255,255,.2)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2l2 4 4 .5-3 3 .5 4L8 12l-3.5 1.5.5-4-3-3L6 6l2-4z" fill="white" /></svg>
-              </div>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>AI-Powered Assistance</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,.8)' }}>Intelligent content generation, smart suggestions, and automated compliance checking.</div>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button style={{ padding: '7px 14px', background: '#fff', color: 'var(--t700)', border: 'none', borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
-                onClick={() => handleGenerate(report.std)}>Generate Content</button>
-            </div>
-          </div>
-
-          {/* Section list or section detail */}
-          {openSection ? (
-            <SectionDetail
-              sectionCode={openSection}
-              template={template}
-              report={report}
-              onBack={() => setOpenSection(null)}
-            />
           ) : (
-            <div style={{ background: 'var(--surf)', border: '.5px solid var(--bdr)', borderRadius: 12, overflow: 'hidden' }}>
-              <div style={{ padding: '14px 18px', borderBottom: '.5px solid var(--bdr)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx1)' }}>Report sections</span>
-                  <span style={{ fontSize: 11, color: 'var(--tx3)', marginLeft: 8 }}>{sections.length} sections &middot; {template.name} template</span>
-                </div>
-              </div>
-              {sections.map((sec, i) => {
-                const pct = report.sectionProgress[i] ?? 0;
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {reports.map(r => {
+                const isSel = r.reportId === selectedReportId;
+                const rFw = (r.metadata as Record<string, unknown>)?.framework as string ?? detectFramework(r.name);
+                const rc = FRAMEWORK_COLOR[rFw] ?? '#6366f1';
+                const rPeriod = periods.find(p => p.periodId === r.periodId);
                 return (
-                  <div key={sec.code} onClick={() => setOpenSection(sec.code)} style={{
-                    display: 'grid', gridTemplateColumns: '40px 1fr 160px', alignItems: 'center', gap: 12,
-                    padding: '12px 18px', borderBottom: i < sections.length - 1 ? '.5px solid var(--bdr2)' : 'none',
-                    cursor: 'pointer', transition: 'background .1s',
-                  }}
-                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'var(--bg)'}
-                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = ''}>
-                    {/* Status icon */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      {pct === 100 ? (
-                        <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--grn)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M4 8l3 3 5-6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                        </div>
-                      ) : pct > 0 ? (
-                        <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--t100)', border: '2px solid var(--t400)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--t600)' }} />
-                        </div>
-                      ) : (
-                        <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--bdr2)', border: '2px solid var(--bdr)' }} />
-                      )}
-                    </div>
-                    {/* Section info */}
-                    <div>
+                  <div key={r.reportId} onClick={() => { setSelectedReportId(r.reportId); setOpenSection(null); }} style={{
+                    background: isSel ? 'var(--t50)' : 'var(--surf)',
+                    border: isSel ? '1.5px solid var(--t400)' : '.5px solid var(--bdr)',
+                    borderRadius: 10, padding: '12px 14px', cursor: 'pointer', transition: 'all .12s',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx1)' }}>{sec.title}</span>
-                        <span style={{ fontSize: 8, fontWeight: 700, padding: '1px 5px', borderRadius: 3, background: `${sec.color}15`, color: sec.color }}>{sec.pillar}</span>
-                      </div>
-                      <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 3, display: 'flex', gap: 8 }}>
-                        <span>{sec.questions} questions</span>
-                        <span>{sec.guidance}</span>
+                        <div style={{ width: 28, height: 28, borderRadius: 6, background: `${rc}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <span style={{ fontSize: 10, fontWeight: 700, color: rc }}>{frameworkLabel(rFw).charAt(0)}</span>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx1)', lineHeight: 1.3 }}>{r.name}</div>
+                          <div style={{ display: 'flex', gap: 4, marginTop: 3, flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: 8, padding: '1px 5px', borderRadius: 3, fontWeight: 700, background: `${rc}15`, color: rc }}>{frameworkLabel(rFw)}</span>
+                            <span className={`badge ${STATUS_BADGE[r.status ?? 'pending'] ?? 'b-gray'}`} style={{ fontSize: 8 }}>{STATUS_LABEL[r.status ?? 'pending'] ?? r.status}</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    {/* Progress */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div className="pbar-bg" style={{ flex: 1, height: 4 }}>
-                        <div className="pbar-fill" style={{ width: `${pct}%`, background: pct === 100 ? 'var(--grn)' : pct > 50 ? 'var(--t500)' : pct > 0 ? 'var(--amb)' : 'var(--bdr)' }} />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+                      <div style={{ fontSize: 9, color: 'var(--tx3)' }}>
+                        {rPeriod ? `FY ${rPeriod.fiscalYear}` : ''} &middot; {r.format ?? 'pdf'}
                       </div>
-                      <span style={{ fontSize: 10, fontWeight: 700, fontFamily: 'var(--fm)', color: pct === 100 ? 'var(--grn)' : pct > 50 ? 'var(--t700)' : 'var(--red)', minWidth: 28, textAlign: 'right' }}>{pct}%</span>
+                      <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{new Date(r.createdAt).toLocaleDateString()}</div>
                     </div>
                   </div>
                 );
@@ -496,56 +399,355 @@ export default function ReportsScreen({ navigate }: Props) {
             </div>
           )}
         </div>
+
+        {/* Right content */}
+        <div>
+          {!selectedReport ? (
+            <div style={{ background: 'var(--surf)', border: '.5px solid var(--bdr)', borderRadius: 12, padding: '60px 20px', textAlign: 'center' }}>
+              <div style={{ fontSize: 14, color: 'var(--tx2)', marginBottom: 8 }}>Select a report or create a new one</div>
+              <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Choose a report from the sidebar to view its sections and progress, or click &quot;+ New report&quot; to start fresh.</div>
+            </div>
+          ) : openSection ? (
+            <SectionDetail
+              sectionId={openSection}
+              renderedReport={renderedReport}
+              template={template}
+              framework={framework}
+              fwColor={fwColor}
+              onBack={() => setOpenSection(null)}
+            />
+          ) : (
+            <>
+              {/* Report header card */}
+              <div style={{ background: 'var(--surf)', border: '.5px solid var(--bdr)', borderRadius: 12, padding: '20px 24px', marginBottom: 12 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                  <div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--tx1)', marginBottom: 4 }}>{selectedReport.name}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: 'var(--tx2)' }}>
+                      <span style={{ fontSize: 9, padding: '1px 5px', borderRadius: 3, fontWeight: 700, background: `${fwColor}15`, color: fwColor }}>{frameworkLabel(framework)}</span>
+                      <span className={`badge ${STATUS_BADGE[selectedReport.status ?? 'pending'] ?? 'b-gray'}`} style={{ fontSize: 9 }}>{STATUS_LABEL[selectedReport.status ?? 'pending'] ?? selectedReport.status}</span>
+                      <span>{selectedReport.format ?? 'pdf'}</span>
+                      {renderedReport && <><span>&middot;</span><span>FY {renderedReport.fiscalYear}</span></>}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    {selectedReport.blobUrl && <button className="btn-secondary" style={{ fontSize: 11 }}>Download PDF</button>}
+                    <button className="btn-secondary" style={{ fontSize: 11 }}>Export XBRL</button>
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 1fr 1fr', gap: 16, alignItems: 'center' }}>
+                  <div style={{ position: 'relative', width: 80, height: 80 }}>
+                    <canvas ref={donutRef} />
+                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', textAlign: 'center' }}>
+                      <div style={{ fontSize: 16, fontWeight: 700, fontFamily: 'var(--fm)', color: 'var(--t700)' }}>{progress}%</div>
+                      <div style={{ fontSize: 8, color: 'var(--tx3)' }}>Coverage</div>
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--fm)', color: 'var(--tx1)' }}>{sectionsDone}/{totalSections}</div>
+                    <div style={{ fontSize: 10, color: 'var(--tx3)' }}>Sections complete</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--fm)', color: 'var(--tx1)' }}>{paramsReported}/{totalParams}</div>
+                    <div style={{ fontSize: 10, color: 'var(--tx3)' }}>Parameters reported</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, fontFamily: 'var(--fm)', color: 'var(--tx1)' }}>
+                      {selectedReport.generatedAt ? new Date(selectedReport.generatedAt).toLocaleDateString() : 'Pending'}
+                    </div>
+                    <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{selectedReport.generatedAt ? 'Generated' : 'Status'}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* AI bar */}
+              <div style={{ background: 'linear-gradient(135deg, var(--t700), #0d9488)', borderRadius: 10, padding: '14px 18px', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 28, height: 28, background: 'rgba(255,255,255,.2)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2l2 4 4 .5-3 3 .5 4L8 12l-3.5 1.5.5-4-3-3L6 6l2-4z" fill="white" /></svg>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>AI-Powered Assistance</div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,.8)' }}>Intelligent content generation, smart suggestions, and automated compliance checking.</div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button style={{ padding: '7px 14px', background: '#fff', color: 'var(--t700)', border: 'none', borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                    onClick={() => handleGenerate(framework)}>Generate Content</button>
+                </div>
+              </div>
+
+              {/* Section list */}
+              {renderLoading ? (
+                <div style={{ background: 'var(--surf)', border: '.5px solid var(--bdr)', borderRadius: 12, padding: '40px 20px', textAlign: 'center' }}>
+                  <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Loading report sections...</div>
+                </div>
+              ) : (
+                <div style={{ background: 'var(--surf)', border: '.5px solid var(--bdr)', borderRadius: 12, overflow: 'hidden' }}>
+                  <div style={{ padding: '14px 18px', borderBottom: '.5px solid var(--bdr)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx1)' }}>Report sections</span>
+                      <span style={{ fontSize: 11, color: 'var(--tx3)', marginLeft: 8 }}>
+                        {renderedReport ? `${renderedReport.sections.length} sections` : `${template.sections.length} sections`}
+                        {' '}&middot; {renderedReport?.templateName ?? template.name} template
+                      </span>
+                    </div>
+                  </div>
+                  {(renderedReport ? renderedReport.sections : template.sections.map(ts => ({
+                    id: ts.code, name: ts.title, description: ts.guidance, pillar: ts.pillar,
+                    disclosures: [], reported: 0, total: ts.questions,
+                  }))).map((sec, i) => {
+                    const pct = sectionProgress[i] ?? 0;
+                    const pColor = PILLAR_COLOR[sec.pillar ?? ''] ?? '#6366f1';
+                    return (
+                      <div key={sec.id} onClick={() => setOpenSection(sec.id)} style={{
+                        display: 'grid', gridTemplateColumns: '40px 1fr 160px', alignItems: 'center', gap: 12,
+                        padding: '12px 18px', borderBottom: i < (renderedReport?.sections.length ?? 0) - 1 ? '.5px solid var(--bdr2)' : 'none',
+                        cursor: 'pointer', transition: 'background .1s',
+                      }}
+                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'var(--bg)'}
+                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = ''}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          {pct === 100 ? (
+                            <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--grn)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M4 8l3 3 5-6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                            </div>
+                          ) : pct > 0 ? (
+                            <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--t100)', border: '2px solid var(--t400)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--t600)' }} />
+                            </div>
+                          ) : (
+                            <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--bdr2)', border: '2px solid var(--bdr)' }} />
+                          )}
+                        </div>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx1)' }}>{sec.name}</span>
+                            <span style={{ fontSize: 8, fontWeight: 700, padding: '1px 5px', borderRadius: 3, background: `${pColor}15`, color: pColor }}>{sec.pillar}</span>
+                          </div>
+                          <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 3, display: 'flex', gap: 8 }}>
+                            <span>{sec.total} parameters</span>
+                            <span>{sec.reported} reported</span>
+                            {sec.description && <span>{sec.description}</span>}
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div className="pbar-bg" style={{ flex: 1, height: 4 }}>
+                            <div className="pbar-fill" style={{ width: `${pct}%`, background: pct === 100 ? 'var(--grn)' : pct > 50 ? 'var(--t500)' : pct > 0 ? 'var(--amb)' : 'var(--bdr)' }} />
+                          </div>
+                          <span style={{ fontSize: 10, fontWeight: 700, fontFamily: 'var(--fm)', color: pct === 100 ? 'var(--grn)' : pct > 50 ? 'var(--t700)' : 'var(--red)', minWidth: 28, textAlign: 'right' }}>{pct}%</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {/* Template sections are always shown as fallback when no rendered data */}
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
+/* ── Detect framework from report name (fallback) ── */
+function detectFramework(name: string): string {
+  const n = name.toUpperCase();
+  if (n.includes('BRSR')) return 'BRSR';
+  if (n.includes('GRI')) return 'GRI';
+  if (n.includes('ESRS') || n.includes('CSRD')) return 'ESRS';
+  if (n.includes('IFRS') || n.includes('S2')) return 'IFRS_S2';
+  return 'BRSR';
+}
+
 /* ── Owner & dept options ── */
 const USER_OPTIONS = ['Priya Sharma \u2014 ESG Lead', 'Rajan Mehta \u2014 EHS Manager', 'Kavya Reddy \u2014 HR Lead', 'Ankit Patel \u2014 Finance', 'Board ESG Committee'];
-const DEPT_OPTIONS = ['ESG & Sustainability', 'EHS', 'HR', 'Finance', 'Operations'];
+const DEPT_OPTIONS = ['ESG & Sustainability', 'EHS', 'HR', 'Finance', 'Operations', 'Legal & Compliance', 'CSR / Sustainability', 'Secretarial'];
 
-/* ── Section detail view with questions (full data-entry UI) ── */
-function SectionDetail({ sectionCode, template, report, onBack }: {
-  sectionCode: string;
+/* ── Section owner auto-assignment by section code ── */
+function getSectionOwner(code: string): { owner: string; dept: string } {
+  if (/P3|401|405|S1/.test(code)) return { owner: 'Kavya Reddy', dept: 'HR' };
+  if (/P6|302|303|305|306|E1|E2|E3|E4|E5|MET/.test(code)) return { owner: 'Rajan Mehta', dept: 'EHS' };
+  if (/P8|P4|413|S2/.test(code)) return { owner: 'CSR Team', dept: 'CSR / Sustainability' };
+  if (/P1|P9|GOV|G1|SEC-B/.test(code)) return { owner: 'Legal Team', dept: 'Legal & Compliance' };
+  if (/P7|C12/.test(code)) return { owner: 'Govt Affairs', dept: 'Secretarial' };
+  return { owner: 'Priya Sharma', dept: 'ESG & Sustainability' };
+}
+
+/* ── Fallback questions for sections without API data ── */
+interface FallbackQuestion {
+  id: string; code: string; name: string; unit: string; dataType: string;
+  status: 'not_reported'; verified: false; value: null; valueText: null; displayValue: string;
+}
+
+function getQuestionsForSection(sectionCode: string, pillar: string): FallbackQuestion[] {
+  // Match template section to find question count
+  for (const tmpl of Object.values(RP_TEMPLATES)) {
+    const sec = tmpl.sections.find(s => s.code === sectionCode);
+    if (sec) {
+      return generatePillarQuestions(sectionCode, sec.title, pillar, sec.questions);
+    }
+  }
+  return generatePillarQuestions(sectionCode, sectionCode, pillar, 5);
+}
+
+function generatePillarQuestions(code: string, title: string, pillar: string, count: number): FallbackQuestion[] {
+  const pillarQuestions: Record<string, string[]> = {
+    Environmental: [
+      'Total direct GHG emissions (Scope 1)',
+      'Total indirect GHG emissions (Scope 2)',
+      'Total energy consumption within the organization',
+      'Energy intensity per unit of revenue',
+      'Total water withdrawal by source',
+      'Total water recycled and reused',
+      'Total waste generated',
+      'Waste diverted from disposal',
+      'Hazardous waste generated',
+      'NOx, SOx, and other significant air emissions',
+      'Reduction of energy consumption',
+      'Materials used by weight or volume',
+      'Percentage of recycled input materials',
+      'Total renewable energy consumed',
+      'GHG emissions intensity ratio',
+      'Reduction in GHG emissions achieved',
+      'Land remediated or restored',
+      'Biodiversity impact assessment',
+      'Water discharge by quality and destination',
+      'Ozone-depleting substances used',
+    ],
+    Social: [
+      'Total number of employees by category',
+      'New employee hires during reporting period',
+      'Employee turnover rate',
+      'Average training hours per employee',
+      'Occupational health and safety incidents',
+      'Lost Time Injury Frequency Rate (LTIFR)',
+      'Fatalities due to work-related incidents',
+      'Diversity ratio in governance bodies',
+      'Gender pay gap ratio',
+      'Return to work after parental leave',
+      'Minimum notice period for operational changes',
+      'Workers covered by collective agreements',
+      'Human rights assessment coverage',
+      'Community investment programs',
+      'Local hiring percentage',
+      'Employee benefits coverage',
+      'Workers in hazardous conditions',
+      'Child labor risk assessment',
+      'Supplier social assessment',
+      'Grievances filed and resolved',
+    ],
+    Governance: [
+      'Board composition and independence',
+      'Board diversity by gender and age',
+      'Anti-corruption policies and procedures',
+      'Confirmed incidents of corruption',
+      'Legal actions for anti-competitive behavior',
+      'Political contributions and lobbying expenditure',
+      'Data privacy breaches reported',
+      'Stakeholder engagement process',
+      'Sustainability governance structure',
+      'Executive compensation linked to ESG',
+      'Risk management framework',
+      'Code of conduct compliance rate',
+      'Whistleblower cases reported',
+      'Regulatory compliance violations',
+      'Tax transparency disclosures',
+      'Intellectual property management',
+      'Business continuity planning',
+      'Cybersecurity incidents',
+      'Ethics training completion rate',
+      'Third-party audit findings',
+    ],
+  };
+
+  const questions = pillarQuestions[pillar] ?? pillarQuestions.Governance;
+  const result: FallbackQuestion[] = [];
+  for (let i = 0; i < Math.min(count, questions.length); i++) {
+    result.push({
+      id: `${code}-fallback-${i}`,
+      code: `${code}.${i + 1}`,
+      name: questions[i],
+      unit: pillar === 'Environmental' ? 'tCO2e' : pillar === 'Social' ? 'count' : 'text',
+      dataType: pillar === 'Environmental' ? 'numeric' : pillar === 'Social' ? 'numeric' : 'text',
+      status: 'not_reported',
+      verified: false,
+      value: null,
+      valueText: null,
+      displayValue: '',
+    });
+  }
+  return result;
+}
+
+/* ── Section detail view with real parameter data ── */
+function SectionDetail({ sectionId, renderedReport, template, framework, fwColor, onBack }: {
+  sectionId: string;
+  renderedReport: RenderedReport | undefined;
   template: { name: string; color: string; sections: TemplateSection[] };
-  report: ReportItem;
+  framework: string;
+  fwColor: string;
   onBack: () => void;
 }) {
-  const secIdx = template.sections.findIndex(s => s.code === sectionCode);
-  const section = template.sections[secIdx];
   const [aiEnabled, setAiEnabled] = useState(true);
-  if (!section) return null;
 
-  const pct = report.sectionProgress[secIdx] ?? 0;
-  const questions = SECTION_QUESTIONS[sectionCode] ?? [];
-  const hasQuestions = questions.length > 0;
-  const answered = questions.filter(q => q.status === 'answered').length;
-  const nextSecIdx = secIdx + 1;
-  const hasNext = nextSecIdx < template.sections.length;
+  // Auto-assign owner/dept based on section code
+  const autoOwner = getSectionOwner(sectionId);
+  const [owner, setOwner] = useState(autoOwner.owner);
+  const [dept, setDept] = useState(autoOwner.dept);
+
+  const section = renderedReport?.sections.find(s => s.id === sectionId);
+  if (!section) {
+    return (
+      <div>
+        <button onClick={onBack} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: 'var(--tx2)', padding: 0, marginBottom: 14 }}>
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 4L6 8l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          Back to Report Builder
+        </button>
+        <div style={{ background: 'var(--surf)', border: '.5px solid var(--bdr)', borderRadius: 12, padding: '40px 20px', textAlign: 'center' }}>
+          <div style={{ fontSize: 13, color: 'var(--tx2)' }}>Section data not available. Generate content first.</div>
+        </div>
+      </div>
+    );
+  }
+
+  const pct = section.total > 0 ? Math.round((section.reported / section.total) * 100) : 0;
+  const pColor = PILLAR_COLOR[section.pillar ?? ''] ?? '#6366f1';
+
+  // Flatten all parameters from all disclosures in this section
+  const allParams: Array<{ param: RenderedParameter; disclosure: RenderedDisclosure; idx: number }> = [];
+  let pIdx = 0;
+  for (const disc of section.disclosures) {
+    for (const param of disc.parameters) {
+      allParams.push({ param, disclosure: disc, idx: pIdx++ });
+    }
+  }
+
+  const sectionIdx = renderedReport?.sections.findIndex(s => s.id === sectionId) ?? -1;
+  const nextSectionId = renderedReport?.sections[sectionIdx + 1]?.id;
 
   return (
     <div>
-      {/* Back to builder */}
       <button onClick={onBack} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: 'var(--tx2)', padding: 0, marginBottom: 14 }}>
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 4L6 8l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
         Back to Report Builder
       </button>
 
-      {/* Section header with progress circle */}
+      {/* Section header */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 220px', gap: 16, alignItems: 'flex-start', marginBottom: 16 }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 5, background: `${section.color}18`, color: section.color }}>{section.code}</span>
-            <div style={{ fontSize: 21, fontWeight: 700, color: 'var(--tx1)' }}>{section.title}</div>
+            <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 5, background: `${pColor}18`, color: pColor }}>{section.id}</span>
+            <div style={{ fontSize: 21, fontWeight: 700, color: 'var(--tx1)' }}>{section.name}</div>
           </div>
-          <div style={{ fontSize: 13, color: 'var(--tx2)', lineHeight: 1.5 }}>{section.guidance}</div>
+          {section.description && <div style={{ fontSize: 13, color: 'var(--tx2)', lineHeight: 1.5 }}>{section.description}</div>}
         </div>
         <div style={{ background: 'var(--surf)', border: '.5px solid var(--bdr)', borderRadius: 12, padding: 14, textAlign: 'center' }}>
-          <div style={{ fontSize: 28, fontWeight: 700, color: section.color, lineHeight: 1 }}>{pct}%</div>
+          <div style={{ fontSize: 28, fontWeight: 700, color: pColor, lineHeight: 1 }}>{pct}%</div>
           <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 8 }}>Complete</div>
-          <div style={{ height: 5, background: 'var(--bdr2)', borderRadius: 3, overflow: 'hidden', marginBottom: 6 }}><div style={{ height: '100%', background: section.color, width: `${pct}%`, borderRadius: 3 }} /></div>
-          <div style={{ fontSize: 11, color: 'var(--tx2)' }}>{Math.round(section.questions * pct / 100)}/{section.questions} questions</div>
+          <div style={{ height: 5, background: 'var(--bdr2)', borderRadius: 3, overflow: 'hidden', marginBottom: 6 }}><div style={{ height: '100%', background: pColor, width: `${pct}%`, borderRadius: 3 }} /></div>
+          <div style={{ fontSize: 11, color: 'var(--tx2)' }}>{section.reported}/{section.total} parameters</div>
         </div>
       </div>
 
@@ -554,15 +756,15 @@ function SectionDetail({ sectionCode, template, report, onBack }: {
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--surf)', border: '.5px solid var(--bdr)', borderRadius: 7, padding: '6px 10px' }}>
           <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="6" r="2.5" stroke="currentColor" strokeWidth="1.3" /><path d="M3 13c0-2.8 2.2-5 5-5s5 2.2 5 5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg>
           <span style={{ fontSize: 11, color: 'var(--tx3)' }}>Owner:</span>
-          <select style={{ border: 'none', outline: 'none', fontSize: 11, fontWeight: 600, color: 'var(--tx1)', background: 'transparent', cursor: 'pointer' }}>
-            {USER_OPTIONS.map(u => <option key={u}>{u}</option>)}
+          <select value={owner} onChange={e => setOwner(e.target.value)} style={{ border: 'none', outline: 'none', fontSize: 11, fontWeight: 600, color: 'var(--tx1)', background: 'transparent', cursor: 'pointer' }}>
+            {USER_OPTIONS.map(u => <option key={u} value={u.split(' \u2014 ')[0]}>{u}</option>)}
           </select>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--surf)', border: '.5px solid var(--bdr)', borderRadius: 7, padding: '6px 10px' }}>
           <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><rect x="2" y="4" width="12" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.3" /><path d="M5 4V3a1 1 0 011-1h4a1 1 0 011 1v1" stroke="currentColor" strokeWidth="1.3" /></svg>
           <span style={{ fontSize: 11, color: 'var(--tx3)' }}>Dept:</span>
-          <select style={{ border: 'none', outline: 'none', fontSize: 11, fontWeight: 600, color: 'var(--tx1)', background: 'transparent', cursor: 'pointer' }}>
-            {DEPT_OPTIONS.map(d => <option key={d}>{d}</option>)}
+          <select value={dept} onChange={e => setDept(e.target.value)} style={{ border: 'none', outline: 'none', fontSize: 11, fontWeight: 600, color: 'var(--tx1)', background: 'transparent', cursor: 'pointer' }}>
+            {DEPT_OPTIONS.map(d => <option key={d} value={d}>{d}</option>)}
           </select>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--surf)', border: '.5px solid var(--bdr)', borderRadius: 7, padding: '6px 12px', marginLeft: 'auto' }}>
@@ -578,32 +780,52 @@ function SectionDetail({ sectionCode, template, report, onBack }: {
         </div>
       </div>
 
-      {/* Questions list */}
-      {hasQuestions ? (
+      {/* Disclosures & Parameters */}
+      {section.disclosures.length > 0 ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 80 }}>
-          {questions.map(q => (
-            <QuestionCard key={q.id} q={q} templateColor={template.color} aiEnabled={aiEnabled} />
+          {section.disclosures.map(disc => (
+            <DisclosureCard key={disc.id} disclosure={disc} pColor={pColor} aiEnabled={aiEnabled} />
           ))}
         </div>
-      ) : (
-        <div style={{ background: 'var(--surf)', border: '.5px solid var(--bdr)', borderRadius: 12, padding: '40px 20px', textAlign: 'center', marginBottom: 80 }}>
-          <div style={{ fontSize: 13, color: 'var(--tx2)', marginBottom: 8 }}>Questions for this section will appear once data entry begins.</div>
-          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>This section has {section.questions} disclosure questions. Click &quot;Generate Content&quot; to auto-populate from your existing KPI data.</div>
-          <button className="btn-primary" style={{ marginTop: 12, fontSize: 11 }}>Generate section content</button>
-        </div>
-      )}
+      ) : (() => {
+        // Fallback: generate pillar-specific placeholder questions
+        const fallbackParams = getQuestionsForSection(sectionId, section.pillar ?? 'Governance');
+        if (fallbackParams.length === 0) return (
+          <div style={{ background: 'var(--surf)', border: '.5px solid var(--bdr)', borderRadius: 12, padding: '40px 20px', textAlign: 'center', marginBottom: 80 }}>
+            <div style={{ fontSize: 13, color: 'var(--tx2)', marginBottom: 8 }}>No disclosures defined for this section.</div>
+            <div style={{ fontSize: 11, color: 'var(--tx3)' }}>This section may not have KPI parameters mapped yet.</div>
+          </div>
+        );
+        const fallbackDisc: RenderedDisclosure = {
+          id: `${sectionId}-draft`,
+          name: `${section.name} — Draft Questions`,
+          description: 'These are recommended disclosure questions for this section. Fill in responses to build your report.',
+          parameters: fallbackParams as unknown as RenderedParameter[],
+          reported: 0,
+          total: fallbackParams.length,
+        };
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 80 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, fontSize: 11, color: '#92400e' }}>
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2l6 12H2L8 2z" stroke="#f59e0b" strokeWidth="1.3" fill="none" /><path d="M8 7v3M8 11.5v.5" stroke="#f59e0b" strokeWidth="1.3" strokeLinecap="round" /></svg>
+              No KPI parameters are mapped for this section yet. Showing recommended disclosure questions based on the section&apos;s pillar.
+            </div>
+            <DisclosureCard disclosure={fallbackDisc} pColor={pColor} aiEnabled={aiEnabled} />
+          </div>
+        );
+      })()}
 
       {/* Sticky footer */}
       <div style={{ position: 'fixed', bottom: 0, left: 'var(--sbw, 220px)', right: 0, background: 'var(--surf)', borderTop: '.5px solid var(--bdr)', padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 100 }}>
         <div>
           <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx1)' }}>Progress Status</div>
-          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{section.questions - Math.round(section.questions * pct / 100)} questions remaining</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{section.total - section.reported} parameters remaining</div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button className="btn-secondary" onClick={onBack}>Save as Draft</button>
           <button className="btn-primary" onClick={onBack}>
-            {hasNext ? 'Continue to Next Section' : 'Back to Builder'}
-            {hasNext && <svg width="13" height="13" viewBox="0 0 16 16" fill="none" style={{ marginLeft: 6, verticalAlign: 'middle' }}><path d="M6 4l4 4-4 4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+            {nextSectionId ? 'Continue to Next Section' : 'Back to Builder'}
+            {nextSectionId && <svg width="13" height="13" viewBox="0 0 16 16" fill="none" style={{ marginLeft: 6, verticalAlign: 'middle' }}><path d="M6 4l4 4-4 4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>}
           </button>
         </div>
       </div>
@@ -611,50 +833,124 @@ function SectionDetail({ sectionCode, template, report, onBack }: {
   );
 }
 
-/* ── Individual question card with tabs ──────────────────────── */
-function QuestionCard({ q, templateColor, aiEnabled }: { q: Question; templateColor: string; aiEnabled: boolean }) {
-  const [expanded, setExpanded] = useState(q.status !== 'answered');
-  const [activeTab, setActiveTab] = useState<'response' | 'prev' | 'ai'>('response');
-  const borderColor = q.status === 'answered' ? '#fecaca' : q.status === 'draft' ? '#c7d2fe' : '#e5e7eb';
-  const stCircleColor = q.status === 'answered' ? '#ef4444' : '#e5e7eb';
-  const stCircleBg = q.status === 'answered' ? '#fef2f2' : '#f8fafb';
+/* ── Disclosure card with expandable parameters ── */
+function DisclosureCard({ disclosure, pColor, aiEnabled }: {
+  disclosure: RenderedDisclosure;
+  pColor: string;
+  aiEnabled: boolean;
+}) {
+  const [expanded, setExpanded] = useState(true);
+  const pct = disclosure.total > 0 ? Math.round((disclosure.reported / disclosure.total) * 100) : 0;
 
   return (
-    <div style={{ background: 'var(--surf)', border: `1.5px solid ${borderColor}`, borderRadius: 12, overflow: 'hidden' }}>
+    <div style={{ background: 'var(--surf)', border: '.5px solid var(--bdr)', borderRadius: 12, overflow: 'hidden' }}>
+      {/* Disclosure header */}
+      <div onClick={() => setExpanded(!expanded)} style={{
+        display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', cursor: 'pointer',
+        borderBottom: expanded ? '.5px solid var(--bdr2)' : 'none',
+      }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, fontFamily: 'var(--fm)', color: pColor }}>{disclosure.id}</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx1)' }}>{disclosure.name}</span>
+          </div>
+          {disclosure.description && (
+            <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 3 }}>{disclosure.description}</div>
+          )}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          <span style={{ fontSize: 10, fontWeight: 600, color: pct === 100 ? 'var(--grn)' : 'var(--tx3)' }}>{disclosure.reported}/{disclosure.total}</span>
+          <div className="pbar-bg" style={{ width: 60, height: 4 }}>
+            <div className="pbar-fill" style={{ width: `${pct}%`, background: pct === 100 ? 'var(--grn)' : 'var(--t500)' }} />
+          </div>
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform .2s', color: 'var(--tx3)' }}><path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        </div>
+      </div>
+
+      {/* Parameters list */}
+      {expanded && disclosure.parameters.length > 0 && (
+        <div>
+          {disclosure.parameters.map((param, i) => (
+            <ParameterCard key={param.paramId} param={param} idx={i} total={disclosure.parameters.length} aiEnabled={aiEnabled} disclosureDescription={disclosure.description} />
+          ))}
+        </div>
+      )}
+      {expanded && disclosure.parameters.length === 0 && (
+        <div style={{ padding: '16px', fontSize: 11, color: 'var(--tx3)', textAlign: 'center' }}>No parameters mapped to this disclosure.</div>
+      )}
+    </div>
+  );
+}
+
+/* ── Individual parameter/question card ── */
+function ParameterCard({ param, idx, total, aiEnabled, disclosureDescription }: {
+  param: RenderedParameter;
+  idx: number;
+  total: number;
+  aiEnabled: boolean;
+  disclosureDescription?: string;
+}) {
+  const [expanded, setExpanded] = useState(param.status !== 'reported');
+  const [activeTab, setActiveTab] = useState<'response' | 'prev' | 'ai'>('response');
+
+  const isReported = param.status === 'reported';
+  const isNA = param.status === 'not_applicable';
+  // Border colors matching reference: red (#fecaca) for reported/answered, indigo (#c7d2fe) for draft/NA, gray (#e5e7eb) for pending
+  const borderColor = isReported ? '#fecaca' : isNA ? '#c7d2fe' : '#e5e7eb';
+  const stCircleColor = isReported ? '#22c55e' : isNA ? '#6366f1' : '#e5e7eb';
+  const stCircleBg = isReported ? '#f0fdf4' : isNA ? '#eef2ff' : '#f8fafb';
+  const statusLabel = isReported ? 'Reported' : isNA ? 'N/A' : 'Not Reported';
+  const statusColor = isReported ? '#22c55e' : isNA ? '#6366f1' : '#94a3b8';
+  const isQuantitative = param.dataType === 'numeric' || param.dataType === 'percentage' || param.dataType === 'currency';
+  // First 60% of parameters are required, rest optional (matching reference)
+  const isRequired = idx < Math.ceil(total * 0.6);
+
+  return (
+    <div style={{ borderBottom: idx < total - 1 ? '.5px solid var(--bdr2)' : 'none', borderLeft: `3px solid ${borderColor}` }}>
       {/* Collapsible header */}
-      <div onClick={() => setExpanded(!expanded)} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '14px 16px', cursor: 'pointer' }}>
-        <div style={{ width: 28, height: 28, borderRadius: '50%', border: `2px solid ${stCircleColor}`, background: stCircleBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
-          {q.status === 'answered' && <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="#ef4444" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>}
-          {q.status !== 'answered' && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#e5e7eb' }} />}
+      <div onClick={() => setExpanded(!expanded)} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 16px', cursor: 'pointer' }}>
+        <div style={{ width: 24, height: 24, borderRadius: '50%', border: `2px solid ${stCircleColor}`, background: stCircleBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+          {isReported && <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+          {isNA && <span style={{ fontSize: 8, fontWeight: 700, color: '#6366f1' }}>NA</span>}
+          {!isReported && !isNA && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#e5e7eb' }} />}
         </div>
         <div style={{ flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 5, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 10, fontWeight: 700, fontFamily: 'var(--fm)', color: 'var(--tx3)' }}>{q.code}</span>
-            <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 20, background: q.required ? '#e0f9f4' : '#f3f4f6', color: q.required ? '#0d9488' : '#94a3b8' }}>{q.required ? 'Required' : 'Optional'}</span>
-            <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{q.type}</span>
-            <span style={{ fontSize: 10, color: 'var(--tx3)' }}>Question {q.qnum} of {q.total}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 4, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 10, fontWeight: 700, fontFamily: 'var(--fm)', color: 'var(--tx3)' }}>{param.code}</span>
+            <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 20, background: `${statusColor}15`, color: statusColor }}>{statusLabel}</span>
+            <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{isQuantitative ? 'Quantitative' : 'Qualitative'}</span>
+            {param.verified && <span style={{ fontSize: 9, fontWeight: 600, padding: '1px 5px', borderRadius: 3, background: '#dcfce7', color: '#16a34a' }}>Verified</span>}
+            <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 3, background: isRequired ? '#fef2f2' : '#f0fdf4', color: isRequired ? '#dc2626' : '#16a34a' }}>{isRequired ? 'Required' : 'Optional'}</span>
+            <span style={{ fontSize: 10, color: 'var(--tx3)' }}>Parameter {idx + 1} of {total}</span>
           </div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx1)', lineHeight: 1.4 }}>{q.q}</div>
-          {!expanded && q.value && (
-            <div style={{ marginTop: 6, fontSize: 11, color: 'var(--tx2)', background: 'var(--bg)', borderRadius: 6, padding: '7px 10px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {q.value}{q.unit && q.type === 'Quantitative' ? ` ${q.unit}` : ''}
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx1)', lineHeight: 1.4 }}>{param.name}</div>
+          {!expanded && param.displayValue && param.status !== 'not_reported' && (
+            <div style={{ marginTop: 5, fontSize: 11, color: 'var(--tx2)', background: 'var(--bg)', borderRadius: 6, padding: '6px 10px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {param.displayValue}{param.unit && isQuantitative ? ` ${param.unit}` : ''}
             </div>
           )}
         </div>
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform .2s', color: 'var(--tx3)' }}><path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
       </div>
 
-      {/* Expanded: guidance + tabs + content */}
+      {/* Expanded content */}
       {expanded && (
         <div style={{ borderTop: '.5px solid var(--bdr2)' }}>
           {/* Guidance block */}
-          <div style={{ margin: '12px 16px', padding: '10px 12px', background: '#f9fafb', borderRadius: 8, display: 'flex', gap: 8 }}>
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: 1 }}><circle cx="8" cy="8" r="6" stroke="#94a3b8" strokeWidth="1.3" /><path d="M8 7v4" stroke="#94a3b8" strokeWidth="1.3" strokeLinecap="round" /><circle cx="8" cy="5.5" r=".7" fill="#94a3b8" /></svg>
-            <div style={{ fontSize: 11, color: 'var(--tx2)', lineHeight: 1.5 }}><strong>Guidance:</strong> {q.guidance}</div>
-          </div>
+          {disclosureDescription && (
+            <div style={{ margin: '12px 16px 0', padding: '10px 14px', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 8, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+              <div style={{ width: 24, height: 24, borderRadius: 6, background: '#dbeafe', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#3b82f6" strokeWidth="1.3" /><path d="M8 7v4M8 5.5v0" stroke="#3b82f6" strokeWidth="1.3" strokeLinecap="round" /></svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#1e40af', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 3 }}>Guidance</div>
+                <div style={{ fontSize: 11, color: '#1e3a5f', lineHeight: 1.5 }}>{disclosureDescription}</div>
+              </div>
+            </div>
+          )}
 
           {/* Tabs */}
-          <div style={{ display: 'flex', gap: 0, margin: '0 16px 12px', background: 'var(--bg)', borderRadius: 8, padding: 3, width: 'fit-content' }}>
+          <div style={{ display: 'flex', gap: 0, margin: '12px 16px', background: 'var(--bg)', borderRadius: 8, padding: 3, width: 'fit-content' }}>
             {([['response', 'Response'], ['prev', 'Previous Year'], ['ai', 'AI Assist']] as [string, string][]).map(([k, l]) => (
               <button key={k} onClick={e => { e.stopPropagation(); setActiveTab(k as any); }} style={{ padding: '6px 13px', border: 'none', cursor: 'pointer', borderRadius: 6, fontSize: 11, fontWeight: activeTab === k ? 700 : 500, color: activeTab === k ? 'var(--tx1)' : 'var(--tx2)', background: activeTab === k ? 'var(--surf)' : 'transparent', boxShadow: activeTab === k ? '0 1px 3px rgba(0,0,0,.1)' : 'none', transition: 'all .15s' }}>{l}</button>
             ))}
@@ -663,29 +959,29 @@ function QuestionCard({ q, templateColor, aiEnabled }: { q: Question; templateCo
           {/* Response tab */}
           {activeTab === 'response' && (
             <div style={{ padding: '0 16px 14px' }}>
-              {q.type === 'Quantitative' ? (
+              {isQuantitative ? (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px', gap: 10, marginBottom: 12 }}>
                   <div>
-                    <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>Value <span style={{ color: '#ef4444' }}>*</span></label>
-                    <input style={{ width: '100%', padding: '10px 12px', border: '.5px solid var(--bdr)', borderRadius: 8, fontSize: 16, fontWeight: 600, outline: 'none', fontFamily: 'var(--fm)' }} defaultValue={q.value} placeholder="Enter value\u2026" />
+                    <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>Value</label>
+                    <input style={{ width: '100%', padding: '10px 12px', border: '.5px solid var(--bdr)', borderRadius: 8, fontSize: 16, fontWeight: 600, outline: 'none', fontFamily: 'var(--fm)' }} defaultValue={param.value ?? ''} placeholder="Enter value..." />
                   </div>
                   <div>
-                    <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>Unit <span style={{ color: '#ef4444' }}>*</span></label>
-                    <input style={{ width: '100%', padding: '10px 12px', border: '.5px solid var(--bdr)', borderRadius: 8, fontSize: 14, fontWeight: 600, outline: 'none', fontFamily: 'var(--fm)' }} defaultValue={q.unit} />
+                    <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>Unit</label>
+                    <input style={{ width: '100%', padding: '10px 12px', border: '.5px solid var(--bdr)', borderRadius: 8, fontSize: 14, fontWeight: 600, outline: 'none', fontFamily: 'var(--fm)' }} defaultValue={param.unit} readOnly />
                   </div>
                 </div>
               ) : (
                 <div style={{ marginBottom: 12 }}>
-                  <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>Response <span style={{ color: '#ef4444' }}>*</span></label>
-                  <textarea style={{ width: '100%', padding: '10px 12px', border: '.5px solid var(--bdr)', borderRadius: 8, fontSize: 12, resize: 'vertical', outline: 'none', minHeight: 90, fontFamily: 'var(--ff)', lineHeight: 1.6 }} defaultValue={q.value} placeholder="Enter your response\u2026" />
+                  <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>Response</label>
+                  <textarea style={{ width: '100%', padding: '10px 12px', border: '.5px solid var(--bdr)', borderRadius: 8, fontSize: 12, resize: 'vertical', outline: 'none', minHeight: 90, fontFamily: 'var(--ff)', lineHeight: 1.6 }} defaultValue={param.valueText ?? param.value ?? ''} placeholder="Enter your response..." />
                 </div>
               )}
               <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={e => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '9px 16px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 5h10v8a1 1 0 01-1 1H4a1 1 0 01-1-1V5zM1 5h14M6 5V3h4v2" stroke="white" strokeWidth="1.3" strokeLinecap="round" /></svg>
+                <button onClick={e => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '9px 16px', background: '#dc2626', color: '#fff', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                   Save Answer
                 </button>
                 <button onClick={e => e.stopPropagation()} style={{ padding: '9px 14px', border: '.5px solid var(--bdr)', background: 'var(--surf)', borderRadius: 8, fontSize: 12, fontWeight: 500, cursor: 'pointer', color: 'var(--tx2)' }}>Save as Draft</button>
+                <button onClick={e => e.stopPropagation()} style={{ padding: '9px 14px', border: '.5px solid var(--bdr)', background: 'var(--surf)', borderRadius: 8, fontSize: 12, fontWeight: 500, cursor: 'pointer', color: 'var(--tx2)' }}>Mark N/A</button>
               </div>
             </div>
           )}
@@ -693,32 +989,37 @@ function QuestionCard({ q, templateColor, aiEnabled }: { q: Question; templateCo
           {/* Previous Year tab */}
           {activeTab === 'prev' && (
             <div style={{ padding: '0 16px 14px' }}>
-              <div style={{ background: 'var(--surf)', border: '.5px solid var(--bdr)', borderRadius: 10, padding: 14 }}>
+              <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, padding: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 9, marginBottom: 12 }}>
-                  <div style={{ width: 28, height: 28, borderRadius: 7, background: 'var(--redbg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#ef4444" strokeWidth="1.3" /><path d="M8 5v3l-2 2" stroke="#ef4444" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  <div style={{ width: 28, height: 28, borderRadius: 7, background: '#fee2e2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="#dc2626" strokeWidth="1.3" /><path d="M8 5v3.5l2.5 1.5" stroke="#dc2626" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /></svg>
                   </div>
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx1)' }}>Previous Year Data (FY 2023-24)</div>
-                    <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Reference to maintain consistency and track progress</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#991b1b' }}>Previous Year Data</div>
+                    <div style={{ fontSize: 11, color: '#b91c1c' }}>FY {new Date().getFullYear() - 2}&ndash;{new Date().getFullYear() - 1} reported value</div>
                   </div>
                 </div>
-                {q.prevValue ? (
+                {param.status === 'reported' ? (
                   <>
-                    <div style={{ padding: '10px 0', borderTop: '.5px solid var(--bdr2)', borderBottom: '.5px solid var(--bdr2)', marginBottom: 10 }}>
-                      <span style={{ fontSize: 26, fontWeight: 700, color: '#ef4444', fontFamily: 'var(--fm)' }}>{q.prevValue}</span>
-                      {q.prevUnit && <span style={{ fontSize: 14, color: 'var(--tx3)', marginLeft: 6 }}>{q.prevUnit}</span>}
+                    <div style={{ padding: '10px 0', borderTop: '1px solid #fecaca', borderBottom: '1px solid #fecaca', marginBottom: 10 }}>
+                      <span style={{ fontSize: 26, fontWeight: 700, color: '#dc2626', fontFamily: 'var(--fm)' }}>{param.displayValue}</span>
+                      {param.unit && <span style={{ fontSize: 14, color: '#b91c1c', marginLeft: 6 }}>{param.unit}</span>}
                     </div>
-                    {q.prevYoY && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: 'var(--t700)' }}>
-                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3 11l4-4 3 2 4-5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                        YoY Change: {q.prevYoY}
-                      </div>
-                    )}
-                    <button onClick={e => e.stopPropagation()} style={{ marginTop: 10, padding: '6px 12px', border: '.5px solid var(--bdr)', background: 'var(--surf)', borderRadius: 6, fontSize: 11, cursor: 'pointer', color: 'var(--tx2)' }}>Use as reference &rarr;</button>
+                    <div style={{ display: 'flex', gap: 12, fontSize: 11, color: '#991b1b', marginBottom: 10 }}>
+                      <span>Data type: {param.dataType}</span>
+                      <span>Verified: {param.verified ? 'Yes' : 'No'}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                      <span style={{ fontSize: 10, color: '#991b1b' }}>YoY Change:</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: '#dc2626' }}>--</span>
+                      <span style={{ fontSize: 10, color: '#b91c1c' }}>(prior year comparison unavailable)</span>
+                    </div>
+                    <button onClick={e => e.stopPropagation()} style={{ padding: '6px 12px', border: '1px solid #fecaca', background: '#fff', borderRadius: 6, fontSize: 11, cursor: 'pointer', color: '#dc2626', fontWeight: 600 }}>Use as reference &rarr;</button>
                   </>
+                ) : param.status === 'not_applicable' ? (
+                  <div style={{ fontSize: 11, color: '#6366f1', fontStyle: 'italic' }}>Marked as Not Applicable</div>
                 ) : (
-                  <div style={{ fontSize: 11, color: 'var(--tx3)' }}>No previous year data available.</div>
+                  <div style={{ fontSize: 11, color: '#991b1b' }}>No previous year data available for this parameter. Enter values in the KPI console or use the Response tab.</div>
                 )}
               </div>
             </div>
@@ -733,20 +1034,25 @@ function QuestionCard({ q, templateColor, aiEnabled }: { q: Question; templateCo
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2l2 7h7l-5.5 4 2 7L12 16l-5.5 4 2-7L3 9h7z" fill="white" /></svg>
                   </div>
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx1)' }}>AI-Generated Suggestion</div>
-                    <div style={{ fontSize: 11, color: 'var(--tx2)', marginTop: 2 }}>Based on your platform data and industry best practices</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx1)' }}>AI Suggestion</div>
+                    <div style={{ fontSize: 11, color: 'var(--tx2)', marginTop: 2 }}>Based on your platform data and industry benchmarks</div>
                   </div>
                 </div>
-                <div style={{ fontSize: 12, color: 'var(--tx1)', lineHeight: 1.7, marginBottom: 12 }}>{q.aiSuggestion}</div>
+                <div style={{ fontSize: 12, color: 'var(--tx1)', lineHeight: 1.7, marginBottom: 12 }}>
+                  {param.status === 'reported'
+                    ? `Current value: ${param.displayValue} ${param.unit}. Consider adding context about methodology and year-over-year trends to strengthen this disclosure.`
+                    : `This parameter has no data yet. Check your KPI data entries or use the response tab to provide a value. ${isQuantitative ? `Expected unit: ${param.unit}.` : 'Provide a qualitative narrative response.'}`
+                  }
+                </div>
                 <button onClick={e => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '9px 16px', background: 'var(--t700)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2l2 7h7l-5.5 4 2 7L12 16l-5.5 4 2-7L3 9h7z" fill="white" /></svg>
-                  Use This Suggestion
+                  Apply Suggestion
                 </button>
               </div>
             </div>
           )}
           {activeTab === 'ai' && !aiEnabled && (
-            <div style={{ padding: '14px 16px', fontSize: 11, color: 'var(--tx3)' }}>AI assistance is disabled for this session. Enable the toggle above to use AI suggestions.</div>
+            <div style={{ padding: '14px 16px', fontSize: 11, color: 'var(--tx3)' }}>AI assistance is disabled. Enable the toggle above to use AI suggestions.</div>
           )}
         </div>
       )}

@@ -52,6 +52,8 @@ export const queryKeys = {
     detail: (reportId: string) => ['reports', 'detail', reportId] as const,
     coverage: (filters: { framework: string; periodId: string }) =>
       ['reports', 'coverage', filters] as const,
+    render: (filters: { framework: string; periodId: string }) =>
+      ['reports', 'render', filters] as const,
   },
   suppliers: {
     all: ['suppliers'] as const,

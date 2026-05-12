@@ -111,28 +111,26 @@ export const POST = withApiHandler(
       name: reportName,
       format,
       generatedBy: ctx.userId,
+      metadata: { framework },
     });
 
-    // Enqueue the report-generation job
-    const jobId = await submitJob<ReportGenerationJobData>('report-generation', {
-      tenantId: ctx.tenantId,
-      reportId: report.reportId,
-      framework,
-      periodId,
-      nodeId,
-    });
-
-    if (!jobId) {
-      throw new AppError(
-        ErrorCode.PROCESSING_ERROR,
-        'Failed to enqueue report generation job',
-        500
-      );
+    // Enqueue the report-generation job (non-fatal if queue is unavailable)
+    let jobId: string | null = null;
+    try {
+      jobId = await submitJob<ReportGenerationJobData>('report-generation', {
+        tenantId: ctx.tenantId,
+        reportId: report.reportId,
+        framework,
+        periodId,
+        nodeId,
+      });
+    } catch {
+      // pg-boss may not be running — report record is already created
     }
 
     return {
       data: {
-        jobId,
+        jobId: jobId ?? undefined,
         reportId: report.reportId,
         reportName,
         framework,
