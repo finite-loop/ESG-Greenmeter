@@ -57,6 +57,13 @@
       "when": 1778853600000,
       "tag": "0007_add_users_credential_columns",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1778940000000,
+      "tag": "0008_access_requests",
+      "breakpoints": true
     }
   ]
 }

@@ -310,6 +310,24 @@ async function main() {
   `;
   console.log(`  [user] demo@greenmeter.ai / ${DEMO_PASSWORD} → Infosys`);
 
+  // Platform admin → Infosys tenant
+  const PLATFORM_ADMIN_PASSWORD = 'Admin@2026';
+  const platformAdminHash = hashSync(PLATFORM_ADMIN_PASSWORD, 10);
+  await sql`
+    INSERT INTO users (user_id, tenant_id, name, email, password_hash, role, status)
+    VALUES (
+      ${'20000000-0000-0000-0000-000000000A08'}::uuid,
+      ${T.infosys}::uuid,
+      'Platform Admin',
+      'admin@greenmeter.ai',
+      ${platformAdminHash},
+      'admin',
+      'active'
+    )
+    ON CONFLICT (email) DO UPDATE SET password_hash = ${platformAdminHash}
+  `;
+  console.log(`  [user] admin@greenmeter.ai / ${PLATFORM_ADMIN_PASSWORD} → Infosys (Platform Admin)`);
+
   // ── 3c. Org hierarchy ──
   console.log('\n[3/12] Seeding org nodes...');
   for (const t of TENANTS) {
@@ -663,6 +681,7 @@ async function main() {
 
   console.log('\n=== Demo seed complete! ===');
   console.log('\nAvailable logins:');
+  console.log(`  ${'admin@greenmeter.ai'.padEnd(30)} / ${'Admin@2026'.padEnd(18)} → Infosys Technologies (Platform Admin)`);
   console.log(`  ${'demo@greenmeter.ai'.padEnd(30)} / ${DEMO_PASSWORD.padEnd(18)} → Infosys Technologies`);
   for (const t of TENANTS) {
     console.log(`  ${t.adminEmail.padEnd(30)} / ${t.adminPassword.padEnd(18)} → ${t.name}`);

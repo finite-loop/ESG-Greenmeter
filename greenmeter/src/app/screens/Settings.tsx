@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 type Props = { navigate:(s:any)=>void; [k:string]:any };
 
 /* ── Sidebar navigation config ───────────────────────────────── */
@@ -17,6 +17,7 @@ const SETTINGS_NAV = [
     group: 'Access',
     items: [
       { id: 'users', label: 'Users & roles' },
+      { id: 'requests', label: 'Access requests' },
       { id: 'notifications', label: 'Notifications' },
     ],
   },
@@ -116,6 +117,7 @@ export default function SettingsScreen({ navigate }: Props) {
         <div>
           {activeSection === 'system-health' && <SystemHealthContent />}
           {activeSection === 'users' && <UsersContent />}
+          {activeSection === 'requests' && <RequestsContent />}
           {activeSection === 'audit-logs' && <AuditLogsContent />}
           {activeSection === 'documents' && <DocumentsContent />}
           {activeSection === 'organization' && <OrganizationContent />}
@@ -245,6 +247,202 @@ function UsersContent() {
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+/* ── Access Requests ─────────────────────────────────────────── */
+interface AccessRequest {
+  requestId: string;
+  fullName: string;
+  email: string;
+  company: string;
+  industry: string | null;
+  jobTitle: string | null;
+  status: string;
+  createdAt: string;
+}
+interface TenantOption {
+  tenantId: string;
+  name: string;
+}
+
+function RequestsContent() {
+  const [requests, setRequests] = useState<AccessRequest[]>([]);
+  const [tenants, setTenants] = useState<TenantOption[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<string>('pending');
+  const [approving, setApproving] = useState<string | null>(null);
+  const [approveForm, setApproveForm] = useState<{ tenantId: string; role: string }>({ tenantId: '', role: 'viewer' });
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const fetchRequests = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/access-requests?status=${statusFilter}&pageSize=50`);
+      if (res.ok) {
+        const json = await res.json();
+        setRequests(json.data ?? []);
+      }
+    } catch { /* ignore */ }
+    setLoading(false);
+  }, [statusFilter]);
+
+  useEffect(() => { fetchRequests(); }, [fetchRequests]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/industry/companies');
+        if (res.ok) {
+          const json = await res.json();
+          setTenants((json.data ?? []).map((t: TenantOption & { isCurrent?: boolean }) => ({ tenantId: t.tenantId, name: t.name })));
+        }
+      } catch { /* ignore */ }
+    })();
+  }, []);
+
+  async function handleReview(requestId: string, action: 'approve' | 'reject') {
+    setActionLoading(true);
+    try {
+      const body: Record<string, string> = { action };
+      if (action === 'approve') {
+        body.tenantId = approveForm.tenantId;
+        body.role = approveForm.role;
+      }
+      const res = await fetch(`/api/access-requests/${requestId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (res.ok) {
+        setApproving(null);
+        fetchRequests();
+      }
+    } catch { /* ignore */ }
+    setActionLoading(false);
+  }
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx1)' }}>
+          Access requests
+          <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--tx3)', marginLeft: 8 }}>
+            {requests.length} {statusFilter}
+          </span>
+        </div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          {(['pending', 'approved', 'rejected'] as const).map(s => (
+            <button key={s} onClick={() => setStatusFilter(s)} style={{
+              fontSize: 10, padding: '4px 10px', borderRadius: 5, cursor: 'pointer', fontWeight: 600,
+              border: statusFilter === s ? '1px solid var(--t700)' : '.5px solid var(--bdr)',
+              background: statusFilter === s ? 'var(--t50)' : 'var(--surf)',
+              color: statusFilter === s ? 'var(--t700)' : 'var(--tx2)',
+            }}>
+              {s.charAt(0).toUpperCase() + s.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {loading ? (
+        <div style={{ padding: 32, textAlign: 'center', color: 'var(--tx3)', fontSize: 12 }}>Loading...</div>
+      ) : requests.length === 0 ? (
+        <div style={{ padding: 32, textAlign: 'center', color: 'var(--tx3)', fontSize: 12, background: 'var(--bg)', borderRadius: 10 }}>
+          No {statusFilter} requests
+        </div>
+      ) : (
+        <div className="card">
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Company</th>
+                <th>Industry</th>
+                <th>Job Title</th>
+                <th>Submitted</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {requests.map(r => (
+                <React.Fragment key={r.requestId}>
+                  <tr>
+                    <td style={{ fontWeight: 500 }}>{r.fullName}</td>
+                    <td style={{ fontSize: 11, color: 'var(--tx2)' }}>{r.email}</td>
+                    <td style={{ color: 'var(--tx2)' }}>{r.company}</td>
+                    <td style={{ fontSize: 11, color: 'var(--tx3)' }}>{r.industry || '—'}</td>
+                    <td style={{ fontSize: 11, color: 'var(--tx3)' }}>{r.jobTitle || '—'}</td>
+                    <td style={{ fontSize: 11, color: 'var(--tx3)' }}>
+                      {new Date(r.createdAt).toLocaleDateString()}
+                    </td>
+                    <td>
+                      {r.status === 'pending' && (
+                        <div style={{ display: 'flex', gap: 5 }}>
+                          <button onClick={() => { setApproving(approving === r.requestId ? null : r.requestId); setApproveForm({ tenantId: '', role: 'viewer' }); }}
+                            style={{ fontSize: 10, padding: '3px 8px', background: 'var(--t700)', border: 'none', borderRadius: 5, cursor: 'pointer', color: '#fff', fontWeight: 600 }}>
+                            Approve
+                          </button>
+                          <button onClick={() => handleReview(r.requestId, 'reject')}
+                            style={{ fontSize: 10, padding: '3px 8px', background: 'none', border: '.5px solid var(--bdr)', borderRadius: 5, cursor: 'pointer', color: 'var(--tx2)' }}>
+                            Reject
+                          </button>
+                        </div>
+                      )}
+                      {r.status !== 'pending' && (
+                        <span className={`badge b-${r.status === 'approved' ? 'green' : 'red'}`} style={{ fontSize: 9 }}>
+                          {r.status}
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                  {approving === r.requestId && (
+                    <tr>
+                      <td colSpan={7} style={{ background: 'var(--t50)', padding: '10px 14px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <div>
+                            <label style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 3 }}>Tenant</label>
+                            <select value={approveForm.tenantId} onChange={e => setApproveForm(f => ({ ...f, tenantId: e.target.value }))}
+                              style={{ fontSize: 11, padding: '4px 8px', border: '.5px solid var(--bdr)', borderRadius: 5, minWidth: 180 }}>
+                              <option value="">Select tenant...</option>
+                              {tenants.map(t => <option key={t.tenantId} value={t.tenantId}>{t.name}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <label style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 3 }}>Role</label>
+                            <select value={approveForm.role} onChange={e => setApproveForm(f => ({ ...f, role: e.target.value }))}
+                              style={{ fontSize: 11, padding: '4px 8px', border: '.5px solid var(--bdr)', borderRadius: 5, minWidth: 120 }}>
+                              <option value="viewer">Viewer</option>
+                              <option value="department">Department</option>
+                              <option value="analyst">Analyst</option>
+                              <option value="admin">Admin</option>
+                            </select>
+                          </div>
+                          <button onClick={() => handleReview(r.requestId, 'approve')}
+                            disabled={!approveForm.tenantId || actionLoading}
+                            style={{
+                              fontSize: 10, padding: '5px 14px', background: approveForm.tenantId ? 'var(--t700)' : 'var(--tx3)',
+                              border: 'none', borderRadius: 5, cursor: approveForm.tenantId ? 'pointer' : 'not-allowed',
+                              color: '#fff', fontWeight: 600, marginTop: 14,
+                            }}>
+                            {actionLoading ? 'Processing...' : 'Confirm approval'}
+                          </button>
+                          <button onClick={() => setApproving(null)}
+                            style={{ fontSize: 10, padding: '5px 10px', background: 'none', border: '.5px solid var(--bdr)', borderRadius: 5, cursor: 'pointer', color: 'var(--tx2)', marginTop: 14 }}>
+                            Cancel
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

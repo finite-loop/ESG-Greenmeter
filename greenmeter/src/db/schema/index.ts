@@ -9,3 +9,4 @@ export * from './reports';
 export * from './supply-chain';
 export * from './config';
 export * from './audit';
+export * from './access-requests';

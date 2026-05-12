@@ -11,6 +11,7 @@ export interface UserInsert {
   role: string;
   departmentId?: string | null;
   status: string;
+  passwordHash?: string;
 }
 
 export interface UserRow {
@@ -102,6 +103,7 @@ export const userRepository = {
           role: user.role,
           departmentId: user.departmentId ?? null,
           status: user.status,
+          passwordHash: user.passwordHash ?? undefined,
         })
         .returning();
 

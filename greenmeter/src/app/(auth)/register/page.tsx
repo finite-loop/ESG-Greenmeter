@@ -49,12 +49,13 @@ export default function RegisterPage() {
     terms: false,
   });
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   function update(field: string, value: string | boolean) {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     setError(null);
     if (!form.fullName || !form.email || !form.company || !form.password) {
       setError("Please fill in all required fields.");
@@ -68,7 +69,35 @@ export default function RegisterPage() {
       setError("You must agree to the terms and privacy policy.");
       return;
     }
-    router.push("/register/success");
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName: form.fullName,
+          email: form.email,
+          company: form.company,
+          industry: form.industry || undefined,
+          jobTitle: form.jobTitle || undefined,
+          password: form.password,
+          confirmPassword: form.confirmPassword,
+        }),
+      });
+
+      if (res.status === 201) {
+        router.push("/register/success");
+        return;
+      }
+
+      const data = await res.json();
+      setError(data?.error?.message || "Registration failed. Please try again.");
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -400,21 +429,23 @@ export default function RegisterPage() {
         {/* Submit button */}
         <button
           onClick={handleSubmit}
+          disabled={loading}
           style={{
             width: "100%",
             padding: "10px 16px",
-            background: "var(--tx1)",
+            background: loading ? "var(--tx3)" : "var(--tx1)",
             color: "#fff",
             border: "none",
             borderRadius: 6,
             fontSize: 13,
             fontWeight: 500,
-            cursor: "pointer",
+            cursor: loading ? "not-allowed" : "pointer",
             letterSpacing: ".01em",
             fontFamily: "var(--ff)",
+            opacity: loading ? 0.7 : 1,
           }}
         >
-          Create Account &rarr;
+          {loading ? "Submitting..." : "Create Account \u2192"}
         </button>
 
         {/* Approval note */}
