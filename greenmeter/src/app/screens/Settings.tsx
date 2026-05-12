@@ -284,24 +284,15 @@ function RequestsContent() {
       if (res.ok) {
         const json = await res.json();
         setRequests(json.data ?? []);
+        if (json.tenants) {
+          setTenants(json.tenants.map((t: TenantOption) => ({ tenantId: t.tenantId, name: t.name })));
+        }
       }
     } catch { /* ignore */ }
     setLoading(false);
   }, [statusFilter]);
 
   useEffect(() => { fetchRequests(); }, [fetchRequests]);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch('/api/industry/companies');
-        if (res.ok) {
-          const json = await res.json();
-          setTenants((json.data ?? []).map((t: TenantOption & { isCurrent?: boolean }) => ({ tenantId: t.tenantId, name: t.name })));
-        }
-      } catch { /* ignore */ }
-    })();
-  }, []);
 
   async function handleReview(requestId: string, action: 'approve' | 'reject') {
     setActionLoading(true);
