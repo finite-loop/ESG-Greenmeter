@@ -9,13 +9,21 @@ import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
  * The Credentials provider is defined in auth.ts (requires DB access
  * for password verification).
  */
-const providers: NextAuthConfig['providers'] = [
-  MicrosoftEntraID({
-    clientId: process.env.AUTH_AZURE_AD_CLIENT_ID,
-    clientSecret: process.env.AUTH_AZURE_AD_CLIENT_SECRET,
-    issuer: `https://login.microsoftonline.com/${process.env.AUTH_AZURE_AD_TENANT_ID}/v2.0`,
-  }),
-];
+const providers: NextAuthConfig['providers'] = [];
+
+if (
+  process.env.AUTH_AZURE_AD_CLIENT_ID &&
+  process.env.AUTH_AZURE_AD_CLIENT_SECRET &&
+  process.env.AUTH_AZURE_AD_TENANT_ID
+) {
+  providers.push(
+    MicrosoftEntraID({
+      clientId: process.env.AUTH_AZURE_AD_CLIENT_ID,
+      clientSecret: process.env.AUTH_AZURE_AD_CLIENT_SECRET,
+      issuer: `https://login.microsoftonline.com/${process.env.AUTH_AZURE_AD_TENANT_ID}/v2.0`,
+    }),
+  );
+}
 
 export default {
   providers,
