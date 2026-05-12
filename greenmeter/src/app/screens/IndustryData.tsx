@@ -151,7 +151,7 @@ function fmtChange(curr: number, prev: number, unit: string): { text: string; go
 /* ── Mini sparkline SVG ──────────────────────────────────────── */
 const YEAR_LABELS = ['FY22', 'FY23', 'FY24', 'FY25'];
 
-function Sparkline({ values, color, width = 80, height = 40, showYears = false }: { values: number[]; color: string; width?: number; height?: number; showYears?: boolean }) {
+function Sparkline({ values, color, width = 120, height = 52, showYears = false }: { values: number[]; color: string; width?: number; height?: number; showYears?: boolean }) {
   if (values.length < 2) return null;
   const min = Math.min(...values);
   const max = Math.max(...values);
@@ -173,7 +173,7 @@ function Sparkline({ values, color, width = 80, height = 40, showYears = false }
         points={points.join(' ')}
         fill="none"
         stroke={color}
-        strokeWidth="2"
+        strokeWidth="2.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       />

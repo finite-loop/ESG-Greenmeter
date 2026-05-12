@@ -10,6 +10,7 @@ export interface IndustryCompany {
   country: string | null;
   gicsCode: string | null;
   activeFrameworks: string[] | null;
+  isCurrent: boolean;
 }
 
 interface IndustryCompaniesResponse {

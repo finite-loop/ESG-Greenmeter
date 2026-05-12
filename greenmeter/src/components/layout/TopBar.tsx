@@ -70,6 +70,7 @@ export function TopBar({
         position: "sticky",
         top: 0,
         zIndex: 200,
+        overflow: "visible",
       }}
     >
       {/* Logo area — matches sidebar width */}
@@ -196,23 +197,25 @@ export function TopBar({
             style={{ width: "28px", height: "28px", fontSize: "11px" }}
             onClick={() => setMenuOpen((o) => !o)}
             title={userName}
+            aria-expanded={menuOpen}
+            type="button"
           >
             {initials}
           </button>
 
-          {/* Dropdown menu */}
+          {/* Dropdown menu — uses fixed positioning to avoid sticky header clipping */}
           {menuOpen && (
             <div
               style={{
-                position: "absolute",
-                top: "calc(100% + 6px)",
-                right: 0,
+                position: "fixed",
+                top: "calc(var(--topH) + 4px)",
+                right: "14px",
                 width: "260px",
                 background: "var(--surf)",
                 border: "0.5px solid var(--bdr)",
                 borderRadius: "10px",
                 boxShadow: "0 8px 24px rgba(0,0,0,.12)",
-                zIndex: 300,
+                zIndex: 999,
                 overflow: "hidden",
               }}
             >

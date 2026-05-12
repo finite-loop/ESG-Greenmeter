@@ -162,6 +162,8 @@ async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
 
 /* ── Component ── */
 
+interface PeriodOption { periodId: string; label: string; fiscalYear: string }
+
 export default function ReportsScreen({ navigate }: Props) {
   const queryClient = useQueryClient();
   const [selectedIdx, setSelectedIdx] = useState(0);
@@ -170,8 +172,26 @@ export default function ReportsScreen({ navigate }: Props) {
   const [genError, setGenError] = useState<string | null>(null);
   const [showGenModal, setShowGenModal] = useState(false);
   const [genFramework, setGenFramework] = useState('BRSR');
+  const [periods, setPeriods] = useState<PeriodOption[]>([]);
+  const [selectedPeriodId, setSelectedPeriodId] = useState('');
   const donutRef = useRef<HTMLCanvasElement>(null);
   const chartRef = useRef<any>(null);
+
+  /* Fetch reporting periods on mount */
+  useEffect(() => {
+    fetch('/api/periods')
+      .then(r => { if (r.ok) return r.json(); return null; })
+      .then(data => {
+        const items: PeriodOption[] = (data?.data ?? []).map((p: { periodId: string; label: string; fiscalYear: string }) => ({
+          periodId: p.periodId,
+          label: p.label,
+          fiscalYear: p.fiscalYear,
+        }));
+        setPeriods(items);
+        if (items.length > 0) setSelectedPeriodId(items[0].periodId);
+      })
+      .catch(() => {});
+  }, []);
 
   const report = RP_REPORTS[selectedIdx];
   const template = RP_TEMPLATES[report.std] ?? RP_TEMPLATES.Custom;
@@ -206,13 +226,17 @@ export default function ReportsScreen({ navigate }: Props) {
 
   /* Generate handler */
   async function handleGenerate(fw: string) {
+    if (!selectedPeriodId) {
+      setGenError('Please select a reporting period');
+      return;
+    }
     setGenerating(true);
     setGenError(null);
     try {
       await fetchJson('/api/reports/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ framework: fw, periodId: 'fy-2024-25' }),
+        body: JSON.stringify({ framework: fw, periodId: selectedPeriodId }),
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.reports.all });
       setShowGenModal(false);
@@ -272,8 +296,11 @@ export default function ReportsScreen({ navigate }: Props) {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
               <div className="field"><label className="lbl">Report name *</label><input className="inp" placeholder={`e.g. Annual Sustainability Report ${new Date().getFullYear()}`} /></div>
-              <div className="field"><label className="lbl">Fiscal year *</label>
-                <select className="sel"><option>FY 2024-25</option><option>FY 2025-26</option><option>Q1 FY 2025-26</option><option>Q4 FY 2024-25</option></select>
+              <div className="field"><label className="lbl">Reporting period *</label>
+                <select className="sel" value={selectedPeriodId} onChange={e => setSelectedPeriodId(e.target.value)}>
+                  {periods.length === 0 && <option value="">No periods available</option>}
+                  {periods.map(p => <option key={p.periodId} value={p.periodId}>{p.label} (FY {p.fiscalYear})</option>)}
+                </select>
               </div>
             </div>
 

@@ -4,7 +4,7 @@ import { tenants } from '@/db/schema/tenants';
 import { eq } from 'drizzle-orm';
 
 export const GET = withApiHandler(
-  async () => {
+  async (_req, ctx) => {
     const rows = await db
       .select({
         tenantId: tenants.tenantId,
@@ -17,7 +17,12 @@ export const GET = withApiHandler(
       .from(tenants)
       .where(eq(tenants.active, true));
 
-    return { data: rows };
+    const data = rows.map(r => ({
+      ...r,
+      isCurrent: r.tenantId === ctx.tenantId,
+    }));
+
+    return { data };
   },
   { roles: ['admin', 'analyst', 'department', 'viewer'], audit: false }
 );

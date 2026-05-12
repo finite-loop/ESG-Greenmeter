@@ -4,7 +4,6 @@ import dynamic from "next/dynamic";
 import { useMds } from "@/hooks/useMds";
 import { useCorrelations } from "@/hooks/useCorrelations";
 import { useIndustryCompanies } from "@/hooks/useIndustryCompanies";
-import BenchmarkView from "@/components/analytics/BenchmarkView";
 import CorrelationMatrix from "@/components/analytics/CorrelationMatrix";
 
 const MdsScatterPlot = dynamic(() => import("@/components/charts/MdsScatterPlot"), { ssr: false });
@@ -18,6 +17,21 @@ const ANA_TABS = [
 
 export default function AnalyticsScreen({ navigate, RollupBar, rollupLevel, setRollupLevel }: Props) {
   const [tab, setTab] = useState('peer');
+  const [latestFY, setLatestFY] = useState<string | null>(null);
+
+  // Fetch tenant's reporting periods and pick the latest fiscal year
+  useEffect(() => {
+    fetch('/api/periods')
+      .then(r => { if (r.ok) return r.json(); return null; })
+      .then(data => {
+        const periods: { fiscalYear: string; startDate: string }[] = data?.data ?? [];
+        if (periods.length > 0) {
+          // API returns sorted by start_date DESC, so first is latest
+          setLatestFY(periods[0].fiscalYear);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <div>
@@ -67,10 +81,10 @@ export default function AnalyticsScreen({ navigate, RollupBar, rollupLevel, setR
       </div>
 
       <div style={{background:'var(--surf)',border:'.5px solid var(--bdr)',borderTop:'none',borderRadius:'0 0 12px 12px',padding:16}}>
-        {tab==='peer' && <PeerTab/>}
+        {tab==='peer' && <PeerTab latestFY={latestFY}/>}
         {tab==='rollup' && <RollupDrillTab/>}
         {tab==='forecast' && <ForecastTab/>}
-        {tab==='correlation' && <CorrelationTab/>}
+        {tab==='correlation' && <CorrelationTab latestFY={latestFY}/>}
         {tab==='anomaly' && <AnomalyTab/>}
         {tab==='trends' && <TrendsTab/>}
       </div>
@@ -78,69 +92,174 @@ export default function AnalyticsScreen({ navigate, RollupBar, rollupLevel, setR
   );
 }
 
-function ghgFromName(name: string): number {
+/* deterministic number from company name for demo */
+function valFromName(name: string, base: number, range: number): number {
   let h = 0;
   for (let i = 0; i < name.length; i++) h = ((h << 5) - h) + name.charCodeAt(i);
-  return 1.8 + (Math.abs(h) % 1000) / 1000 * 6.5;
+  return +(base + (Math.abs(h) % 1000) / 1000 * range).toFixed(1);
 }
 
-function PeerTab() {
-  const [peerSet, setPeerSet] = useState('nifty-50');
+const METRIC_OPTIONS = [
+  { key: 'ghg', label: 'GHG intensity', unit: 'tCO2e/₹cr', base: 1.8, range: 6.5 },
+  { key: 'water', label: 'Water intensity', unit: 'kL/₹cr', base: 12, range: 40 },
+  { key: 'renewable', label: 'Renewable energy %', unit: '%', base: 8, range: 65 },
+  { key: 'women', label: 'Women in mgmt %', unit: '%', base: 10, range: 35 },
+  { key: 'esg', label: 'ESG score', unit: '/100', base: 35, range: 55 },
+] as const;
+
+function PeerTab({ latestFY }: { latestFY: string | null }) {
+  const [metric, setMetric] = useState('ghg');
   const peerRef = useRef<HTMLCanvasElement>(null);
+  const radarRef = useRef<HTMLCanvasElement>(null);
   const { data: apiCompanies } = useIndustryCompanies();
 
-  const peerEntries = useMemo(() => {
-    const entries: { name: string; val: number; isYou: boolean }[] = [];
-    if (apiCompanies?.data) {
-      apiCompanies.data.forEach(t => {
-        const val = ghgFromName(t.name);
-        entries.push({ name: t.name.length > 20 ? t.name.slice(0, 18) + '…' : t.name, val: +val.toFixed(1), isYou: false });
-      });
-    }
-    entries.push({ name: 'Your org', val: 4.2, isYou: true });
-    entries.sort((a, b) => a.val - b.val);
-    return entries;
+  /* find current tenant + its sector, then filter same-sector peers */
+  const { sectorPeers, currentTenant, sectorName } = useMemo(() => {
+    if (!apiCompanies?.data) return { sectorPeers: [], currentTenant: null, sectorName: '' };
+    const current = apiCompanies.data.find(t => t.isCurrent) ?? null;
+    const sector = current?.sector ?? '';
+    /* match peers: same sector OR if sector is null show all */
+    const peers = sector
+      ? apiCompanies.data.filter(t => !t.isCurrent && t.sector && t.sector.toLowerCase() === sector.toLowerCase())
+      : apiCompanies.data.filter(t => !t.isCurrent);
+    return { sectorPeers: peers, currentTenant: current, sectorName: sector };
   }, [apiCompanies]);
 
-  useEffect(()=>{
-    let c1:any;
-    (async()=>{
-      const {Chart,registerables}=await import('chart.js');
+  const metricCfg = METRIC_OPTIONS.find(m => m.key === metric) ?? METRIC_OPTIONS[0];
+
+  const peerEntries = useMemo(() => {
+    const entries: { name: string; val: number; kind: 'you' | 'better' | 'worse' | 'avg' }[] = [];
+    const yourVal = metricCfg.key === 'ghg' ? 4.2 : metricCfg.key === 'water' ? 31 : metricCfg.key === 'renewable' ? 18 : metricCfg.key === 'women' ? 22 : 72;
+
+    sectorPeers.forEach(t => {
+      const val = valFromName(t.name + metricCfg.key, metricCfg.base, metricCfg.range);
+      const label = t.name.length > 16 ? t.name.slice(0, 14) + '…' : t.name;
+      const lowerBetter = metricCfg.key === 'ghg' || metricCfg.key === 'water';
+      const isBetter = lowerBetter ? val < yourVal : val > yourVal;
+      entries.push({ name: label, val, kind: isBetter ? 'better' : 'worse' });
+    });
+
+    /* sector average */
+    if (entries.length > 0) {
+      const avg = +(entries.reduce((s, e) => s + e.val, 0) / entries.length).toFixed(1);
+      entries.push({ name: 'Sector avg', val: avg, kind: 'avg' });
+    }
+
+    entries.push({ name: currentTenant?.name ?? 'Your org', val: yourVal, kind: 'you' });
+    entries.sort((a, b) => a.val - b.val);
+    return entries;
+  }, [sectorPeers, currentTenant, metricCfg]);
+
+  /* Vertical bar chart */
+  useEffect(() => {
+    let c1: any;
+    (async () => {
+      const { Chart, registerables } = await import('chart.js');
       Chart.register(...registerables);
-      if(!peerRef.current || peerEntries.length === 0) return;
-      const labels = peerEntries.map(e => e.name);
-      const data = peerEntries.map(e => e.val);
-      const colors = peerEntries.map(e => e.isYou ? '#0f766e' : '#94a3b8');
-      c1=new Chart(peerRef.current,{type:'bar',data:{labels,datasets:[{data,backgroundColor:colors,borderRadius:6}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#f3f4f6'},border:{display:false},ticks:{font:{family:'DM Mono',size:10},color:'#94a3b8',callback:(v:any)=>v+' t/₹cr'}},y:{grid:{display:false},border:{display:false},ticks:{font:{family:'DM Sans',size:11},color:'#0f172a'}}}}});
+      if (!peerRef.current || peerEntries.length === 0) return;
+      const colorMap = { you: '#0f766e', better: '#ccfbf1', avg: '#e5e7eb', worse: '#fca5a5' };
+      const borderMap = { you: '#0f766e', better: '#5eead4', avg: '#d1d5db', worse: '#f87171' };
+      c1 = new Chart(peerRef.current, {
+        type: 'bar',
+        data: {
+          labels: peerEntries.map(e => e.name),
+          datasets: [{
+            data: peerEntries.map(e => e.val),
+            backgroundColor: peerEntries.map(e => colorMap[e.kind]),
+            borderColor: peerEntries.map(e => borderMap[e.kind]),
+            borderWidth: 1.5,
+            borderRadius: 6,
+            maxBarThickness: 42,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              grid: { color: '#f3f4f6' },
+              border: { display: false },
+              ticks: { font: { family: 'DM Mono', size: 10 }, color: '#94a3b8', callback: (v: any) => v + ' ' + metricCfg.unit },
+            },
+            x: {
+              grid: { display: false },
+              border: { display: false },
+              ticks: { font: { family: 'DM Sans', size: 10 }, color: '#0f172a', maxRotation: 45, minRotation: 30 },
+            },
+          },
+        },
+      });
     })();
-    return()=>{c1?.destroy();};
-  },[peerEntries]);
+    return () => { c1?.destroy(); };
+  }, [peerEntries, metricCfg]);
+
+  /* Radar chart — positioning across KPIs */
+  useEffect(() => {
+    let c2: any;
+    (async () => {
+      const { Chart, registerables } = await import('chart.js');
+      Chart.register(...registerables);
+      if (!radarRef.current) return;
+      c2 = new Chart(radarRef.current, {
+        type: 'radar',
+        data: {
+          labels: ['GHG intensity', 'Energy effic.', 'Water effic.', 'Renewables', 'Safety', 'Diversity'],
+          datasets: [
+            { label: currentTenant?.name ?? 'Your org', data: [72, 68, 38, 22, 74, 61], backgroundColor: 'rgba(15,118,110,.18)', borderColor: '#0f766e', borderWidth: 2, pointRadius: 4, pointBackgroundColor: '#0f766e' },
+            { label: 'Sector average', data: [50, 50, 50, 50, 50, 50], backgroundColor: 'rgba(148,163,184,.12)', borderColor: '#94a3b8', borderWidth: 1.5, borderDash: [5, 3], pointRadius: 3, pointBackgroundColor: '#94a3b8' },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: true, position: 'bottom', labels: { font: { family: 'DM Sans', size: 10 }, color: '#64748b', boxWidth: 10, padding: 10 } } },
+          scales: { r: { beginAtZero: true, max: 100, ticks: { display: false, stepSize: 25 }, grid: { color: '#e2e8f0' }, pointLabels: { font: { family: 'DM Sans', size: 10 }, color: '#334155' } } },
+        },
+      });
+    })();
+    return () => { c2?.destroy(); };
+  }, [currentTenant]);
+
+  const peerCount = sectorPeers.length;
 
   return (
     <div>
       {/* Benchmarking-against selector */}
-      <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
+      <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12,flexWrap:'wrap'}}>
         <span style={{fontSize:11,color:'var(--tx2)',fontWeight:600}}>Benchmarking against:</span>
-        <select className="sel" style={{fontSize:11,padding:'4px 10px',minWidth:160}} value={peerSet} onChange={e=>setPeerSet(e.target.value)}>
-          <option value="nifty-50">NIFTY 50 ESG</option>
-          <option value="sector">Sector peers (Engineering &amp; Construction)</option>
-          <option value="custom">Custom peer set</option>
-        </select>
-        <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:10,background:'var(--t50)',color:'var(--t700)',border:'.5px solid var(--t200)'}}>{peerEntries.length - 1} peers</span>
-        <span style={{fontSize:10,color:'var(--tx3)',marginLeft:4}}>FY 2023-24</span>
+        <div style={{fontSize:11,padding:'4px 10px',background:'var(--bg)',border:'.5px solid var(--bdr)',borderRadius:6,fontWeight:600,color:'var(--tx1)'}}>
+          {sectorName || 'All sectors'}
+        </div>
+        <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:10,background:'var(--t50)',color:'var(--t700)',border:'.5px solid var(--t200)'}}>{peerCount} peers</span>
+        <div style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:6}}>
+          <span style={{fontSize:10,color:'var(--tx3)'}}>Metric:</span>
+          <select className="sel" style={{fontSize:11,padding:'4px 10px',minWidth:140}} value={metric} onChange={e => setMetric(e.target.value)}>
+            {METRIC_OPTIONS.map(m => <option key={m.key} value={m.key}>{m.label}</option>)}
+          </select>
+          <span style={{fontSize:10,color:'var(--tx3)',marginLeft:4}}>FY 2023-24</span>
+        </div>
+      </div>
+
+      {/* Color legend */}
+      <div style={{display:'flex',gap:14,marginBottom:10,fontSize:10,color:'var(--tx3)'}}>
+        <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:10,height:10,borderRadius:2,background:'#0f766e',display:'inline-block'}}/> Your org</span>
+        <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:10,height:10,borderRadius:2,background:'#ccfbf1',border:'1px solid #5eead4',display:'inline-block'}}/> Better peers</span>
+        <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:10,height:10,borderRadius:2,background:'#e5e7eb',border:'1px solid #d1d5db',display:'inline-block'}}/> Sector avg</span>
+        <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:10,height:10,borderRadius:2,background:'#fca5a5',border:'1px solid #f87171',display:'inline-block'}}/> Worse peers</span>
       </div>
 
       <div style={{display:'grid',gridTemplateColumns:'3fr 2fr',gap:12,marginBottom:12}}>
         <div>
-          <div style={{fontSize:12,fontWeight:600,color:'var(--tx1)',marginBottom:8}}>GHG intensity — peer comparison (FY24)</div>
-          <div style={{height:220,position:'relative'}}><canvas ref={peerRef}/></div>
+          <div style={{fontSize:12,fontWeight:600,color:'var(--tx1)',marginBottom:8}}>{metricCfg.label} — peer comparison (FY24)</div>
+          <div style={{height:260,position:'relative'}}><canvas ref={peerRef}/></div>
         </div>
         <div>
           <div style={{fontSize:12,fontWeight:600,color:'var(--tx1)',marginBottom:8}}>Positioning across KPIs</div>
-          <BenchmarkView fiscalYear="2023-24" />
+          <div style={{height:260,position:'relative'}}><canvas ref={radarRef}/></div>
         </div>
       </div>
-      <MdsSection />
+      <MdsSection latestFY={latestFY} />
       <div style={{background:'var(--bg)',borderRadius:10,padding:'12px 14px'}}>
         <div style={{fontSize:11,fontWeight:600,color:'var(--tx2)',marginBottom:10}}>Detailed peer comparison table — all key parameters</div>
         <table style={{width:'100%',borderCollapse:'collapse',fontSize:11}}>
@@ -172,8 +291,8 @@ function PeerTab() {
   );
 }
 
-function MdsSection() {
-  const { data, isLoading, error } = useMds({ fiscalYear: '2023-24' });
+function MdsSection({ latestFY }: { latestFY: string | null }) {
+  const { data, isLoading, error } = useMds({ fiscalYear: latestFY ?? '', enabled: !!latestFY });
 
   return (
     <div style={{background:'var(--bg)',borderRadius:10,padding:'12px 14px',marginBottom:12}}>
@@ -272,8 +391,8 @@ function ForecastTab() {
   );
 }
 
-function CorrelationTab() {
-  const { data, isLoading, error } = useCorrelations({ fiscalYear: '2023-24' });
+function CorrelationTab({ latestFY }: { latestFY: string | null }) {
+  const { data, isLoading, error } = useCorrelations({ fiscalYear: latestFY ?? '', enabled: !!latestFY });
 
   const scatterRef = useRef<HTMLCanvasElement>(null);
   useEffect(()=>{
