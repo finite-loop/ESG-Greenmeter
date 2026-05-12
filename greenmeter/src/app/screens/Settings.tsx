@@ -273,60 +273,75 @@ function RequestsContent() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('pending');
   const [approving, setApproving] = useState<string | null>(null);
-  const [approveForm, setApproveForm] = useState<{ tenantId: string; role: string }>({ tenantId: '', role: 'viewer' });
+  const [selectedTenant, setSelectedTenant] = useState('');
+  const [selectedRole, setSelectedRole] = useState('viewer');
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const fetchRequests = useCallback(async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch(`/api/access-requests?status=${statusFilter}&pageSize=50`);
+      const json = await res.json();
       if (res.ok) {
-        const json = await res.json();
         setRequests(json.data ?? []);
-        if (json.tenants) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          setTenants(json.tenants.map((t: any) => ({
-            tenantId: t.tenantId || t.tenant_id || '',
-            name: t.name || '',
-          })).filter((t: TenantOption) => t.tenantId));
-        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const t = (json.tenants ?? []).map((row: any) => ({
+          tenantId: String(row.tenantId ?? row.tenant_id ?? ''),
+          name: String(row.name ?? ''),
+        })).filter((row: TenantOption) => row.tenantId.length > 0);
+        setTenants(t);
+      } else {
+        setActionError(json?.error?.message || 'Failed to load requests');
       }
-    } catch { /* ignore */ }
+    } catch {
+      setActionError('Failed to load requests');
+    }
     setLoading(false);
   }, [statusFilter]);
 
-  useEffect(() => { fetchRequests(); }, [fetchRequests]);
+  useEffect(() => { loadData(); }, [loadData]);
 
-  async function handleReview(requestId: string, action: 'approve' | 'reject') {
+  async function doApprove(requestId: string) {
+    if (!selectedTenant) return;
     setActionLoading(true);
     setActionError(null);
     try {
-      const body: Record<string, string> = { action };
-      if (action === 'approve') {
-        if (!approveForm.tenantId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(approveForm.tenantId)) {
-          setActionError(`Invalid tenant selection (got "${approveForm.tenantId}"). Please re-select a tenant.`);
-          setActionLoading(false);
-          return;
-        }
-        body.tenantId = approveForm.tenantId;
-        body.role = approveForm.role;
-      }
       const res = await fetch(`/api/access-requests/${requestId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ action: 'approve', tenantId: selectedTenant, role: selectedRole }),
       });
+      const json = await res.json().catch(() => null);
       if (res.ok) {
         setApproving(null);
-        setActionError(null);
-        fetchRequests();
+        loadData();
       } else {
-        const json = await res.json().catch(() => null);
-        setActionError(json?.error?.message || `Failed with status ${res.status}`);
+        setActionError(json?.error?.message || `Approval failed (${res.status})`);
       }
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Network error');
+    } catch {
+      setActionError('Network error');
+    }
+    setActionLoading(false);
+  }
+
+  async function doReject(requestId: string) {
+    setActionLoading(true);
+    setActionError(null);
+    try {
+      const res = await fetch(`/api/access-requests/${requestId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reject' }),
+      });
+      const json = await res.json().catch(() => null);
+      if (res.ok) {
+        loadData();
+      } else {
+        setActionError(json?.error?.message || `Rejection failed (${res.status})`);
+      }
+    } catch {
+      setActionError('Network error');
     }
     setActionLoading(false);
   }
@@ -394,11 +409,11 @@ function RequestsContent() {
                     <td>
                       {r.status === 'pending' && (
                         <div style={{ display: 'flex', gap: 5 }}>
-                          <button onClick={() => { setApproving(approving === r.requestId ? null : r.requestId); setApproveForm({ tenantId: '', role: 'viewer' }); }}
+                          <button onClick={() => { setApproving(approving === r.requestId ? null : r.requestId); setSelectedTenant(''); setSelectedRole('viewer'); }}
                             style={{ fontSize: 10, padding: '3px 8px', background: 'var(--t700)', border: 'none', borderRadius: 5, cursor: 'pointer', color: '#fff', fontWeight: 600 }}>
                             Approve
                           </button>
-                          <button onClick={() => handleReview(r.requestId, 'reject')}
+                          <button onClick={() => doReject(r.requestId)}
                             style={{ fontSize: 10, padding: '3px 8px', background: 'none', border: '.5px solid var(--bdr)', borderRadius: 5, cursor: 'pointer', color: 'var(--tx2)' }}>
                             Reject
                           </button>
@@ -417,7 +432,7 @@ function RequestsContent() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                           <div>
                             <label style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 3 }}>Tenant</label>
-                            <select value={approveForm.tenantId} onChange={e => setApproveForm(f => ({ ...f, tenantId: e.target.value }))}
+                            <select value={selectedTenant} onChange={e => setSelectedTenant(e.target.value)}
                               style={{ fontSize: 11, padding: '4px 8px', border: '.5px solid var(--bdr)', borderRadius: 5, minWidth: 180 }}>
                               <option value="">Select tenant...</option>
                               {tenants.map(t => <option key={t.tenantId} value={t.tenantId}>{t.name}</option>)}
@@ -425,7 +440,7 @@ function RequestsContent() {
                           </div>
                           <div>
                             <label style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 3 }}>Role</label>
-                            <select value={approveForm.role} onChange={e => setApproveForm(f => ({ ...f, role: e.target.value }))}
+                            <select value={selectedRole} onChange={e => setSelectedRole(e.target.value)}
                               style={{ fontSize: 11, padding: '4px 8px', border: '.5px solid var(--bdr)', borderRadius: 5, minWidth: 120 }}>
                               <option value="viewer">Viewer</option>
                               <option value="department">Department</option>
@@ -433,11 +448,11 @@ function RequestsContent() {
                               <option value="admin">Admin</option>
                             </select>
                           </div>
-                          <button onClick={() => handleReview(r.requestId, 'approve')}
-                            disabled={!approveForm.tenantId || actionLoading}
+                          <button onClick={() => doApprove(r.requestId)}
+                            disabled={!selectedTenant || actionLoading}
                             style={{
-                              fontSize: 10, padding: '5px 14px', background: approveForm.tenantId ? 'var(--t700)' : 'var(--tx3)',
-                              border: 'none', borderRadius: 5, cursor: approveForm.tenantId ? 'pointer' : 'not-allowed',
+                              fontSize: 10, padding: '5px 14px', background: selectedTenant ? 'var(--t700)' : 'var(--tx3)',
+                              border: 'none', borderRadius: 5, cursor: selectedTenant ? 'pointer' : 'not-allowed',
                               color: '#fff', fontWeight: 600, marginTop: 14,
                             }}>
                             {actionLoading ? 'Processing...' : 'Confirm approval'}

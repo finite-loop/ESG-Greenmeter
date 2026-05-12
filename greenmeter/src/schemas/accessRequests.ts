@@ -21,16 +21,10 @@ export const accessRequestListFilterSchema = paginationSchema.extend({
 
 export const accessRequestReviewSchema = z.object({
   action: z.enum(['approve', 'reject']),
-  tenantId: z.string().uuid().optional(),
-  role: z.enum(['admin', 'analyst', 'department', 'viewer']).optional(),
+  tenantId: z.string().optional(),
+  role: z.string().optional(),
   reviewNote: z.string().max(500).optional(),
-}).refine(
-  (data) => data.action !== 'approve' || !!data.tenantId,
-  { message: 'tenantId is required when approving', path: ['tenantId'] }
-).refine(
-  (data) => data.action !== 'approve' || !!data.role,
-  { message: 'role is required when approving', path: ['role'] }
-);
+});
 
 export type RegisterRequest = z.infer<typeof registerRequestSchema>;
 export type AccessRequestListFilter = z.infer<typeof accessRequestListFilterSchema>;
