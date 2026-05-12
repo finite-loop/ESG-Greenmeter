@@ -250,7 +250,10 @@ function ApiGoalsView({ apiGoals, tenantSector, onAddGoal, showAddGoal, setShowA
   const critical = apiGoals.filter(x => normalizeStatus(x.status) === "critical").length;
 
   const sectorKey = matchSector(tenantSector);
-  const starterGoals = SECTOR_STARTER_GOALS[sectorKey] ?? SECTOR_STARTER_GOALS.default;
+  const allStarterGoals = SECTOR_STARTER_GOALS[sectorKey] ?? SECTOR_STARTER_GOALS.default;
+  // Filter out starter goals already adopted (fuzzy match on name)
+  const existingNames = new Set(apiGoals.map(g => g.name.toLowerCase().trim()));
+  const starterGoals = allStarterGoals.filter(sg => !existingNames.has(sg.name.toLowerCase().trim()));
 
   async function handleAdoptGoal(sg: StarterGoal) {
     try {
@@ -296,15 +299,24 @@ function ApiGoalsView({ apiGoals, tenantSector, onAddGoal, showAddGoal, setShowA
         </div>
       )}
 
-      {/* Starter goals section (when no real goals exist) */}
-      {!hasGoals && (
+      {/* Starter goals suggestions (always shown when unadopted suggestions remain) */}
+      {starterGoals.length > 0 && (
         <div style={{ marginBottom: 16 }}>
           <div style={{ padding: "14px 18px", background: "var(--t50)", border: "1.5px dashed var(--t300)", borderRadius: 12, marginBottom: 14 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--t800)", marginBottom: 4 }}>
-              Recommended for your sector{tenantSector ? ` (${tenantSector})` : ""}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--t800)" }}>
+                Recommended for your sector{tenantSector ? ` (${tenantSector})` : ""}
+              </div>
+              {hasGoals && (
+                <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 4, background: "var(--t100)", color: "var(--t700)" }}>
+                  {starterGoals.length} suggestion{starterGoals.length !== 1 ? "s" : ""} remaining
+                </span>
+              )}
             </div>
             <div style={{ fontSize: 11, color: "var(--t700)", marginBottom: 14, lineHeight: 1.5 }}>
-              Your organisation has no goals defined yet. Here are starter goals tailored to your industry. Click &quot;Adopt Goal&quot; to add any of them to your portfolio.
+              {hasGoals
+                ? "Here are additional goals tailored to your industry that you haven\u2019t adopted yet. Click \u201cAdopt Goal\u201d to add them to your portfolio."
+                : "Your organisation has no goals defined yet. Here are starter goals tailored to your industry. Click \u201cAdopt Goal\u201d to add any of them to your portfolio."}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10 }}>
               {starterGoals.map(sg => {
