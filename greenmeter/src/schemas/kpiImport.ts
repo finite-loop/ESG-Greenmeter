@@ -22,7 +22,7 @@ export const importPreviewRowSchema = z.object({
   rawUnit: z.string().nullable(),
   status: z.enum(['matched', 'unmatched', 'duplicate']),
   error: z.string().optional(),
-  paramId: z.string().uuid().optional(),
+  paramId: z.string().guid().optional(),
   matchedParamCode: z.string().optional(),
   matchedParamName: z.string().optional(),
   matchedUnit: z.string().optional(),
@@ -33,7 +33,7 @@ export const importPreviewRowSchema = z.object({
  * An available parameter for manual mapping of unmatched rows.
  */
 export const availableParameterSchema = z.object({
-  paramId: z.string().uuid(),
+  paramId: z.string().guid(),
   code: z.string(),
   name: z.string(),
 });

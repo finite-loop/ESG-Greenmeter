@@ -70,7 +70,7 @@ export default function DashboardScreen({ navigate, rollupLevel, setRollupLevel,
       <div className="ph">
         <div>
           <div className="ptitle">ESG Overview</div>
-          <div className="psub">Larsen &amp; Toubro Ltd · FY 2023–24 · viewing against: <strong style={{color:sm.color}}>{sm.label}</strong></div>
+          <div className="psub">Your organisation · FY 2023–24 · viewing against: <strong style={{color:sm.color}}>{sm.label}</strong></div>
         </div>
         <div className="ph-acts">
           <div style={{fontSize:11,border:'.5px solid var(--bdr)',borderRadius:6,padding:'5px 10px',color:'var(--tx2)',background:'var(--surf)',cursor:'pointer',display:'flex',alignItems:'center',gap:5}}>📅 Apr 2023 – Mar 2024 ▾</div>
@@ -259,6 +259,83 @@ export default function DashboardScreen({ navigate, rollupLevel, setRollupLevel,
           <button onClick={()=>navigate('reports')} className="btn-primary" style={{background:sm.color,flexShrink:0}}>View {sm.label} report →</button>
         </div>
       )}
+
+      {/* Standards & compliance — per-standard breakdown with entity lists */}
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:12}}>
+        {(['brsr','gri','esrs','ifrs'] as const).map(k => {
+          const m = STD_META[k];
+          const pct = Math.round(m.covered / m.params * 100);
+          const r = 20; const circ = 2 * Math.PI * r;
+          const entities: Record<string,{name:string;level:string;badge:string}[]> = {
+            brsr:[
+              {name:'Organisation (Group)',level:'Org',badge:'dark'},
+              {name:'Electrical Division',level:'Subsidiary',badge:'teal'},
+              {name:'Machinery Division',level:'Subsidiary',badge:'teal'},
+              {name:'Plant — Site A',level:'Facility',badge:'ind'},
+              {name:'Plant — Site B',level:'Facility',badge:'ind'},
+              {name:'Plant — Site C',level:'Facility',badge:'ind'},
+            ],
+            gri:[
+              {name:'Organisation (Group)',level:'Org',badge:'dark'},
+              {name:'Electrical Division',level:'Subsidiary',badge:'teal'},
+              {name:'Machinery Division',level:'Subsidiary',badge:'teal'},
+              {name:'Plant — Site A',level:'Facility',badge:'ind'},
+              {name:'Plant — Site C',level:'Facility',badge:'ind'},
+            ],
+            esrs:[
+              {name:'Organisation (Group)',level:'Org',badge:'dark'},
+              {name:'Electrical Division',level:'Subsidiary',badge:'teal'},
+              {name:'Plant — Site A',level:'Facility',badge:'ind'},
+            ],
+            ifrs:[
+              {name:'Organisation (Group)',level:'Org',badge:'dark'},
+              {name:'Electrical Division',level:'Subsidiary',badge:'teal'},
+              {name:'Machinery Division',level:'Subsidiary',badge:'teal'},
+            ],
+          };
+          const ents = entities[k];
+          return (
+            <div key={k} className="card" style={{padding:0,overflow:'hidden'}}>
+              <div style={{padding:'14px 14px 10px',borderBottom:'.5px solid var(--bdr2)'}}>
+                <div style={{display:'flex',alignItems:'center',gap:10}}>
+                  <div style={{position:'relative',width:52,height:52,flexShrink:0}}>
+                    <svg viewBox="0 0 52 52" width="52" height="52" style={{transform:'rotate(-90deg)'}}>
+                      <circle cx="26" cy="26" r={r} fill="none" stroke="#f3f4f6" strokeWidth="4"/>
+                      <circle cx="26" cy="26" r={r} fill="none" stroke={m.color} strokeWidth="4" strokeDasharray={`${Math.round(circ*pct/100)} ${Math.round(circ)}`} strokeLinecap="round"/>
+                    </svg>
+                    <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
+                      <div style={{fontSize:13,fontWeight:700,fontFamily:'var(--fm)',color:m.color}}>{pct}%</div>
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{fontSize:13,fontWeight:700,color:'var(--tx1)'}}>{m.label}</div>
+                    <div style={{fontSize:10,color:'var(--tx3)',marginTop:2}}>{m.covered}/{m.params} params · {m.sections} sections</div>
+                    <div style={{display:'flex',alignItems:'center',gap:4,marginTop:3}}>
+                      <div className="pbar-bg" style={{width:60,height:4}}><div className="pbar-fill" style={{width:`${pct}%`,height:4,background:m.color}}/></div>
+                      <span style={{fontSize:9,fontFamily:'var(--fm)',color:'var(--tx3)'}}>{pct}%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div style={{padding:'8px 14px 12px'}}>
+                <div style={{fontSize:9,fontWeight:700,textTransform:'uppercase',letterSpacing:'.07em',color:'var(--tx3)',marginBottom:6}}>Reporting entities ({ents.length})</div>
+                {ents.map(e => (
+                  <div key={e.name} style={{display:'flex',alignItems:'center',gap:6,padding:'5px 0',borderBottom:'.5px solid var(--bdr2)'}}>
+                    <div style={{width:6,height:6,borderRadius:'50%',background:m.color,flexShrink:0}}/>
+                    <span style={{fontSize:11,fontWeight:500,color:'var(--tx1)',flex:1}}>{e.name}</span>
+                    <span className={`badge b-${e.badge}`} style={{fontSize:8}}>{e.level}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{padding:'6px 14px 12px'}}>
+                <button onClick={()=>navigate('reports')} style={{width:'100%',border:'.5px solid var(--bdr)',background:'var(--surf)',borderRadius:7,padding:6,fontSize:10,fontWeight:500,cursor:'pointer',color:m.color,display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
+                  View {m.label} report →
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
 
       {/* Bottom row */}
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>

@@ -204,11 +204,11 @@ function SystemHealthContent() {
 /* ── Users ────────────────────────────────────────────────────── */
 function UsersContent() {
   const users = [
-    { name: 'Priya Sharma', email: 'priya@larsentoubro.com', role: 'Admin', dept: 'ESG Lead (all)', lastActive: 'Today, 2:14 PM', status: 'active' },
-    { name: 'Rajan Mehta', email: 'rajan@larsentoubro.com', role: 'Analyst', dept: 'EHS · Plant Pune', lastActive: 'Today, 11:30 AM', status: 'active' },
-    { name: 'Kavya Reddy', email: 'kavya@larsentoubro.com', role: 'Department', dept: 'HR Department', lastActive: 'Yesterday', status: 'active' },
-    { name: 'Ankit Patel', email: 'ankit@larsentoubro.com', role: 'Viewer', dept: 'L&T Electrical', lastActive: '3 days ago', status: 'active' },
-    { name: 'Sanjay Kumar', email: 'sanjay@larsentoubro.com', role: 'Department', dept: 'Finance · Operations', lastActive: '—', status: 'pending' },
+    { name: 'Priya Sharma', email: 'priya@company.com', role: 'Admin', dept: 'ESG Lead (all)', lastActive: 'Today, 2:14 PM', status: 'active' },
+    { name: 'Rajan Mehta', email: 'rajan@company.com', role: 'Analyst', dept: 'EHS · Plant Operations', lastActive: 'Today, 11:30 AM', status: 'active' },
+    { name: 'Kavya Reddy', email: 'kavya@company.com', role: 'Department', dept: 'HR Department', lastActive: 'Yesterday', status: 'active' },
+    { name: 'Ankit Patel', email: 'ankit@company.com', role: 'Viewer', dept: 'Electrical Division', lastActive: '3 days ago', status: 'active' },
+    { name: 'Sanjay Kumar', email: 'sanjay@company.com', role: 'Department', dept: 'Finance · Operations', lastActive: '—', status: 'pending' },
   ];
   return (
     <div>
@@ -330,11 +330,11 @@ function DocumentsContent() {
 /* ── Organization ─────────────────────────────────────────────── */
 function OrganizationContent() {
   const fields = [
-    ['Legal name', 'Larsen & Toubro Limited'],
+    ['Legal name', 'Your Organisation Ltd'],
     ['CIN', 'L99999MH1946PLC004768'],
     ['Registered address', 'L&T House, Ballard Estate, Mumbai 400 001'],
-    ['Website', 'www.larsentoubro.com'],
-    ['Email', 'sustainability@larsentoubro.com'],
+    ['Website', 'www.company.com'],
+    ['Email', 'sustainability@company.com'],
     ['Financial year', 'April – March'],
     ['Reporting currency', 'INR (₹)'],
   ];
@@ -414,18 +414,18 @@ function IndustryContent() {
 function RollupHierarchyContent() {
   type Node = { name: string; type: string; badge: string; children?: Node[] };
   const tree: Node[] = [
-    { name: 'Larsen & Toubro Ltd', type: 'Organization', badge: 'b-dark', children: [
-      { name: 'L&T Construction', type: 'Subsidiary', badge: 'b-teal', children: [
-        { name: 'Plant Pune', type: 'Facility', badge: 'b-ind' },
-        { name: 'Plant Hazira', type: 'Facility', badge: 'b-ind' },
-        { name: 'Plant Kattupalli', type: 'Facility', badge: 'b-ind' },
+    { name: 'Organisation (Group)', type: 'Organization', badge: 'b-dark', children: [
+      { name: 'Manufacturing Division', type: 'Subsidiary', badge: 'b-teal', children: [
+        { name: 'Plant — Site A', type: 'Facility', badge: 'b-ind' },
+        { name: 'Plant — Site B', type: 'Facility', badge: 'b-ind' },
+        { name: 'Plant — Site C', type: 'Facility', badge: 'b-ind' },
       ]},
-      { name: 'L&T Technology Services', type: 'Subsidiary', badge: 'b-teal', children: [
-        { name: 'LTTS Vadodara', type: 'Facility', badge: 'b-ind' },
-        { name: 'LTTS Mysore', type: 'Facility', badge: 'b-ind' },
+      { name: 'Technology Services', type: 'Subsidiary', badge: 'b-teal', children: [
+        { name: 'Office — Vadodara', type: 'Facility', badge: 'b-ind' },
+        { name: 'Office — Mysore', type: 'Facility', badge: 'b-ind' },
       ]},
-      { name: 'L&T Electrical & Automation', type: 'Subsidiary', badge: 'b-teal', children: [
-        { name: 'EA — Mumbai HQ', type: 'Facility', badge: 'b-ind' },
+      { name: 'Electrical & Automation', type: 'Subsidiary', badge: 'b-teal', children: [
+        { name: 'HQ Office', type: 'Facility', badge: 'b-ind' },
       ]},
     ]},
   ];

@@ -20,7 +20,7 @@ export const updatePeerSchema = z.object({
 
 export const peerValuesFilterSchema = paginationSchema.extend({
   fiscalYear: z.string().optional(),
-  paramId: z.string().uuid().optional(),
+  paramId: z.string().guid().optional(),
 });
 
 export const peerListFilterSchema = paginationSchema.extend({
@@ -36,7 +36,7 @@ export const peerSuggestionsFilterSchema = z.object({
 });
 
 export const peerSyncSchema = z.object({
-  sourceTenantIds: z.array(z.string().uuid()).min(1).max(20),
+  sourceTenantIds: z.array(z.string().guid()).min(1).max(20),
 });
 
 export type CreatePeer = z.infer<typeof createPeerSchema>;

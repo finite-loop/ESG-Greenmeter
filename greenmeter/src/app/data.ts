@@ -68,7 +68,7 @@ export const GOALS_DATA = [
     name:'Net zero Scope 1+2 emissions', pillar:'E', type:'Absolute reduction',
     owner:'Priya Sharma', role:'ESG Lead', targetDate:'Mar 2035', baselineDate:'FY2023',
     baseline:'142,000 tCO2e', target:'0 tCO2e', pct:62, status:'on-track',
-    scope:['Larsen & Toubro Ltd (all entities)'],
+    scope:['Organisation (all entities)'],
     standards:['BRSR Core','IFRS S2','GRI 305','SBTi 1.5°C'],
     aiNote:'89% probability of achieving by 2035 at current ↓9.4%/yr pace. Estimated actual: 2033.',
     params:[
@@ -80,9 +80,9 @@ export const GOALS_DATA = [
     ],
     milestones:[
       {date:'Mar 2025',desc:'Complete Scope 1+2 baseline audit across all 3 facilities',owner:'Priya Sharma',st:'done',evidence:'Audit report attached'},
-      {date:'Sep 2025',desc:'Procure renewable energy tariff for Plant Pune — target 40% RE',owner:'Rajan Mehta',st:'in-progress',evidence:'Pending PPA sign-off'},
+      {date:'Sep 2025',desc:'Procure renewable energy tariff for Plant Site A — target 40% RE',owner:'Rajan Mehta',st:'in-progress',evidence:'Pending PPA sign-off'},
       {date:'Mar 2026',desc:'Achieve 25% absolute Scope 1 reduction vs FY2023 baseline',owner:'Rajan Mehta',st:'pending',evidence:'—'},
-      {date:'Mar 2028',desc:'Commission 15MW solar at Plant Nashik',owner:'Rajan Mehta',st:'pending',evidence:'—'},
+      {date:'Mar 2028',desc:'Commission 15MW solar at Plant Site B',owner:'Rajan Mehta',st:'pending',evidence:'—'},
       {date:'Mar 2030',desc:'Scope 1+2 down 60% vs baseline · all plants RE certified',owner:'Priya Sharma',st:'pending',evidence:'—'},
       {date:'Mar 2035',desc:'Net zero Scope 1+2 · remaining offset via verified carbon credits',owner:'Priya Sharma',st:'pending',evidence:'—'},
     ]
@@ -91,7 +91,7 @@ export const GOALS_DATA = [
     name:'50% renewable energy', pillar:'E', type:'% renewable / circular',
     owner:'Rajan Mehta', role:'EHS Manager', targetDate:'Mar 2030', baselineDate:'FY2023',
     baseline:'18%', target:'50%', pct:36, status:'at-risk',
-    scope:['Larsen & Toubro Ltd (all)'],
+    scope:['Organisation (all)'],
     standards:['BRSR Core','GRI 302','RE100'],
     aiNote:'Will reach ~32% by 2030 at current pace — 18pp short. Recommend: PPA agreement for Plant 3.',
     params:[
@@ -100,9 +100,9 @@ export const GOALS_DATA = [
       {name:'RE certificates purchased',current:'0',target:'Annual',unit:'RECs',pct:0,st:'pending'},
     ],
     milestones:[
-      {date:'Jun 2025',desc:'Sign PPA for Plant Pune rooftop solar (5MW)',owner:'Rajan Mehta',st:'in-progress',evidence:'Term sheet signed'},
+      {date:'Jun 2025',desc:'Sign PPA for Plant Site A rooftop solar (5MW)',owner:'Rajan Mehta',st:'in-progress',evidence:'Term sheet signed'},
       {date:'Mar 2026',desc:'Reach 25% renewable across all facilities',owner:'Rajan Mehta',st:'pending',evidence:'—'},
-      {date:'Mar 2028',desc:'Commission Plant Nashik solar (15MW)',owner:'Rajan Mehta',st:'pending',evidence:'—'},
+      {date:'Mar 2028',desc:'Commission Plant Site B solar (15MW)',owner:'Rajan Mehta',st:'pending',evidence:'—'},
       {date:'Mar 2030',desc:'50% renewable milestone · RE100 submission',owner:'Priya Sharma',st:'pending',evidence:'—'},
     ]
   },
@@ -110,7 +110,7 @@ export const GOALS_DATA = [
     name:'Zero waste to landfill', pillar:'E', type:'Absolute reduction',
     owner:'Rajan Mehta', role:'EHS Manager', targetDate:'Mar 2027', baselineDate:'FY2023',
     baseline:'1,820 MT to landfill', target:'0 MT', pct:78, status:'on-track',
-    scope:['L&T Electrical','L&T Machinery'],
+    scope:['Electrical Division','Machinery Division'],
     standards:['BRSR Core','GRI 306'],
     aiNote:'97% probability of achieving ahead of schedule — estimated mid-2026.',
     params:[
@@ -119,8 +119,8 @@ export const GOALS_DATA = [
       {name:'Waste recycled / composted',current:'68%',target:'80%',unit:'%',pct:85,st:'on-track'},
     ],
     milestones:[
-      {date:'Sep 2025',desc:'Zero landfill at Plant Pune — composting + recycling program complete',owner:'Rajan Mehta',st:'done',evidence:'Certificate attached'},
-      {date:'Mar 2026',desc:'Plant Nashik waste segregation at source — 95% diversion',owner:'Rajan Mehta',st:'in-progress',evidence:'Monthly report'},
+      {date:'Sep 2025',desc:'Zero landfill at Plant Site A — composting + recycling program complete',owner:'Rajan Mehta',st:'done',evidence:'Certificate attached'},
+      {date:'Mar 2026',desc:'Plant Site B waste segregation at source — 95% diversion',owner:'Rajan Mehta',st:'in-progress',evidence:'Monthly report'},
       {date:'Mar 2027',desc:'All facilities zero landfill · GRI 306 disclosure complete',owner:'Priya Sharma',st:'pending',evidence:'—'},
     ]
   },
@@ -128,7 +128,7 @@ export const GOALS_DATA = [
     name:'40% women in workforce', pillar:'S', type:'Headcount / diversity %',
     owner:'Kavya Reddy', role:'HR Lead', targetDate:'Mar 2027', baselineDate:'FY2023',
     baseline:'28%', target:'40%', pct:24, status:'critical',
-    scope:['Larsen & Toubro Ltd (all)'],
+    scope:['Organisation (all)'],
     standards:['BRSR Core','GRI 405','SEBI mandate'],
     aiNote:'Likely 32% by 2027 at current pace — 8pp short. Immediate structured hiring policy change needed.',
     params:[

@@ -85,7 +85,7 @@ function PeerTab() {
     (async()=>{
       const {Chart,registerables}=await import('chart.js');
       Chart.register(...registerables);
-      if(peerRef.current) c1=new Chart(peerRef.current,{type:'bar',data:{labels:['Best in class','Top quartile','L&T','Sector median','Laggard'],datasets:[{data:[2.1,3.6,4.2,4.8,7.2],backgroundColor:['#10b981','#5eead4','#0f766e','#94a3b8','#f3f4f6'],borderRadius:6}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#f3f4f6'},border:{display:false},ticks:{font:{family:'DM Mono',size:10},color:'#94a3b8'}},y:{grid:{display:false},border:{display:false},ticks:{font:{family:'DM Sans',size:11},color:'#0f172a'}}}}});
+      if(peerRef.current) c1=new Chart(peerRef.current,{type:'bar',data:{labels:['Best in class','Top quartile','Your org','Sector median','Laggard'],datasets:[{data:[2.1,3.6,4.2,4.8,7.2],backgroundColor:['#10b981','#5eead4','#0f766e','#94a3b8','#f3f4f6'],borderRadius:6}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'#f3f4f6'},border:{display:false},ticks:{font:{family:'DM Mono',size:10},color:'#94a3b8'}},y:{grid:{display:false},border:{display:false},ticks:{font:{family:'DM Sans',size:11},color:'#0f172a'}}}}});
     })();
     return()=>{c1?.destroy();};
   },[]);
@@ -181,7 +181,7 @@ function RollupDrillTab() {
           {['Entity','Level','GHG tCO2e','% of total','YoY change','Contribution bar'].map(h=><th key={h} style={{padding:'8px 12px',textAlign:'left',fontSize:9,fontWeight:700,textTransform:'uppercase',letterSpacing:'.06em',color:'var(--tx3)'}}>{h}</th>)}
         </tr></thead>
         <tbody>
-          {([['Larsen & Toubro Ltd','Organization','142,300','100%','↓ 9.4%',true,100,''],['L&T Electrical & Automation Ltd','Subsidiary','61,200','43%','↓ 11.2%',true,43,'14px'],['Plant — Pune','Facility','34,100','24%','↓ 13.1%',true,24,'28px'],['Plant — Nashik','Facility','27,100','19%','↓ 8.8%',true,19,'28px'],['L&T Machinery Ltd','Subsidiary','81,100','57%','↓ 7.9%',true,57,'14px'],['Plant — Aurangabad','Facility','81,100','57%','↓ 7.9%',true,57,'28px'],['EHS Dept (Pune)','Department','12,000','8%','↓ 6.1%',true,8,'42px'],['Operations (Pune)','Department','19,000','13%','↓ 14.2%',true,13,'42px']] as [string,string,string,string,string,boolean,number,string][]).map(([n,lv,v,pct,chg,good,w,indent]) => (
+          {([['Organisation (Group)','Organization','142,300','100%','↓ 9.4%',true,100,''],['Electrical & Automation','Subsidiary','61,200','43%','↓ 11.2%',true,43,'14px'],['Plant — Site A','Facility','34,100','24%','↓ 13.1%',true,24,'28px'],['Plant — Site B','Facility','27,100','19%','↓ 8.8%',true,19,'28px'],['Machinery Division','Subsidiary','81,100','57%','↓ 7.9%',true,57,'14px'],['Plant — Site C','Facility','81,100','57%','↓ 7.9%',true,57,'28px'],['EHS Dept (Site A)','Department','12,000','8%','↓ 6.1%',true,8,'42px'],['Operations (Site A)','Department','19,000','13%','↓ 14.2%',true,13,'42px']] as [string,string,string,string,string,boolean,number,string][]).map(([n,lv,v,pct,chg,good,w,indent]) => (
             <tr key={n} style={{borderBottom:'.5px solid var(--bdr2)'}}
               onMouseEnter={e=>(e.currentTarget as HTMLElement).style.background='var(--surf)'}
               onMouseLeave={e=>(e.currentTarget as HTMLElement).style.background=''}>

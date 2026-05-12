@@ -48,7 +48,7 @@ export default function ConsoleScreen({ navigate, rollupLevel, setRollupLevel, R
         <select className="sel" style={{width:140,fontSize:12,padding:'7px 10px'}}><option>FY 2024-25</option><option>FY 2023-24</option><option>FY 2022-23</option></select>
         <select className="sel" style={{width:120,fontSize:12,padding:'7px 10px'}}><option>BRSR</option><option>GRI 2021</option><option>ESRS</option><option>IFRS S2</option><option>All standards</option></select>
         <select className="sel" style={{width:150,fontSize:12,padding:'7px 10px'}}><option>All categories</option><option>Environmental</option><option>Social</option><option>Governance</option></select>
-        <select className="sel" style={{width:180,fontSize:12,padding:'7px 10px'}}><option>Plant — Pune (Facility)</option><option>Plant — Nashik</option><option>L&T Electrical</option><option>Larsen & Toubro Ltd (Org)</option></select>
+        <select className="sel" style={{width:180,fontSize:12,padding:'7px 10px'}}><option>Plant — Site A (Facility)</option><option>Plant — Site B</option><option>Electrical Division</option><option>Organisation (Org)</option></select>
       </div>
 
       {/* Completeness strip */}

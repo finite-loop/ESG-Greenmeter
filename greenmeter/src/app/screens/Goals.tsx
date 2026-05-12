@@ -113,7 +113,7 @@ export default function GoalsScreen({ navigate, RollupBar, rollupLevel, setRollu
                 <div style={{borderTop:'.5px solid var(--bdr2)',paddingTop:12,marginBottom:12}}>
                   <div style={{fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'.06em',color:'var(--tx3)',marginBottom:8}}>Scope — applies to</div>
                   <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
-                    {['Larsen & Toubro Ltd','L&T Electrical & Automation Ltd','L&T Machinery Ltd','Plant — Pune','Plant — Nashik','Plant — Aurangabad'].map(e => (
+                    {['Organisation (Group)','Electrical & Automation Division','Machinery Division','Plant — Site A','Plant — Site B','Plant — Site C'].map(e => (
                       <span key={e} style={{padding:'4px 10px',borderRadius:20,fontSize:11,fontWeight:500,background:'var(--t50)',color:'var(--t800)',border:'.5px solid var(--t200)'}}>{e}</span>
                     ))}
                   </div>

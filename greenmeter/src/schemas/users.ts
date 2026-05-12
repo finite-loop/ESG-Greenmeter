@@ -7,7 +7,7 @@ export const userInviteSchema = z.object({
   email: z.string().email(),
   name: z.string().min(1).max(100),
   role: roleEnum.default('viewer'),
-  departmentId: z.string().uuid().optional(),
+  departmentId: z.string().guid().optional(),
 }).refine(
   (data) => data.role !== 'department' || !!data.departmentId,
   { message: 'departmentId is required when role is department', path: ['departmentId'] }
@@ -16,7 +16,7 @@ export const userInviteSchema = z.object({
 export const userUpdateSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   role: roleEnum.optional(),
-  departmentId: z.string().uuid().nullable().optional(),
+  departmentId: z.string().guid().nullable().optional(),
   active: z.boolean().optional(),
 });
 

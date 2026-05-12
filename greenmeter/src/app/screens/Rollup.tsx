@@ -36,7 +36,7 @@ export default function RollupScreen({ navigate, rollupLevel, setRollupLevel, Ro
               {/* Organization */}
               <div style={{display:'flex',alignItems:'center',gap:6,background:'var(--t900)',borderRadius:8,padding:'8px 14px',cursor:'pointer',width:'fit-content'}} onClick={()=>setRollupLevel('organization')}>
                 <div style={{width:8,height:8,borderRadius:'50%',background:'var(--t300)'}}/>
-                <span style={{fontSize:11,fontWeight:600,color:'#fff'}}>Larsen &amp; Toubro Ltd</span>
+                <span style={{fontSize:11,fontWeight:600,color:'#fff'}}>Organisation (Group)</span>
                 <span style={{fontFamily:'var(--fm)',fontSize:11,fontWeight:700,color:'var(--t300)'}}>142k tCO2e</span>
                 <span className="badge b-dark" style={{fontSize:9}}>Organization</span>
               </div>
@@ -44,7 +44,7 @@ export default function RollupScreen({ navigate, rollupLevel, setRollupLevel, Ro
               {/* Subsidiaries */}
               <div style={{display:'flex',gap:40,position:'relative'}}>
                 <div style={{position:'absolute',top:0,left:50,right:50,height:'1.5px',background:'var(--t200)'}}/>
-                {([['L&T Electrical','61k tCO2e',72,'E: 72 · S: 81 · G: 70',[['Plant Pune','34k'],['Plant Nashik','27k']]],['L&T Machinery','81k tCO2e',64,'E: 64 · S: 77 · G: 73',[['Plant Aurangabad','81k']]]] as [string,string,number,string,[string,string][]][]).map(([n,v,sc,detail,plants]) => (
+                {([['Electrical Division','61k tCO2e',72,'E: 72 · S: 81 · G: 70',[['Plant Site A','34k'],['Plant Site B','27k']]],['Machinery Division','81k tCO2e',64,'E: 64 · S: 77 · G: 73',[['Plant Site C','81k']]]] as [string,string,number,string,[string,string][]][]).map(([n,v,sc,detail,plants]) => (
                   <div key={n} style={{display:'flex',flexDirection:'column',alignItems:'center'}}>
                     <div style={{width:'1.5px',height:14,background:'var(--t200)'}}/>
                     <div style={{background:'var(--surf)',border:'.5px solid var(--t300)',borderRadius:8,padding:'8px 12px',cursor:'pointer',textAlign:'center',width:'fit-content'}} onClick={()=>setRollupLevel('subsidiary')}>
@@ -87,7 +87,7 @@ export default function RollupScreen({ navigate, rollupLevel, setRollupLevel, Ro
           <thead><tr><th>Entity</th><th>Level</th><th>E score</th><th>S score</th><th>G score</th><th>GHG (tCO2e)</th><th>Water (kL)</th><th>Women %</th><th>Completeness</th></tr></thead>
           <tbody>
             <tr style={{background:'var(--t50)'}}>
-              <td style={{fontWeight:700}}>Larsen &amp; Toubro Ltd</td>
+              <td style={{fontWeight:700}}>Organisation (Group)</td>
               <td><span className="badge b-dark" style={{fontSize:9}}>Org</span></td>
               <td style={{fontFamily:'var(--fm)',color:'var(--t700)',fontWeight:600}}>68</td>
               <td style={{fontFamily:'var(--fm)',color:'var(--ind)',fontWeight:600}}>79</td>
@@ -97,7 +97,7 @@ export default function RollupScreen({ navigate, rollupLevel, setRollupLevel, Ro
               <td style={{fontFamily:'var(--fm)'}}>28%</td>
               <td><div style={{display:'flex',alignItems:'center',gap:6}}><div className="pbar-bg" style={{width:60}}><div className="pbar-fill" style={{width:'84%',background:'var(--t500)'}}/></div><span style={{fontSize:10,fontFamily:'var(--fm)'}}>84%</span></div></td>
             </tr>
-            {([['L&T Electrical','Subsidiary',72,81,70,'61,000','128,000','31%',91,'teal'],['L&T Machinery','Subsidiary',64,77,73,'81,000','184,000','25%',77,'teal'],['Plant — Pune','Facility',74,82,71,'34,000','72,000','33%',94,'ind'],['Plant — Nashik','Facility',70,80,69,'27,000','56,000','29%',88,'ind'],['Plant — Aurangabad','Facility',64,77,73,'81,000','184,000','25%',72,'ind'],['EHS Dept','Department','-','-','-','12,000','18,000','-',95,'gray'],['Operations Dept','Department','-','-','-','19,000','42,000','-',82,'gray']] as [string,string,any,any,any,string,string,string,number,string][]).map(([n,lv,e,s,g,ghg,water,women,comp,bc]) => (
+            {([['Electrical Division','Subsidiary',72,81,70,'61,000','128,000','31%',91,'teal'],['Machinery Division','Subsidiary',64,77,73,'81,000','184,000','25%',77,'teal'],['Plant — Site A','Facility',74,82,71,'34,000','72,000','33%',94,'ind'],['Plant — Site B','Facility',70,80,69,'27,000','56,000','29%',88,'ind'],['Plant — Site C','Facility',64,77,73,'81,000','184,000','25%',72,'ind'],['EHS Dept','Department','-','-','-','12,000','18,000','-',95,'gray'],['Operations Dept','Department','-','-','-','19,000','42,000','-',82,'gray']] as [string,string,any,any,any,string,string,string,number,string][]).map(([n,lv,e,s,g,ghg,water,women,comp,bc]) => (
               <tr key={n}>
                 <td style={{fontWeight:500,paddingLeft:lv==='Department'?28:lv==='Facility'?18:10}}>{n}</td>
                 <td><span className={`badge b-${bc}`} style={{fontSize:9}}>{lv}</span></td>
