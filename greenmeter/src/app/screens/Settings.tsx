@@ -275,6 +275,7 @@ function RequestsContent() {
   const [approving, setApproving] = useState<string | null>(null);
   const [approveForm, setApproveForm] = useState<{ tenantId: string; role: string }>({ tenantId: '', role: 'viewer' });
   const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const fetchRequests = useCallback(async () => {
     setLoading(true);
@@ -304,6 +305,7 @@ function RequestsContent() {
 
   async function handleReview(requestId: string, action: 'approve' | 'reject') {
     setActionLoading(true);
+    setActionError(null);
     try {
       const body: Record<string, string> = { action };
       if (action === 'approve') {
@@ -317,14 +319,25 @@ function RequestsContent() {
       });
       if (res.ok) {
         setApproving(null);
+        setActionError(null);
         fetchRequests();
+      } else {
+        const json = await res.json().catch(() => null);
+        setActionError(json?.error?.message || `Failed with status ${res.status}`);
       }
-    } catch { /* ignore */ }
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Network error');
+    }
     setActionLoading(false);
   }
 
   return (
     <div>
+      {actionError && (
+        <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 6, color: '#dc2626', fontSize: 12, padding: '9px 13px', marginBottom: 12 }}>
+          {actionError}
+        </div>
+      )}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx1)' }}>
           Access requests

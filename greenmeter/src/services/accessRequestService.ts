@@ -1,7 +1,6 @@
 import { hashSync } from 'bcryptjs';
 import { accessRequestRepository } from '@/db/repositories/accessRequestRepository';
 import { userRepository } from '@/db/repositories/userRepository';
-import { setTenantContext } from '@/db';
 import { AppError, ErrorCode } from '@/lib/errors';
 import { logger } from '@/lib/logger';
 import type { RegisterRequest, AccessRequestListFilter } from '@/schemas/accessRequests';
@@ -80,9 +79,6 @@ export const accessRequestService = {
     }
 
     if (input.action === 'approve') {
-      // Switch tenant context to the target tenant so RLS allows the insert
-      await setTenantContext(input.tenantId!);
-
       // Create user account with the original password hash
       await userRepository.create({
         tenantId: input.tenantId!,
