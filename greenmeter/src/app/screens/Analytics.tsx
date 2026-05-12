@@ -78,6 +78,7 @@ export default function AnalyticsScreen({ navigate, RollupBar, rollupLevel, setR
 }
 
 function PeerTab() {
+  const [peerSet, setPeerSet] = useState('nifty-50');
   const peerRef = useRef<HTMLCanvasElement>(null);
   useEffect(()=>{
     let c1:any;
@@ -91,6 +92,18 @@ function PeerTab() {
 
   return (
     <div>
+      {/* Benchmarking-against selector */}
+      <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
+        <span style={{fontSize:11,color:'var(--tx2)',fontWeight:600}}>Benchmarking against:</span>
+        <select className="sel" style={{fontSize:11,padding:'4px 10px',minWidth:160}} value={peerSet} onChange={e=>setPeerSet(e.target.value)}>
+          <option value="nifty-50">NIFTY 50 ESG</option>
+          <option value="sector">Sector peers (Engineering &amp; Construction)</option>
+          <option value="custom">Custom peer set</option>
+        </select>
+        <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:10,background:'var(--t50)',color:'var(--t700)',border:'.5px solid var(--t200)'}}>47 peers</span>
+        <span style={{fontSize:10,color:'var(--tx3)',marginLeft:4}}>FY 2023-24</span>
+      </div>
+
       <div style={{display:'grid',gridTemplateColumns:'3fr 2fr',gap:12,marginBottom:12}}>
         <div>
           <div style={{fontSize:12,fontWeight:600,color:'var(--tx1)',marginBottom:8}}>GHG intensity — peer comparison (FY24)</div>

@@ -22,6 +22,41 @@
       "when": 1778421600000,
       "tag": "0002_coverage_summary_materialized_view",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1778508000000,
+      "tag": "0003_supplier_portal_token",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1778594400000,
+      "tag": "0004_recommendations_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1778680800000,
+      "tag": "0005_industry_codes",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1778767200000,
+      "tag": "0006_peer_source_tenant",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1778853600000,
+      "tag": "0007_add_users_credential_columns",
+      "breakpoints": true
     }
   ]
 }

@@ -1,25 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { PageHeader } from "@/components/layout/PageHeader";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "@/components/ui/Table";
-import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/Select";
 import {
   ENTITY_TYPES,
   ACTION_TYPES,
@@ -51,12 +32,12 @@ interface AuditResponse {
   };
 }
 
-const ACTION_BADGE_VARIANT: Record<string, "success" | "warning" | "error" | "info" | "teal"> = {
-  CREATE: "success",
-  UPDATE: "info",
-  DELETE: "error",
-  VERIFY: "teal",
-  IMPORT: "warning",
+const ACTION_BADGE: Record<string, string> = {
+  CREATE: "b-green",
+  UPDATE: "b-teal",
+  DELETE: "b-red",
+  VERIFY: "b-ind",
+  IMPORT: "b-amber",
 };
 
 export default function AuditLogPage() {
@@ -78,7 +59,6 @@ export default function AuditLogPage() {
   const abortRef = useRef<AbortController | null>(null);
 
   const fetchLogs = useCallback(async (currentFilters: AuditFilters, page: number) => {
-    // Cancel any in-flight request
     if (abortRef.current) {
       abortRef.current.abort();
     }
@@ -109,7 +89,7 @@ export default function AuditLogPage() {
       setMeta(json.meta);
     } catch (err: unknown) {
       if (err instanceof Error && err.name === "AbortError") {
-        return; // Request was cancelled, ignore
+        return;
       }
       setError(err instanceof Error ? err.message : "Failed to fetch audit logs");
     } finally {
@@ -149,11 +129,22 @@ export default function AuditLogPage() {
 
   const totalPages = Math.ceil(meta.total / (meta.pageSize || 20));
 
+  /* ── Summary stats ── */
+  const todayCount = logs.filter(l => {
+    const d = new Date(l.createdAt);
+    const now = new Date();
+    return d.toDateString() === now.toDateString();
+  }).length;
+
+  const uniqueUsers = new Set(logs.map(l => l.userId).filter(Boolean)).size;
+
   if (unauthorized) {
     return (
       <div>
-        <PageHeader title="Audit Log" description="Access restricted" />
-        <div className="p-4 rounded-lg bg-[var(--redbg)] text-[var(--redtx)] text-xs">
+        <div className="ph">
+          <div><div className="ptitle">Audit Log</div><div className="psub">Access restricted</div></div>
+        </div>
+        <div style={{ padding: 14, borderRadius: 10, background: "var(--redbg)", color: "var(--redtx)", fontSize: 12 }}>
           You do not have permission to view audit logs. This page is restricted to Admin and Analyst roles.
         </div>
       </div>
@@ -162,170 +153,140 @@ export default function AuditLogPage() {
 
   return (
     <div>
-      <PageHeader
-        title="Audit Log"
-        description="Browse and filter the audit trail to verify data integrity"
-      />
+      <div className="ph">
+        <div><div className="ptitle">Audit Log</div><div className="psub">Browse and filter the audit trail to verify data integrity</div></div>
+      </div>
+
+      {/* Summary stat cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginBottom: 14 }}>
+        {([
+          ["Today", String(todayCount), "Entries today", "var(--t700)"],
+          ["This page", String(logs.length), `of ${meta.total} total`, "var(--tx1)"],
+          ["Total entries", String(meta.total), "All time", "var(--tx1)"],
+          ["Active users", String(uniqueUsers), "On this page", "var(--t700)"],
+        ] as [string, string, string, string][]).map(([l, v, s, c]) => (
+          <div key={l} className="stat-card"><div className="slbl">{l}</div><div className="sval" style={{ color: c }}>{v}</div><div className="ssub">{s}</div></div>
+        ))}
+      </div>
 
       {/* Filter Controls */}
-      <div className="flex flex-wrap items-end gap-3 mb-4">
-        <div className="w-40">
-          <label className="block text-[11px] font-semibold text-[var(--tx2)] mb-[5px]">
-            Entity Type
-          </label>
-          <Select
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", gap: 10, marginBottom: 14 }}>
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: "var(--tx2)", marginBottom: 5 }}>Entity Type</div>
+          <select
+            className="sel"
+            style={{ fontSize: 11, padding: "5px 8px", minWidth: 140 }}
             value={filters.entityType ?? ""}
-            onValueChange={(val) =>
-              setFilters((f) => ({ ...f, entityType: val === "__all__" ? undefined : val }))
-            }
+            onChange={e => setFilters(f => ({ ...f, entityType: e.target.value || undefined }))}
           >
-            <SelectTrigger>
-              <SelectValue placeholder="All entities" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__all__">All entities</SelectItem>
-              {ENTITY_TYPES.map((et) => (
-                <SelectItem key={et} value={et}>
-                  {et.replace(/_/g, " ")}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <option value="">All entities</option>
+            {ENTITY_TYPES.map(et => (
+              <option key={et} value={et}>{et.replace(/_/g, " ")}</option>
+            ))}
+          </select>
         </div>
 
-        <div className="w-36">
-          <label className="block text-[11px] font-semibold text-[var(--tx2)] mb-[5px]">
-            Action
-          </label>
-          <Select
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: "var(--tx2)", marginBottom: 5 }}>Action</div>
+          <select
+            className="sel"
+            style={{ fontSize: 11, padding: "5px 8px", minWidth: 120 }}
             value={filters.action ?? ""}
-            onValueChange={(val) =>
-              setFilters((f) => ({ ...f, action: val === "__all__" ? undefined : val }))
-            }
+            onChange={e => setFilters(f => ({ ...f, action: e.target.value || undefined }))}
           >
-            <SelectTrigger>
-              <SelectValue placeholder="All actions" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__all__">All actions</SelectItem>
-              {ACTION_TYPES.map((a) => (
-                <SelectItem key={a} value={a}>
-                  {a}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <option value="">All actions</option>
+            {ACTION_TYPES.map(a => (
+              <option key={a} value={a}>{a}</option>
+            ))}
+          </select>
         </div>
 
-        <div className="w-44">
-          <Input
-            label="User ID"
-            id="filter-userId"
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: "var(--tx2)", marginBottom: 5 }}>User ID</div>
+          <input
+            className="inp"
+            style={{ fontSize: 11, padding: "5px 8px", width: 160 }}
             placeholder="UUID..."
             value={filters.userId ?? ""}
-            onChange={(e) => setFilters((f) => ({ ...f, userId: e.target.value || undefined }))}
+            onChange={e => setFilters(f => ({ ...f, userId: e.target.value || undefined }))}
           />
         </div>
 
-        <div className="w-36">
-          <Input
-            label="From"
-            id="filter-dateFrom"
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: "var(--tx2)", marginBottom: 5 }}>From</div>
+          <input
+            className="inp"
             type="date"
+            style={{ fontSize: 11, padding: "5px 8px", width: 130 }}
             value={filters.dateFrom ?? ""}
-            onChange={(e) => setFilters((f) => ({ ...f, dateFrom: e.target.value || undefined }))}
+            onChange={e => setFilters(f => ({ ...f, dateFrom: e.target.value || undefined }))}
           />
         </div>
 
-        <div className="w-36">
-          <Input
-            label="To"
-            id="filter-dateTo"
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: "var(--tx2)", marginBottom: 5 }}>To</div>
+          <input
+            className="inp"
             type="date"
+            style={{ fontSize: 11, padding: "5px 8px", width: 130 }}
             value={filters.dateTo ?? ""}
-            onChange={(e) => setFilters((f) => ({ ...f, dateTo: e.target.value || undefined }))}
+            onChange={e => setFilters(f => ({ ...f, dateTo: e.target.value || undefined }))}
           />
         </div>
 
-        <div className="flex gap-2 pb-[13px]">
-          <Button variant="primary" size="sm" onClick={handleApplyFilters}>
-            Apply
-          </Button>
-          <Button variant="ghost" size="sm" onClick={handleClearFilters}>
-            Clear
-          </Button>
+        <div style={{ display: "flex", gap: 6, paddingBottom: 1 }}>
+          <button className="btn-primary" style={{ fontSize: 11, padding: "5px 14px" }} onClick={handleApplyFilters}>Apply</button>
+          <button className="btn-secondary" style={{ fontSize: 11, padding: "5px 14px" }} onClick={handleClearFilters}>Clear</button>
         </div>
       </div>
 
       {/* Error State */}
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-[var(--redbg)] text-[var(--redtx)] text-xs">
+        <div style={{ marginBottom: 14, padding: 12, borderRadius: 10, background: "var(--redbg)", color: "var(--redtx)", fontSize: 12 }}>
           {error}
         </div>
       )}
 
       {/* Table */}
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Timestamp</TableHead>
-            <TableHead>User</TableHead>
-            <TableHead>Action</TableHead>
-            <TableHead>Entity Type</TableHead>
-            <TableHead>Entity ID</TableHead>
-            <TableHead>Summary</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {loading && (
-            <TableRow>
-              <TableCell colSpan={6} className="text-center py-8 text-[var(--tx3)]">
-                Loading...
-              </TableCell>
-            </TableRow>
-          )}
-          {!loading && logs.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={6} className="text-center py-8 text-[var(--tx3)]">
-                No audit log entries found
-              </TableCell>
-            </TableRow>
-          )}
-          {!loading &&
-            logs.map((log) => (
-              <AuditRow
-                key={log.logId}
-                log={log}
-                expanded={expandedRows.has(log.logId)}
-                onToggle={() => toggleRow(log.logId)}
-              />
+      <div className="card" style={{ overflow: "hidden" }}>
+        <table className="tbl">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>User</th>
+              <th>Action</th>
+              <th>Entity Type</th>
+              <th>Entity ID</th>
+              <th>Summary</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading && (
+              <tr>
+                <td colSpan={6} style={{ textAlign: "center", padding: 32, color: "var(--tx3)", fontSize: 11 }}>Loading...</td>
+              </tr>
+            )}
+            {!loading && logs.length === 0 && (
+              <tr>
+                <td colSpan={6} style={{ textAlign: "center", padding: 32, color: "var(--tx3)", fontSize: 11 }}>No audit log entries found</td>
+              </tr>
+            )}
+            {!loading && logs.map(log => (
+              <AuditRow key={log.logId} log={log} expanded={expandedRows.has(log.logId)} onToggle={() => toggleRow(log.logId)} />
             ))}
-        </TableBody>
-      </Table>
+          </tbody>
+        </table>
+      </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-4">
-          <span className="text-[11px] text-[var(--tx3)]">
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12 }}>
+          <span style={{ fontSize: 11, color: "var(--tx3)" }}>
             Page {meta.page} of {totalPages} ({meta.total} total entries)
           </span>
-          <div className="flex gap-1">
-            <Button
-              variant="secondary"
-              size="sm"
-              disabled={meta.page <= 1}
-              onClick={() => handlePageChange(meta.page - 1)}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              disabled={meta.page >= totalPages}
-              onClick={() => handlePageChange(meta.page + 1)}
-            >
-              Next
-            </Button>
+          <div style={{ display: "flex", gap: 4 }}>
+            <button className="btn-secondary" style={{ fontSize: 11, padding: "4px 12px" }} disabled={meta.page <= 1} onClick={() => handlePageChange(meta.page - 1)}>Previous</button>
+            <button className="btn-secondary" style={{ fontSize: 11, padding: "4px 12px" }} disabled={meta.page >= totalPages} onClick={() => handlePageChange(meta.page + 1)}>Next</button>
           </div>
         </div>
       )}
@@ -344,27 +305,23 @@ function AuditRow({ log, expanded, onToggle }: AuditRowProps) {
 
   return (
     <>
-      <TableRow onClick={onToggle} className={expanded ? "bg-[var(--bg)]" : ""}>
-        <TableCell className="whitespace-nowrap">
-          {formatAuditTimestamp(log.createdAt)}
-        </TableCell>
-        <TableCell className="font-mono text-[10px]">
+      <tr onClick={onToggle} style={{ cursor: "pointer", background: expanded ? "var(--bg)" : undefined }}
+        onMouseEnter={e => { if (!expanded) (e.currentTarget as HTMLElement).style.background = "var(--bg)"; }}
+        onMouseLeave={e => { if (!expanded) (e.currentTarget as HTMLElement).style.background = ""; }}>
+        <td style={{ whiteSpace: "nowrap" }}>{formatAuditTimestamp(log.createdAt)}</td>
+        <td style={{ fontFamily: "var(--fm)", fontSize: 10 }}>
           {log.userId ? log.userId.slice(0, 8) + "..." : "—"}
-        </TableCell>
-        <TableCell>
-          <Badge variant={ACTION_BADGE_VARIANT[log.action] ?? "neutral"}>
-            {log.action}
-          </Badge>
-        </TableCell>
-        <TableCell>{log.entityType.replace(/_/g, " ")}</TableCell>
-        <TableCell className="font-mono text-[10px]">
-          {log.entityId.slice(0, 8)}...
-        </TableCell>
-        <TableCell>{summary}</TableCell>
-      </TableRow>
+        </td>
+        <td>
+          <span className={`badge ${ACTION_BADGE[log.action] ?? "b-gray"}`} style={{ fontSize: 9 }}>{log.action}</span>
+        </td>
+        <td>{log.entityType.replace(/_/g, " ")}</td>
+        <td style={{ fontFamily: "var(--fm)", fontSize: 10 }}>{log.entityId.slice(0, 8)}...</td>
+        <td>{summary}</td>
+      </tr>
       {expanded && (
         <tr>
-          <td colSpan={6} className="p-0">
+          <td colSpan={6} style={{ padding: 0 }}>
             <ExpandedDetail log={log} />
           </td>
         </tr>
@@ -377,53 +334,45 @@ function ExpandedDetail({ log }: { log: AuditLogEntry }) {
   const diff = computeJsonDiff(log.oldValue, log.newValue);
 
   return (
-    <div className="bg-[var(--bg)] border-t border-[var(--bdr2)] px-4 py-3">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div style={{ background: "var(--bg)", borderTop: ".5px solid var(--bdr2)", padding: "12px 16px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
         {/* Old Value */}
         <div>
-          <h4 className="text-[10px] font-bold uppercase text-[var(--tx3)] mb-2">
-            Old Value
-          </h4>
+          <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em", color: "var(--tx3)", marginBottom: 8 }}>Old Value</div>
           {log.oldValue ? (
-            <pre className="text-[10px] bg-[var(--surf)] p-2 rounded overflow-auto max-h-48 border border-[var(--bdr)]">
+            <pre style={{ fontSize: 10, background: "var(--surf)", padding: 8, borderRadius: 6, overflow: "auto", maxHeight: 192, border: ".5px solid var(--bdr)", margin: 0, fontFamily: "var(--fm)" }}>
               {JSON.stringify(log.oldValue, null, 2)}
             </pre>
           ) : (
-            <span className="text-[10px] text-[var(--tx3)] italic">null</span>
+            <span style={{ fontSize: 10, color: "var(--tx3)", fontStyle: "italic" }}>null</span>
           )}
         </div>
 
         {/* New Value */}
         <div>
-          <h4 className="text-[10px] font-bold uppercase text-[var(--tx3)] mb-2">
-            New Value
-          </h4>
+          <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em", color: "var(--tx3)", marginBottom: 8 }}>New Value</div>
           {log.newValue ? (
-            <pre className="text-[10px] bg-[var(--surf)] p-2 rounded overflow-auto max-h-48 border border-[var(--bdr)]">
+            <pre style={{ fontSize: 10, background: "var(--surf)", padding: 8, borderRadius: 6, overflow: "auto", maxHeight: 192, border: ".5px solid var(--bdr)", margin: 0, fontFamily: "var(--fm)" }}>
               {JSON.stringify(log.newValue, null, 2)}
             </pre>
           ) : (
-            <span className="text-[10px] text-[var(--tx3)] italic">null</span>
+            <span style={{ fontSize: 10, color: "var(--tx3)", fontStyle: "italic" }}>null</span>
           )}
         </div>
       </div>
 
       {/* Diff Highlighting */}
       {diff.length > 0 && (
-        <div className="mt-3">
-          <h4 className="text-[10px] font-bold uppercase text-[var(--tx3)] mb-2">
-            Changes
-          </h4>
-          <div className="bg-[var(--surf)] rounded border border-[var(--bdr)] overflow-hidden">
+        <div style={{ marginTop: 12 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em", color: "var(--tx3)", marginBottom: 8 }}>Changes</div>
+          <div style={{ background: "var(--surf)", borderRadius: 6, border: ".5px solid var(--bdr)", overflow: "hidden" }}>
             {diff
-              .filter((d) => d.type !== "unchanged")
-              .map((entry) => (
+              .filter(d => d.type !== "unchanged")
+              .map(entry => (
                 <DiffRow key={entry.key} entry={entry} />
               ))}
-            {diff.filter((d) => d.type !== "unchanged").length === 0 && (
-              <div className="p-2 text-[10px] text-[var(--tx3)] italic">
-                No field-level changes detected
-              </div>
+            {diff.filter(d => d.type !== "unchanged").length === 0 && (
+              <div style={{ padding: 8, fontSize: 10, color: "var(--tx3)", fontStyle: "italic" }}>No field-level changes detected</div>
             )}
           </div>
         </div>
@@ -431,11 +380,9 @@ function ExpandedDetail({ log }: { log: AuditLogEntry }) {
 
       {/* Metadata */}
       {log.metadata && (
-        <div className="mt-3">
-          <h4 className="text-[10px] font-bold uppercase text-[var(--tx3)] mb-2">
-            Metadata
-          </h4>
-          <pre className="text-[10px] bg-[var(--surf)] p-2 rounded overflow-auto max-h-32 border border-[var(--bdr)]">
+        <div style={{ marginTop: 12 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em", color: "var(--tx3)", marginBottom: 8 }}>Metadata</div>
+          <pre style={{ fontSize: 10, background: "var(--surf)", padding: 8, borderRadius: 6, overflow: "auto", maxHeight: 128, border: ".5px solid var(--bdr)", margin: 0, fontFamily: "var(--fm)" }}>
             {JSON.stringify(log.metadata, null, 2)}
           </pre>
         </div>
@@ -445,10 +392,10 @@ function ExpandedDetail({ log }: { log: AuditLogEntry }) {
 }
 
 function DiffRow({ entry }: { entry: DiffEntry }) {
-  const colors: Record<string, string> = {
-    added: "bg-[var(--grnbg)] text-[var(--grntx)]",
-    removed: "bg-[var(--redbg)] text-[var(--redtx)]",
-    changed: "bg-[var(--ambbg)] text-[var(--ambtx)]",
+  const colors: Record<string, { bg: string; color: string }> = {
+    added: { bg: "var(--grnbg)", color: "var(--grntx)" },
+    removed: { bg: "var(--redbg)", color: "var(--redtx)" },
+    changed: { bg: "var(--ambbg)", color: "var(--ambtx)" },
   };
 
   const prefix: Record<string, string> = {
@@ -457,20 +404,22 @@ function DiffRow({ entry }: { entry: DiffEntry }) {
     changed: "~",
   };
 
+  const style = colors[entry.type] ?? { bg: "transparent", color: "var(--tx2)" };
+
   return (
-    <div className={`flex items-start gap-2 px-2 py-1 text-[10px] ${colors[entry.type] ?? ""}`}>
-      <span className="font-mono font-bold w-3">{prefix[entry.type]}</span>
-      <span className="font-semibold min-w-[80px]">{entry.key}:</span>
+    <div style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "4px 8px", fontSize: 10, background: style.bg, color: style.color }}>
+      <span style={{ fontFamily: "var(--fm)", fontWeight: 700, width: 10 }}>{prefix[entry.type]}</span>
+      <span style={{ fontWeight: 600, minWidth: 80 }}>{entry.key}:</span>
       {entry.type === "changed" && (
         <span>
-          <span className="line-through opacity-60">{formatValue(entry.oldVal)}</span>
+          <span style={{ textDecoration: "line-through", opacity: 0.6 }}>{formatValue(entry.oldVal)}</span>
           {" → "}
-          <span className="font-semibold">{formatValue(entry.newVal)}</span>
+          <span style={{ fontWeight: 600 }}>{formatValue(entry.newVal)}</span>
         </span>
       )}
-      {entry.type === "added" && <span className="font-semibold">{formatValue(entry.newVal)}</span>}
+      {entry.type === "added" && <span style={{ fontWeight: 600 }}>{formatValue(entry.newVal)}</span>}
       {entry.type === "removed" && (
-        <span className="line-through">{formatValue(entry.oldVal)}</span>
+        <span style={{ textDecoration: "line-through" }}>{formatValue(entry.oldVal)}</span>
       )}
     </div>
   );
