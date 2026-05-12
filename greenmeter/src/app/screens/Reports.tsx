@@ -234,21 +234,53 @@ export default function ReportsScreen({ navigate }: Props) {
         </div>
       </div>
 
-      {/* Generate modal */}
+      {/* New Report modal — radio-style framework selection */}
       {showGenModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setShowGenModal(false)}>
-          <div style={{ background: 'var(--surf)', borderRadius: 12, padding: 24, width: 400, maxWidth: '90vw' }} onClick={e => e.stopPropagation()}>
-            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx1)', marginBottom: 16 }}>Generate new report</div>
-            <div style={{ marginBottom: 12 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 5 }}>Framework</div>
-              <select className="sel" style={{ fontSize: 12, padding: '6px 10px', width: '100%' }} value={genFramework} onChange={e => setGenFramework(e.target.value)}>
-                {Object.entries(RP_TEMPLATES).map(([k, t]) => <option key={k} value={k}>{t.name}</option>)}
-              </select>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setShowGenModal(false)}>
+          <div style={{ background: 'var(--surf)', borderRadius: 14, padding: 24, width: 520, maxWidth: '96vw', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }} onClick={e => e.stopPropagation()}>
+            <button onClick={() => setShowGenModal(false)} style={{ position: 'absolute', top: 14, right: 14, background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: 'var(--tx3)' }}>&times;</button>
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx1)', marginBottom: 4 }}>Create a new report</div>
+            <div style={{ fontSize: 11, color: 'var(--tx2)', marginBottom: 16, lineHeight: 1.5 }}>Select a reporting standard, name your report, and choose the fiscal year. The template will pre-populate sections based on the selected standard.</div>
+
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 8 }}>Select reporting standard *</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>
+              {([
+                ['BRSR', 'BRSR Core', 'SEBI-mandated Business Responsibility & Sustainability Report for top 1000 listed entities.', '#ef4444'],
+                ['GRI', 'GRI Universal 2021', 'Global Reporting Initiative universal and topic-specific standards for comprehensive sustainability disclosure.', '#0f766e'],
+                ['ESRS', 'ESRS (CSRD)', 'European Sustainability Reporting Standards under the Corporate Sustainability Reporting Directive.', '#f59e0b'],
+                ['IFRS S2', 'IFRS S2 Climate', 'ISSB climate-related disclosure standard focused on risks, opportunities, and metrics.', '#6366f1'],
+                ['CDP', 'CDP Climate', 'Carbon Disclosure Project questionnaire for climate change, water security, and forests.', '#0d9488'],
+                ['Custom', 'Custom report', 'Build a custom report with your own sections and questions.', '#8b5cf6'],
+              ] as [string, string, string, string][]).map(([k, label, desc, c]) => (
+                <label key={k} onClick={() => setGenFramework(k)} style={{
+                  display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px',
+                  border: genFramework === k ? `1.5px solid ${c}` : '.5px solid var(--bdr)',
+                  borderRadius: 10, cursor: 'pointer', transition: 'all .12s',
+                  background: genFramework === k ? `${c}08` : 'var(--surf)',
+                }}>
+                  <div style={{ width: 18, height: 18, borderRadius: '50%', border: `2px solid ${genFramework === k ? c : 'var(--bdr)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    {genFramework === k && <div style={{ width: 10, height: 10, borderRadius: '50%', background: c }} />}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx1)' }}>{label}</div>
+                    <div style={{ fontSize: 10, color: 'var(--tx3)', lineHeight: 1.4, marginTop: 1 }}>{desc}</div>
+                  </div>
+                  <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 4, background: `${c}15`, color: c }}>{k}</span>
+                </label>
+              ))}
             </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+              <div className="field"><label className="lbl">Report name *</label><input className="inp" placeholder={`e.g. Annual Sustainability Report ${new Date().getFullYear()}`} /></div>
+              <div className="field"><label className="lbl">Fiscal year *</label>
+                <select className="sel"><option>FY 2024-25</option><option>FY 2025-26</option><option>Q1 FY 2025-26</option><option>Q4 FY 2024-25</option></select>
+              </div>
+            </div>
+
             {genError && <div style={{ fontSize: 11, color: 'var(--red)', marginBottom: 12, padding: 8, background: 'var(--redbg)', borderRadius: 6 }}>{genError}</div>}
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
               <button className="btn-secondary" onClick={() => setShowGenModal(false)}>Cancel</button>
-              <button className="btn-primary" disabled={generating} onClick={() => handleGenerate(genFramework)}>{generating ? 'Generating...' : 'Generate'}</button>
+              <button className="btn-primary" disabled={generating} onClick={() => handleGenerate(genFramework)}>{generating ? 'Creating...' : 'Create report'}</button>
             </div>
           </div>
         </div>
@@ -442,7 +474,11 @@ export default function ReportsScreen({ navigate }: Props) {
   );
 }
 
-/* ── Section detail view with questions ─────────────────────── */
+/* ── Owner & dept options ── */
+const USER_OPTIONS = ['Priya Sharma \u2014 ESG Lead', 'Rajan Mehta \u2014 EHS Manager', 'Kavya Reddy \u2014 HR Lead', 'Ankit Patel \u2014 Finance', 'Board ESG Committee'];
+const DEPT_OPTIONS = ['ESG & Sustainability', 'EHS', 'HR', 'Finance', 'Operations'];
+
+/* ── Section detail view with questions (full data-entry UI) ── */
 function SectionDetail({ sectionCode, template, report, onBack }: {
   sectionCode: string;
   template: { name: string; color: string; sections: TemplateSection[] };
@@ -451,171 +487,240 @@ function SectionDetail({ sectionCode, template, report, onBack }: {
 }) {
   const secIdx = template.sections.findIndex(s => s.code === sectionCode);
   const section = template.sections[secIdx];
+  const [aiEnabled, setAiEnabled] = useState(true);
   if (!section) return null;
 
   const pct = report.sectionProgress[secIdx] ?? 0;
   const questions = SECTION_QUESTIONS[sectionCode] ?? [];
   const hasQuestions = questions.length > 0;
   const answered = questions.filter(q => q.status === 'answered').length;
-  const drafts = questions.filter(q => q.status === 'draft').length;
-  const pending = questions.filter(q => q.status === 'pending').length;
+  const nextSecIdx = secIdx + 1;
+  const hasNext = nextSecIdx < template.sections.length;
 
   return (
     <div>
-      {/* Breadcrumb + back */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-        <button onClick={onBack} style={{ background: 'none', border: '.5px solid var(--bdr)', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontSize: 11, color: 'var(--tx2)' }}>
-          &larr; Back to sections
-        </button>
-        <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{template.name}</span>
-        <span style={{ fontSize: 11, color: 'var(--tx3)' }}>&rsaquo;</span>
-        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx1)' }}>{section.code}</span>
+      {/* Back to builder */}
+      <button onClick={onBack} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: 'var(--tx2)', padding: 0, marginBottom: 14 }}>
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 4L6 8l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        Back to Report Builder
+      </button>
+
+      {/* Section header with progress circle */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 220px', gap: 16, alignItems: 'flex-start', marginBottom: 16 }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 5, background: `${section.color}18`, color: section.color }}>{section.code}</span>
+            <div style={{ fontSize: 21, fontWeight: 700, color: 'var(--tx1)' }}>{section.title}</div>
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--tx2)', lineHeight: 1.5 }}>{section.guidance}</div>
+        </div>
+        <div style={{ background: 'var(--surf)', border: '.5px solid var(--bdr)', borderRadius: 12, padding: 14, textAlign: 'center' }}>
+          <div style={{ fontSize: 28, fontWeight: 700, color: section.color, lineHeight: 1 }}>{pct}%</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 8 }}>Complete</div>
+          <div style={{ height: 5, background: 'var(--bdr2)', borderRadius: 3, overflow: 'hidden', marginBottom: 6 }}><div style={{ height: '100%', background: section.color, width: `${pct}%`, borderRadius: 3 }} /></div>
+          <div style={{ fontSize: 11, color: 'var(--tx2)' }}>{Math.round(section.questions * pct / 100)}/{section.questions} questions</div>
+        </div>
       </div>
 
-      {/* Section header */}
-      <div style={{ background: 'var(--surf)', border: '.5px solid var(--bdr)', borderRadius: 12, padding: '18px 22px', marginBottom: 12 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-          <div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx1)', marginBottom: 4 }}>{section.title}</div>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 3, background: `${section.color}15`, color: section.color }}>{section.pillar}</span>
-              <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{section.questions} questions</span>
-            </div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div className="pbar-bg" style={{ width: 120, height: 6 }}>
-              <div className="pbar-fill" style={{ width: `${pct}%`, background: pct === 100 ? 'var(--grn)' : 'var(--t500)' }} />
-            </div>
-            <span style={{ fontSize: 12, fontWeight: 700, fontFamily: 'var(--fm)', color: pct === 100 ? 'var(--grn)' : 'var(--t700)' }}>{pct}%</span>
-          </div>
+      {/* Owner + dept + AI toggle */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--surf)', border: '.5px solid var(--bdr)', borderRadius: 7, padding: '6px 10px' }}>
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="6" r="2.5" stroke="currentColor" strokeWidth="1.3" /><path d="M3 13c0-2.8 2.2-5 5-5s5 2.2 5 5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg>
+          <span style={{ fontSize: 11, color: 'var(--tx3)' }}>Owner:</span>
+          <select style={{ border: 'none', outline: 'none', fontSize: 11, fontWeight: 600, color: 'var(--tx1)', background: 'transparent', cursor: 'pointer' }}>
+            {USER_OPTIONS.map(u => <option key={u}>{u}</option>)}
+          </select>
         </div>
-        <div style={{ fontSize: 12, color: 'var(--tx2)', lineHeight: 1.6, background: 'var(--bg)', borderRadius: 8, padding: '10px 14px' }}>{section.guidance}</div>
-
-        {hasQuestions && (
-          <div style={{ display: 'flex', gap: 12, marginTop: 12, fontSize: 11 }}>
-            <span style={{ color: 'var(--grn)', fontWeight: 600 }}>{answered} answered</span>
-            <span style={{ color: 'var(--amb)', fontWeight: 600 }}>{drafts} draft</span>
-            <span style={{ color: 'var(--tx3)', fontWeight: 600 }}>{pending} pending</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--surf)', border: '.5px solid var(--bdr)', borderRadius: 7, padding: '6px 10px' }}>
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><rect x="2" y="4" width="12" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.3" /><path d="M5 4V3a1 1 0 011-1h4a1 1 0 011 1v1" stroke="currentColor" strokeWidth="1.3" /></svg>
+          <span style={{ fontSize: 11, color: 'var(--tx3)' }}>Dept:</span>
+          <select style={{ border: 'none', outline: 'none', fontSize: 11, fontWeight: 600, color: 'var(--tx1)', background: 'transparent', cursor: 'pointer' }}>
+            {DEPT_OPTIONS.map(d => <option key={d}>{d}</option>)}
+          </select>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--surf)', border: '.5px solid var(--bdr)', borderRadius: 7, padding: '6px 12px', marginLeft: 'auto' }}>
+          <div style={{ width: 26, height: 26, background: 'var(--t700)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2l2 7h7l-5.5 4 2 7L12 16l-5.5 4 2-7L3 9h7z" fill="white" /></svg>
           </div>
-        )}
+          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx1)' }}>AI Assistance</span>
+          <div onClick={() => setAiEnabled(!aiEnabled)} style={{ position: 'relative', width: 36, height: 20, cursor: 'pointer', flexShrink: 0 }}>
+            <div style={{ width: 36, height: 20, borderRadius: 10, background: aiEnabled ? 'var(--t600)' : 'var(--bdr)', transition: 'background .2s' }} />
+            <div style={{ position: 'absolute', top: 2, left: aiEnabled ? 18 : 2, width: 16, height: 16, borderRadius: '50%', background: '#fff', transition: 'left .2s', boxShadow: '0 1px 3px rgba(0,0,0,.2)' }} />
+          </div>
+          <span style={{ fontSize: 11, fontWeight: 600, color: aiEnabled ? 'var(--t700)' : 'var(--tx3)' }}>{aiEnabled ? 'Enabled' : 'Disabled'}</span>
+        </div>
       </div>
 
       {/* Questions list */}
       {hasQuestions ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 80 }}>
           {questions.map(q => (
-            <QuestionCard key={q.id} q={q} templateColor={template.color} />
+            <QuestionCard key={q.id} q={q} templateColor={template.color} aiEnabled={aiEnabled} />
           ))}
         </div>
       ) : (
-        <div style={{ background: 'var(--surf)', border: '.5px solid var(--bdr)', borderRadius: 12, padding: '40px 20px', textAlign: 'center' }}>
+        <div style={{ background: 'var(--surf)', border: '.5px solid var(--bdr)', borderRadius: 12, padding: '40px 20px', textAlign: 'center', marginBottom: 80 }}>
           <div style={{ fontSize: 13, color: 'var(--tx2)', marginBottom: 8 }}>Questions for this section will appear once data entry begins.</div>
-          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>This section has {section.questions} disclosure questions. Click "Generate Content" to auto-populate from your existing KPI data.</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>This section has {section.questions} disclosure questions. Click &quot;Generate Content&quot; to auto-populate from your existing KPI data.</div>
           <button className="btn-primary" style={{ marginTop: 12, fontSize: 11 }}>Generate section content</button>
         </div>
       )}
+
+      {/* Sticky footer */}
+      <div style={{ position: 'fixed', bottom: 0, left: 'var(--sbw, 220px)', right: 0, background: 'var(--surf)', borderTop: '.5px solid var(--bdr)', padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 100 }}>
+        <div>
+          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx1)' }}>Progress Status</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{section.questions - Math.round(section.questions * pct / 100)} questions remaining</div>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn-secondary" onClick={onBack}>Save as Draft</button>
+          <button className="btn-primary" onClick={onBack}>
+            {hasNext ? 'Continue to Next Section' : 'Back to Builder'}
+            {hasNext && <svg width="13" height="13" viewBox="0 0 16 16" fill="none" style={{ marginLeft: 6, verticalAlign: 'middle' }}><path d="M6 4l4 4-4 4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
 
-/* ── Individual question card ───────────────────────────────── */
-function QuestionCard({ q, templateColor }: { q: Question; templateColor: string }) {
-  const [expanded, setExpanded] = useState(false);
-  const qs = Q_STATUS_STYLE[q.status] ?? Q_STATUS_STYLE.pending;
+/* ── Individual question card with tabs ──────────────────────── */
+function QuestionCard({ q, templateColor, aiEnabled }: { q: Question; templateColor: string; aiEnabled: boolean }) {
+  const [expanded, setExpanded] = useState(q.status !== 'answered');
+  const [activeTab, setActiveTab] = useState<'response' | 'prev' | 'ai'>('response');
+  const borderColor = q.status === 'answered' ? '#fecaca' : q.status === 'draft' ? '#c7d2fe' : '#e5e7eb';
+  const stCircleColor = q.status === 'answered' ? '#ef4444' : '#e5e7eb';
+  const stCircleBg = q.status === 'answered' ? '#fef2f2' : '#f8fafb';
 
   return (
-    <div style={{ background: 'var(--surf)', border: '.5px solid var(--bdr)', borderRadius: 10, overflow: 'hidden' }}>
-      {/* Question header row */}
-      <div onClick={() => setExpanded(!expanded)} style={{ display: 'grid', gridTemplateColumns: '40px 1fr auto 90px', alignItems: 'center', gap: 10, padding: '12px 16px', cursor: 'pointer', transition: 'background .1s' }}
-        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'var(--bg)'}
-        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = ''}>
-        {/* Status dot */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ width: 24, height: 24, borderRadius: '50%', background: qs.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {q.status === 'answered' && <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M4 8l3 3 5-6" stroke={qs.col} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
-            {q.status === 'draft' && <div style={{ width: 8, height: 8, borderRadius: '50%', background: qs.col }} />}
-            {q.status === 'pending' && <div style={{ width: 8, height: 8, borderRadius: 2, background: 'var(--bdr)', border: '1px solid var(--tx3)' }} />}
-          </div>
+    <div style={{ background: 'var(--surf)', border: `1.5px solid ${borderColor}`, borderRadius: 12, overflow: 'hidden' }}>
+      {/* Collapsible header */}
+      <div onClick={() => setExpanded(!expanded)} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '14px 16px', cursor: 'pointer' }}>
+        <div style={{ width: 28, height: 28, borderRadius: '50%', border: `2px solid ${stCircleColor}`, background: stCircleBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+          {q.status === 'answered' && <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="#ef4444" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+          {q.status !== 'answered' && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#e5e7eb' }} />}
         </div>
-        {/* Question text */}
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-            <span style={{ fontSize: 10, fontWeight: 700, fontFamily: 'var(--fm)', color: templateColor }}>{q.code}</span>
-            <span style={{ fontSize: 8, padding: '1px 5px', borderRadius: 3, fontWeight: 700, background: q.type === 'Quantitative' ? 'var(--t50)' : 'var(--bg)', color: q.type === 'Quantitative' ? 'var(--t700)' : 'var(--tx2)' }}>{q.type}</span>
-            {q.required && <span style={{ fontSize: 8, fontWeight: 700, color: 'var(--red)' }}>Required</span>}
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 5, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 10, fontWeight: 700, fontFamily: 'var(--fm)', color: 'var(--tx3)' }}>{q.code}</span>
+            <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 20, background: q.required ? '#e0f9f4' : '#f3f4f6', color: q.required ? '#0d9488' : '#94a3b8' }}>{q.required ? 'Required' : 'Optional'}</span>
+            <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{q.type}</span>
+            <span style={{ fontSize: 10, color: 'var(--tx3)' }}>Question {q.qnum} of {q.total}</span>
           </div>
-          <div style={{ fontSize: 12, color: 'var(--tx1)', lineHeight: 1.4 }}>{q.q}</div>
-        </div>
-        {/* Value preview */}
-        <div style={{ textAlign: 'right' }}>
-          {q.value ? (
-            <div style={{ fontSize: 13, fontWeight: 700, fontFamily: 'var(--fm)', color: 'var(--t700)' }}>
-              {q.value.length > 30 ? q.value.slice(0, 28) + '\u2026' : q.value}
-              {q.unit !== 'Text' && <span style={{ fontSize: 9, fontWeight: 400, color: 'var(--tx3)', marginLeft: 3 }}>{q.unit}</span>}
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx1)', lineHeight: 1.4 }}>{q.q}</div>
+          {!expanded && q.value && (
+            <div style={{ marginTop: 6, fontSize: 11, color: 'var(--tx2)', background: 'var(--bg)', borderRadius: 6, padding: '7px 10px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {q.value}{q.unit && q.type === 'Quantitative' ? ` ${q.unit}` : ''}
             </div>
-          ) : (
-            <div style={{ fontSize: 11, color: 'var(--tx3)', fontStyle: 'italic' }}>No value</div>
           )}
         </div>
-        {/* Status badge */}
-        <div style={{ textAlign: 'right' }}>
-          <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 4, background: qs.bg, color: qs.col }}>{qs.label}</span>
-        </div>
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform .2s', color: 'var(--tx3)' }}><path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
       </div>
 
-      {/* Expanded detail */}
+      {/* Expanded: guidance + tabs + content */}
       {expanded && (
-        <div style={{ borderTop: '.5px solid var(--bdr)', padding: '14px 16px', background: 'var(--bg)' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 12 }}>
-            {/* Guidance */}
-            <div>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)', marginBottom: 4 }}>Guidance</div>
-              <div style={{ fontSize: 11, color: 'var(--tx2)', lineHeight: 1.6 }}>{q.guidance}</div>
-            </div>
-            {/* Previous year */}
-            <div>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)', marginBottom: 4 }}>Previous year value</div>
-              {q.prevValue ? (
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, fontFamily: 'var(--fm)', color: 'var(--tx1)' }}>
-                    {q.prevValue.length > 50 ? q.prevValue.slice(0, 48) + '\u2026' : q.prevValue}
-                    {q.prevUnit && <span style={{ fontSize: 9, fontWeight: 400, color: 'var(--tx3)', marginLeft: 3 }}>{q.prevUnit}</span>}
-                  </div>
-                  {q.prevYoY && (
-                    <div style={{ fontSize: 10, fontWeight: 600, color: q.prevYoY.startsWith('-') ? 'var(--grn)' : q.prevYoY.startsWith('+') ? 'var(--amb)' : 'var(--tx3)', marginTop: 3 }}>
-                      {q.prevYoY} YoY
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div style={{ fontSize: 11, color: 'var(--tx3)', fontStyle: 'italic' }}>No previous data</div>
-              )}
-            </div>
+        <div style={{ borderTop: '.5px solid var(--bdr2)' }}>
+          {/* Guidance block */}
+          <div style={{ margin: '12px 16px', padding: '10px 12px', background: '#f9fafb', borderRadius: 8, display: 'flex', gap: 8 }}>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: 1 }}><circle cx="8" cy="8" r="6" stroke="#94a3b8" strokeWidth="1.3" /><path d="M8 7v4" stroke="#94a3b8" strokeWidth="1.3" strokeLinecap="round" /><circle cx="8" cy="5.5" r=".7" fill="#94a3b8" /></svg>
+            <div style={{ fontSize: 11, color: 'var(--tx2)', lineHeight: 1.5 }}><strong>Guidance:</strong> {q.guidance}</div>
           </div>
 
-          {/* Current value */}
-          {q.value && (
-            <div style={{ marginBottom: 12 }}>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)', marginBottom: 4 }}>Current value</div>
-              <div style={{ fontSize: 12, color: 'var(--tx1)', lineHeight: 1.6, background: 'var(--surf)', borderRadius: 8, padding: '10px 14px', border: '.5px solid var(--bdr)' }}>
-                {q.value}
-                {q.unit !== 'Text' && <span style={{ fontSize: 10, color: 'var(--tx3)', marginLeft: 4 }}>{q.unit}</span>}
+          {/* Tabs */}
+          <div style={{ display: 'flex', gap: 0, margin: '0 16px 12px', background: 'var(--bg)', borderRadius: 8, padding: 3, width: 'fit-content' }}>
+            {([['response', 'Response'], ['prev', 'Previous Year'], ['ai', 'AI Assist']] as [string, string][]).map(([k, l]) => (
+              <button key={k} onClick={e => { e.stopPropagation(); setActiveTab(k as any); }} style={{ padding: '6px 13px', border: 'none', cursor: 'pointer', borderRadius: 6, fontSize: 11, fontWeight: activeTab === k ? 700 : 500, color: activeTab === k ? 'var(--tx1)' : 'var(--tx2)', background: activeTab === k ? 'var(--surf)' : 'transparent', boxShadow: activeTab === k ? '0 1px 3px rgba(0,0,0,.1)' : 'none', transition: 'all .15s' }}>{l}</button>
+            ))}
+          </div>
+
+          {/* Response tab */}
+          {activeTab === 'response' && (
+            <div style={{ padding: '0 16px 14px' }}>
+              {q.type === 'Quantitative' ? (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px', gap: 10, marginBottom: 12 }}>
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>Value <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input style={{ width: '100%', padding: '10px 12px', border: '.5px solid var(--bdr)', borderRadius: 8, fontSize: 16, fontWeight: 600, outline: 'none', fontFamily: 'var(--fm)' }} defaultValue={q.value} placeholder="Enter value\u2026" />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>Unit <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input style={{ width: '100%', padding: '10px 12px', border: '.5px solid var(--bdr)', borderRadius: 8, fontSize: 14, fontWeight: 600, outline: 'none', fontFamily: 'var(--fm)' }} defaultValue={q.unit} />
+                  </div>
+                </div>
+              ) : (
+                <div style={{ marginBottom: 12 }}>
+                  <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>Response <span style={{ color: '#ef4444' }}>*</span></label>
+                  <textarea style={{ width: '100%', padding: '10px 12px', border: '.5px solid var(--bdr)', borderRadius: 8, fontSize: 12, resize: 'vertical', outline: 'none', minHeight: 90, fontFamily: 'var(--ff)', lineHeight: 1.6 }} defaultValue={q.value} placeholder="Enter your response\u2026" />
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={e => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '9px 16px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 5h10v8a1 1 0 01-1 1H4a1 1 0 01-1-1V5zM1 5h14M6 5V3h4v2" stroke="white" strokeWidth="1.3" strokeLinecap="round" /></svg>
+                  Save Answer
+                </button>
+                <button onClick={e => e.stopPropagation()} style={{ padding: '9px 14px', border: '.5px solid var(--bdr)', background: 'var(--surf)', borderRadius: 8, fontSize: 12, fontWeight: 500, cursor: 'pointer', color: 'var(--tx2)' }}>Save as Draft</button>
               </div>
             </div>
           )}
 
-          {/* AI suggestion */}
-          <div style={{ background: 'linear-gradient(135deg, #f0fdfa, #ecfdf5)', borderRadius: 8, padding: '12px 14px', border: '1px solid #99f6e440' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 2l2 4 4 .5-3 3 .5 4L8 12l-3.5 1.5.5-4-3-3L6 6l2-4z" fill="#0f766e" /></svg>
-              <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--t700)' }}>AI Suggestion</span>
+          {/* Previous Year tab */}
+          {activeTab === 'prev' && (
+            <div style={{ padding: '0 16px 14px' }}>
+              <div style={{ background: 'var(--surf)', border: '.5px solid var(--bdr)', borderRadius: 10, padding: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 9, marginBottom: 12 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: 7, background: 'var(--redbg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#ef4444" strokeWidth="1.3" /><path d="M8 5v3l-2 2" stroke="#ef4444" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx1)' }}>Previous Year Data (FY 2023-24)</div>
+                    <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Reference to maintain consistency and track progress</div>
+                  </div>
+                </div>
+                {q.prevValue ? (
+                  <>
+                    <div style={{ padding: '10px 0', borderTop: '.5px solid var(--bdr2)', borderBottom: '.5px solid var(--bdr2)', marginBottom: 10 }}>
+                      <span style={{ fontSize: 26, fontWeight: 700, color: '#ef4444', fontFamily: 'var(--fm)' }}>{q.prevValue}</span>
+                      {q.prevUnit && <span style={{ fontSize: 14, color: 'var(--tx3)', marginLeft: 6 }}>{q.prevUnit}</span>}
+                    </div>
+                    {q.prevYoY && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: 'var(--t700)' }}>
+                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3 11l4-4 3 2 4-5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                        YoY Change: {q.prevYoY}
+                      </div>
+                    )}
+                    <button onClick={e => e.stopPropagation()} style={{ marginTop: 10, padding: '6px 12px', border: '.5px solid var(--bdr)', background: 'var(--surf)', borderRadius: 6, fontSize: 11, cursor: 'pointer', color: 'var(--tx2)' }}>Use as reference &rarr;</button>
+                  </>
+                ) : (
+                  <div style={{ fontSize: 11, color: 'var(--tx3)' }}>No previous year data available.</div>
+                )}
+              </div>
             </div>
-            <div style={{ fontSize: 11, color: 'var(--tx1)', lineHeight: 1.6 }}>{q.aiSuggestion}</div>
-            <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-              <button style={{ padding: '4px 10px', fontSize: 10, fontWeight: 600, background: 'var(--t700)', color: '#fff', border: 'none', borderRadius: 5, cursor: 'pointer' }}>Apply suggestion</button>
-              <button style={{ padding: '4px 10px', fontSize: 10, background: 'var(--surf)', border: '.5px solid var(--bdr)', borderRadius: 5, cursor: 'pointer', color: 'var(--tx2)' }}>Dismiss</button>
+          )}
+
+          {/* AI Assist tab */}
+          {activeTab === 'ai' && aiEnabled && (
+            <div style={{ padding: '0 16px 14px' }}>
+              <div style={{ background: 'linear-gradient(135deg,var(--t50),#eef2ff)', border: '.5px solid var(--t200)', borderRadius: 10, padding: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 9, marginBottom: 12 }}>
+                  <div style={{ width: 32, height: 32, background: 'var(--t700)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2l2 7h7l-5.5 4 2 7L12 16l-5.5 4 2-7L3 9h7z" fill="white" /></svg>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx1)' }}>AI-Generated Suggestion</div>
+                    <div style={{ fontSize: 11, color: 'var(--tx2)', marginTop: 2 }}>Based on your platform data and industry best practices</div>
+                  </div>
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--tx1)', lineHeight: 1.7, marginBottom: 12 }}>{q.aiSuggestion}</div>
+                <button onClick={e => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '9px 16px', background: 'var(--t700)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2l2 7h7l-5.5 4 2 7L12 16l-5.5 4 2-7L3 9h7z" fill="white" /></svg>
+                  Use This Suggestion
+                </button>
+              </div>
             </div>
-          </div>
+          )}
+          {activeTab === 'ai' && !aiEnabled && (
+            <div style={{ padding: '14px 16px', fontSize: 11, color: 'var(--tx3)' }}>AI assistance is disabled for this session. Enable the toggle above to use AI suggestions.</div>
+          )}
         </div>
       )}
     </div>

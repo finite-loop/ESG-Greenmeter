@@ -105,6 +105,10 @@ export const queryKeys = {
     coordinates: (filters: { fiscalYear: string; sector?: string }) =>
       ['mds', 'coordinates', filters] as const,
   },
+  industry: {
+    all: ['industry-companies'] as const,
+    detail: (tenantId: string) => ['industry-companies', 'detail', tenantId] as const,
+  },
   correlations: {
     all: ['correlations'] as const,
     matrix: (filters: { fiscalYear: string; sector?: string }) =>

@@ -1,28 +1,12 @@
 "use client";
 import { useState, useEffect, useRef, useMemo } from "react";
+import { useIndustryCompanies } from "@/hooks/useIndustryCompanies";
 
 type Props = { navigate:(s:any)=>void; [k:string]:any };
 
 /* ── Company pool ───────────────────────────────────────────── */
 type Company = { id:string; name:string; industry:string; standards:string[] };
 
-const COMPANIES: Company[] = [
-  { id:'infosys',  name:'Infosys Ltd',              industry:'IT / Technology',    standards:['BRSR','GRI','ESRS'] },
-  { id:'hul',      name:'HUL (Hindustan Unilever)', industry:'FMCG',              standards:['BRSR','GRI'] },
-  { id:'tatasteel',name:'Tata Steel',               industry:'Steel / Metals',     standards:['BRSR','GRI','ESRS'] },
-  { id:'dabur',    name:'Dabur India',              industry:'FMCG',              standards:['BRSR'] },
-  { id:'wipro',    name:'Wipro Ltd',                industry:'IT / Technology',    standards:['BRSR','GRI','ESRS'] },
-  { id:'sail',     name:'SAIL',                     industry:'Steel / Metals',     standards:['BRSR'] },
-  { id:'vedanta',  name:'Vedanta Ltd',              industry:'Mining / Resources', standards:['BRSR','GRI'] },
-  { id:'reliance', name:'Reliance Industries',      industry:'Conglomerate',       standards:['BRSR','GRI','ESRS'] },
-  { id:'tcs',      name:'TCS',                      industry:'IT / Technology',    standards:['BRSR','GRI','ESRS'] },
-  { id:'itc',      name:'ITC Ltd',                  industry:'FMCG',              standards:['BRSR','GRI'] },
-  { id:'mahindra', name:'Mahindra & Mahindra',      industry:'Auto / Manufacturing',standards:['BRSR','GRI'] },
-  { id:'hdfc',     name:'HDFC Bank',                industry:'Banking / Finance',  standards:['BRSR'] },
-  { id:'lt',       name:'Larsen & Toubro',          industry:'Engineering',        standards:['BRSR','GRI','ESRS'] },
-  { id:'ntpc',     name:'NTPC Ltd',                 industry:'Power / Energy',     standards:['BRSR','GRI'] },
-  { id:'jsw',      name:'JSW Steel',                industry:'Steel / Metals',     standards:['BRSR','GRI','ESRS'] },
-];
 
 /* ── Metric definitions ─────────────────────────────────────── */
 type MetricDef = { id:string; name:string; unit:string; pillar:'E'|'S'|'G'; abbr?:string };
@@ -66,14 +50,18 @@ function generateCompanyData(company: Company) {
   const rand = seededRand(company.id.split('').reduce((a,c)=>a+c.charCodeAt(0),0));
   const r = () => rand();
 
-  const isIT = company.industry.includes('IT');
-  const isSteel = company.industry.includes('Steel') || company.industry.includes('Mining');
-  const isFMCG = company.industry.includes('FMCG');
+  const ind = company.industry;
+  const isIT = /IT|Tech|Software|Telecom|Digital/i.test(ind);
+  const isSteel = /Steel|Metal|Mining|Resource|Industrial/i.test(ind);
+  const isFMCG = /FMCG|Consumer|Food|Retail|Beverage/i.test(ind);
+  const isFinance = /Bank|Finance|Insurance|Financial/i.test(ind);
+  const isEnergy = /Energy|Power|Oil|Gas|Petroleum/i.test(ind);
+  const isChemical = /Chemical|Pharma|Fragrance|Flavor/i.test(ind);
 
   // Base multipliers by industry
-  const ghgBase = isIT ? 70000 : isSteel ? 280000 : isFMCG ? 45000 : 140000;
-  const waterBase = isIT ? 180000 : isSteel ? 420000 : isFMCG ? 310000 : 260000;
-  const wasteBase = isIT ? 400 : isSteel ? 4200 : isFMCG ? 1800 : 1300;
+  const ghgBase = isIT ? 70000 : isSteel ? 280000 : isFMCG ? 45000 : isFinance ? 30000 : isEnergy ? 350000 : isChemical ? 120000 : 140000;
+  const waterBase = isIT ? 180000 : isSteel ? 420000 : isFMCG ? 310000 : isFinance ? 80000 : isEnergy ? 500000 : isChemical ? 250000 : 260000;
+  const wasteBase = isIT ? 400 : isSteel ? 4200 : isFMCG ? 1800 : isFinance ? 200 : isEnergy ? 5000 : isChemical ? 2500 : 1300;
 
   const data: Record<string, Record<string, number>> = {};
 
@@ -126,9 +114,6 @@ function generateCompanyData(company: Company) {
   return data;
 }
 
-/* Pre-generate all company data */
-const COMPANY_DATA: Record<string, Record<string, Record<string, number>>> = {};
-COMPANIES.forEach(c => { COMPANY_DATA[c.id] = generateCompanyData(c); });
 
 /* ── Format helpers ──────────────────────────────────────────── */
 function fmtVal(val: number, unit: string): string {
@@ -229,10 +214,28 @@ export default function IndustryDataScreen({ navigate }: Props) {
   const [metricMode, setMetricMode] = useState('Absolute');
   const [showAllCompanies, setShowAllCompanies] = useState(false);
 
-  const company = selectedId ? COMPANIES.find(c => c.id === selectedId) ?? null : null;
-  const data = selectedId ? COMPANY_DATA[selectedId] : null;
+  const { data: apiCompanies, isLoading: loadingCompanies } = useIndustryCompanies();
 
-  const filteredCompanies = COMPANIES.filter(c =>
+  const companies = useMemo<Company[]>(() => {
+    if (!apiCompanies?.data) return [];
+    return apiCompanies.data.map(t => ({
+      id: t.tenantId,
+      name: t.name,
+      industry: t.sector ?? 'Other',
+      standards: t.activeFrameworks ?? [],
+    }));
+  }, [apiCompanies]);
+
+  const companyData = useMemo(() => {
+    const out: Record<string, Record<string, Record<string, number>>> = {};
+    companies.forEach(c => { out[c.id] = generateCompanyData(c); });
+    return out;
+  }, [companies]);
+
+  const company = selectedId ? companies.find(c => c.id === selectedId) ?? null : null;
+  const data = selectedId ? companyData[selectedId] : null;
+
+  const filteredCompanies = companies.filter(c =>
     !search || c.name.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -268,7 +271,7 @@ export default function IndustryDataScreen({ navigate }: Props) {
           <div style={{ fontSize: 48, marginBottom: 12, opacity: 0.7 }}>🏭</div>
           <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx1)', marginBottom: 8 }}>Select an organisation to explore industry data</div>
           <div style={{ fontSize: 12, color: 'var(--tx2)', maxWidth: 500, margin: '0 auto 20px', lineHeight: 1.6 }}>
-            Choose a year and search for any organisation from the corpus of {COMPANIES.length} indexed companies. ESG metrics, trends, benchmarks, and anomalies will appear here.
+            {loadingCompanies ? 'Loading organisations from database…' : `Choose a year and search for any organisation from the corpus of ${companies.length} indexed companies. ESG metrics, trends, benchmarks, and anomalies will appear here.`}
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 8 }}>
             {(showAllCompanies ? filteredCompanies : filteredCompanies.slice(0, 8)).map(c => (
@@ -351,7 +354,7 @@ export default function IndustryDataScreen({ navigate }: Props) {
             <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)', marginBottom: 3 }}>Organisation</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <select className="sel" style={{ fontSize: 12, padding: '6px 10px', width: 180 }} value={selectedId ?? ''} onChange={e => { setSelectedId(e.target.value); setTab('trends'); }}>
-                {COMPANIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
               <button onClick={() => setSelectedId(null)} style={{ background: 'none', border: 'none', fontSize: 16, cursor: 'pointer', color: 'var(--tx3)', padding: '0 2px' }}>×</button>
             </div>
@@ -419,7 +422,7 @@ export default function IndustryDataScreen({ navigate }: Props) {
       {/* Tab content */}
       <div style={{ background: 'var(--surf)', border: '.5px solid var(--bdr)', borderTop: 'none', borderRadius: '0 0 12px 12px', padding: 16 }}>
         {tab === 'trends' && <TrendsKpiTab data={data} year={year} metricSearch={metricSearch} setMetricSearch={setMetricSearch} metricMode={metricMode} setMetricMode={setMetricMode} />}
-        {tab === 'peer' && <PeerBenchmarkTab company={company} year={year} />}
+        {tab === 'peer' && <PeerBenchmarkTab company={company} year={year} companies={companies} companyData={companyData} />}
         {tab === 'rollup' && <RollupDrillTab data={data} year={year} company={company} />}
         {tab === 'forecast' && <ForecastTab data={data} company={company} />}
         {tab === 'correlation' && <CorrelationTab data={data} />}
@@ -539,12 +542,12 @@ function TrendsKpiTab({ data, year, metricSearch, setMetricSearch, metricMode, s
 /* ══════════════════════════════════════════════════════════════
    PEER BENCHMARKING TAB
    ══════════════════════════════════════════════════════════════ */
-function PeerBenchmarkTab({ company, year }: { company: Company; year: Year }) {
+function PeerBenchmarkTab({ company, year, companies, companyData }: { company: Company; year: Year; companies: Company[]; companyData: Record<string, Record<string, Record<string, number>>> }) {
   const peers = useMemo(() => {
-    return COMPANIES.filter(c =>
+    return companies.filter(c =>
       c.id !== company.id && c.industry === company.industry
     );
-  }, [company]);
+  }, [company, companies]);
 
   const allInIndustry = [company, ...peers];
 
@@ -562,13 +565,13 @@ function PeerBenchmarkTab({ company, year }: { company: Company; year: Year }) {
 
       // Normalize values to 0-100 scale for radar
       const allVals = radarMetrics.map(mid => {
-        const vals = allInIndustry.map(c => COMPANY_DATA[c.id]?.[mid]?.[year] ?? 0);
+        const vals = allInIndustry.map(c => companyData[c.id]?.[mid]?.[year] ?? 0);
         return { min: Math.min(...vals), max: Math.max(...vals) };
       });
 
       function normalize(compId: string) {
         return radarMetrics.map((mid, i) => {
-          const raw = COMPANY_DATA[compId]?.[mid]?.[year] ?? 0;
+          const raw = companyData[compId]?.[mid]?.[year] ?? 0;
           const range = allVals[i].max - allVals[i].min || 1;
           const isLowerBetter = ['total_ghg', 'energy_intensity', 'ltifr'].includes(mid);
           const norm = ((raw - allVals[i].min) / range) * 100;
@@ -640,7 +643,7 @@ function PeerBenchmarkTab({ company, year }: { company: Company; year: Year }) {
               <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx1)', marginBottom: 8 }}>Peer companies</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {peers.map(p => {
-                  const pData = COMPANY_DATA[p.id];
+                  const pData = companyData[p.id];
                   const esgScore = Math.round(50 + (pData?.renewable_pct?.[year] ?? 20) * 0.5 + (pData?.women_workforce?.[year] ?? 25) * 0.3 + (pData?.board_independence?.[year] ?? 45) * 0.2);
                   return (
                     <div key={p.id} style={{ background: 'var(--bg)', borderRadius: 8, padding: '10px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -677,8 +680,8 @@ function PeerBenchmarkTab({ company, year }: { company: Company; year: Year }) {
               </thead>
               <tbody>
                 {compareMetrics.map(cm => {
-                  const compVal = COMPANY_DATA[company.id]?.[cm.id]?.[year] ?? 0;
-                  const allVals = allInIndustry.map(c => ({ id: c.id, val: COMPANY_DATA[c.id]?.[cm.id]?.[year] ?? 0 }));
+                  const compVal = companyData[company.id]?.[cm.id]?.[year] ?? 0;
+                  const allVals = allInIndustry.map(c => ({ id: c.id, val: companyData[c.id]?.[cm.id]?.[year] ?? 0 }));
                   allVals.sort((a, b) => cm.lowerBetter ? a.val - b.val : b.val - a.val);
                   const rank = allVals.findIndex(v => v.id === company.id) + 1;
 
@@ -690,7 +693,7 @@ function PeerBenchmarkTab({ company, year }: { company: Company; year: Year }) {
                       <td style={{ padding: '7px 10px', textAlign: 'right', fontFamily: 'var(--fm)', fontWeight: 700, color: 'var(--t700)' }}>{fmtVal(compVal, cm.unit)}</td>
                       {peers.slice(0, 4).map(p => (
                         <td key={p.id} style={{ padding: '7px 10px', textAlign: 'right', fontFamily: 'var(--fm)', color: 'var(--tx2)' }}>
-                          {fmtVal(COMPANY_DATA[p.id]?.[cm.id]?.[year] ?? 0, cm.unit)}
+                          {fmtVal(companyData[p.id]?.[cm.id]?.[year] ?? 0, cm.unit)}
                         </td>
                       ))}
                       <td style={{ padding: '7px 10px', textAlign: 'right' }}>
