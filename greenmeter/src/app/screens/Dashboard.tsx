@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef } from "react";
 import { STD_META, STD_PARAMS } from "../data";
+import { InsightPanel } from "@/components/dashboard/InsightPanel";
 
 type Props = {
   navigate: (s: any) => void;
@@ -335,6 +336,11 @@ export default function DashboardScreen({ navigate, rollupLevel, setRollupLevel,
             </div>
           );
         })}
+      </div>
+
+      {/* Insight briefing */}
+      <div style={{marginBottom:12}}>
+        <InsightPanel />
       </div>
 
       {/* Bottom row */}

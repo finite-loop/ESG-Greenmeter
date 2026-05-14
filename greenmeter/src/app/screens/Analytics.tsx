@@ -5,6 +5,7 @@ import { useMds } from "@/hooks/useMds";
 import { useCorrelations } from "@/hooks/useCorrelations";
 import { useIndustryCompanies } from "@/hooks/useIndustryCompanies";
 import CorrelationMatrix from "@/components/analytics/CorrelationMatrix";
+import { AskAiBar } from "@/components/ai/AskAiBar";
 
 const MdsScatterPlot = dynamic(() => import("@/components/charts/MdsScatterPlot"), { ssr: false });
 
@@ -44,23 +45,17 @@ export default function AnalyticsScreen({ navigate, RollupBar, rollupLevel, setR
       </div>
       <RollupBar active="organization" onSet={setRollupLevel}/>
 
-      {/* NL Query bar */}
-      <div style={{background:'var(--surf)',border:'.5px solid var(--bdr)',borderRadius:10,padding:'12px 14px',marginBottom:14}}>
-        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
-          <div style={{width:24,height:24,background:'var(--t700)',borderRadius:6,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-            <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M13 8A5 5 0 113 8a5 5 0 0110 0zM8 5v3l2 2" stroke="white" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          </div>
-          <input style={{flex:1,border:'none',outline:'none',fontSize:13,background:'transparent',color:'var(--tx1)'}} placeholder="Ask anything about your ESG data — queries run across internal data + peer corpus…"/>
-          <button className="btn-primary" style={{padding:'5px 12px',fontSize:11}}>Ask AI</button>
-        </div>
-        <div style={{display:'flex',flexWrap:'wrap',gap:5}}>
-          {['How does our water intensity compare to sector peers over 3 years?','Which subsidiary contributes most to our Scope 1 emissions?','Show correlation between energy intensity and GHG intensity','Forecast our GHG trajectory to 2035 at current pace'].map(q => (
-            <span key={q} style={{fontSize:10,padding:'3px 9px',background:'var(--bg)',border:'.5px solid var(--bdr)',borderRadius:20,cursor:'pointer',color:'var(--tx2)',transition:'all .12s'}}
-              onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background='var(--t50)';(e.currentTarget as HTMLElement).style.color='var(--t700)'}}
-              onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background='var(--bg)';(e.currentTarget as HTMLElement).style.color='var(--tx2)'}}>{q}</span>
-          ))}
-        </div>
-      </div>
+      {/* AI Query bar */}
+      <AskAiBar
+        context="analytics"
+        placeholder="Ask anything about your ESG data — queries run across internal data + peer corpus..."
+        sampleQueries={[
+          'How does our water intensity compare to sector peers over 3 years?',
+          'Which subsidiary contributes most to our Scope 1 emissions?',
+          'Show correlation between energy intensity and GHG intensity',
+          'Forecast our GHG trajectory to 2035 at current pace',
+        ]}
+      />
 
       {/* KPI summary strip */}
       <div style={{display:'grid',gridTemplateColumns:'repeat(6,1fr)',gap:8,marginBottom:14}}>

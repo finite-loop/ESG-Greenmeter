@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useIndustryCompanies } from "@/hooks/useIndustryCompanies";
+import { AskAiBar } from "@/components/ai/AskAiBar";
 
 type Props = { navigate:(s:any)=>void; [k:string]:any };
 
@@ -378,13 +379,15 @@ export default function IndustryDataScreen({ navigate }: Props) {
       </div>
 
       {/* AI query bar */}
-      <div style={{ background: 'var(--surf)', border: '.5px solid var(--bdr)', borderRadius: 10, padding: '10px 14px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div style={{ width: 24, height: 24, background: 'var(--t700)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M13 8A5 5 0 113 8a5 5 0 0110 0zM8 5v3l2 2" stroke="white" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
-        </div>
-        <input style={{ flex: 1, border: 'none', outline: 'none', fontSize: 13, background: 'transparent', color: 'var(--tx1)' }} placeholder={`Ask anything about ${company.name}'s ESG data…`} />
-        <button className="btn-primary" style={{ padding: '5px 12px', fontSize: 11 }}>Ask AI</button>
-      </div>
+      <AskAiBar
+        context="industry"
+        placeholder={`Ask anything about ${company.name}'s ESG data...`}
+        sampleQueries={[
+          `What are ${company.name}'s biggest ESG risks?`,
+          `How does ${company.name} compare to sector peers?`,
+          `What is ${company.name}'s GHG emission trend?`,
+        ]}
+      />
 
       {/* KPI summary strip */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 8, marginBottom: 14 }}>

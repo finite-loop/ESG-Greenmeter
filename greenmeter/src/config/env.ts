@@ -22,7 +22,7 @@ const envSchema = z.object({
   APPLICATIONINSIGHTS_CONNECTION_STRING: z.string().min(1).optional(),
 
   // LLM Provider
-  LLM_PROVIDER: z.enum(["azure", "local"]).optional(),
+  LLM_PROVIDER: z.enum(["azure", "local", "gemini"]).optional(),
   LLM_ENDPOINT: z.string().url().optional(),
   LLM_API_KEY: z.string().min(1).optional(),
   LLM_MODEL: z.string().min(1).optional(),

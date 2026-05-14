@@ -10,13 +10,13 @@ export interface LlmClient {
 }
 
 interface LlmConfig {
-  provider: 'azure' | 'local';
+  provider: 'azure' | 'local' | 'gemini';
   endpoint: string;
   apiKey: string;
   model: string;
 }
 
-const VALID_PROVIDERS = ['azure', 'local'] as const;
+const VALID_PROVIDERS = ['azure', 'local', 'gemini'] as const;
 const FETCH_TIMEOUT_MS = 60_000; // 60 seconds
 
 function resolveConfig(): LlmConfig {
@@ -28,7 +28,7 @@ function resolveConfig(): LlmConfig {
   if (!rawProvider) {
     throw new AppError(
       ErrorCode.PROCESSING_ERROR,
-      'LLM_PROVIDER environment variable is not set (expected "azure" or "local")',
+      'LLM_PROVIDER environment variable is not set (expected "azure", "local", or "gemini")',
       500
     );
   }
@@ -36,12 +36,12 @@ function resolveConfig(): LlmConfig {
   if (!VALID_PROVIDERS.includes(rawProvider as typeof VALID_PROVIDERS[number])) {
     throw new AppError(
       ErrorCode.PROCESSING_ERROR,
-      `LLM_PROVIDER has invalid value "${rawProvider}" (expected "azure" or "local")`,
+      `LLM_PROVIDER has invalid value "${rawProvider}" (expected "azure", "local", or "gemini")`,
       500
     );
   }
 
-  const provider = rawProvider as 'azure' | 'local';
+  const provider = rawProvider as 'azure' | 'local' | 'gemini';
 
   if (!endpoint) {
     throw new AppError(
@@ -64,11 +64,16 @@ function buildLocalUrl(endpoint: string): string {
   return `${base}/v1/chat/completions`;
 }
 
+function buildGeminiUrl(endpoint: string): string {
+  const base = endpoint.replace(/\/$/, '');
+  return `${base}/chat/completions`;
+}
+
 async function callOpenAiCompatible(
   url: string,
   apiKey: string,
   model: string,
-  provider: 'azure' | 'local',
+  provider: 'azure' | 'local' | 'gemini',
   prompt: string,
   input: string,
   options?: LlmCompletionOptions
@@ -127,9 +132,19 @@ async function callOpenAiCompatible(
 }
 
 /**
+ * Returns true if an LLM provider is configured and available.
+ * Used by feature flags to conditionally show AI features on the client.
+ */
+export function isLlmAvailable(): boolean {
+  const provider = process.env.LLM_PROVIDER;
+  const endpoint = process.env.LLM_ENDPOINT;
+  return !!provider && !!endpoint && VALID_PROVIDERS.includes(provider as typeof VALID_PROVIDERS[number]);
+}
+
+/**
  * Creates a provider-agnostic LLM client.
- * Provider is selected via LLM_PROVIDER env var ("azure" or "local").
- * Both use OpenAI-compatible chat completion APIs.
+ * Provider is selected via LLM_PROVIDER env var ("azure", "local", or "gemini").
+ * All providers use OpenAI-compatible chat completion APIs.
  */
 export function createLlmClient(): LlmClient {
   const config = resolveConfig();
@@ -137,9 +152,14 @@ export function createLlmClient(): LlmClient {
   return {
     async complete(prompt: string, input: string, options?: LlmCompletionOptions): Promise<string> {
       try {
-        const url = config.provider === 'azure'
-          ? buildAzureUrl(config.endpoint, config.model)
-          : buildLocalUrl(config.endpoint);
+        let url: string;
+        if (config.provider === 'azure') {
+          url = buildAzureUrl(config.endpoint, config.model);
+        } else if (config.provider === 'gemini') {
+          url = buildGeminiUrl(config.endpoint);
+        } else {
+          url = buildLocalUrl(config.endpoint);
+        }
 
         return await callOpenAiCompatible(url, config.apiKey, config.model, config.provider, prompt, input, options);
       } catch (error) {

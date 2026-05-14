@@ -121,4 +121,15 @@ export const queryKeys = {
     list: (filters: { limit?: number }) =>
       ['recommendations', filters] as const,
   },
+  insights: {
+    all: ['insights'] as const,
+    briefing: (filters: { periodId?: string }) =>
+      ['insights', 'briefing', filters] as const,
+  },
+  askAi: {
+    all: ['ask-ai'] as const,
+  },
+  featureFlags: {
+    all: ['feature-flags'] as const,
+  },
 } as const;
